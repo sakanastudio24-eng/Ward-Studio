@@ -66,8 +66,14 @@ DetailFlow and InkBot purchase flows live under:
 
 DetailFlow flow behavior:
 1. Bottom drawer flow: `package -> readiness -> payment`
-2. Post-purchase right drawer for confirmation, booking CTA, and onboarding checklist
-3. Strategy call return section appears after focus returns from booking tab
+2. On `Pay deposit`, client first calls `POST /api/orders/create` and stores `order_id`
+3. Checkout then calls `POST /api/checkout/create` with that `orderId`
+4. Verification uses `GET /api/checkout/verify?session_id=...`
+5. Post-purchase right drawer handles booking CTA and setup submission via `POST /api/onboarding/submit`
+
+Activation note:
+- DetailFlow is active.
+- InkBot remains visible as roadmap context and is currently request-access only.
 
 Pricing/rules are centralized in:
 - `src/lib/pricing.ts`
@@ -94,6 +100,10 @@ Config submission notifications:
 - Sends internal config-submission email.
 - Optional buyer acknowledgement can be enabled with:
   - `ORDERS_SEND_BUYER_ACK=true`
+
+Supabase-backed setup submission path used by DetailFlow UI:
+- `POST /api/onboarding/submit`
+- Validates `order_id`, strips sensitive config keys, validates asset links, stores onboarding payload.
 
 Booking-confirmed trigger:
 - `POST /api/cal/webhook`
@@ -141,6 +151,25 @@ Run this SQL in Supabase SQL editor:
 It creates:
 - `orders`
 - `onboarding_submissions`
+
+## DetailFlow API Endpoints (v1 Wrapper)
+
+- `POST /api/orders/create`
+  - Creates `orders` row before checkout
+  - Request: `{ product_id, tier_id, addon_ids, customer_email? }`
+  - Response: `{ order_id }`
+
+- `POST /api/checkout/create`
+  - Creates checkout session record
+  - Supports optional `orderId` so checkout and onboarding share one order id
+
+- `GET /api/checkout/verify?session_id=...`
+  - Verifies checkout state and returns paid summary payload
+
+- `POST /api/onboarding/submit`
+  - Stores post-purchase safe config and optional asset links
+  - Request: `{ order_id, config_json, asset_links? }`
+  - Response: `{ ok: true, warning?: string }`
 
 ## Git remote
 
