@@ -180,6 +180,30 @@
   }
 }
 
+@keyframes word-carousel-right {
+  from {
+    transform: translateX(-50%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@layer utilities {
+  .word-carousel-right-track {
+    width: max-content;
+    animation: word-carousel-right 36s linear infinite;
+    will-change: transform;
+  }
+
+  /* Keep all UI text selectable, including overlay/menu primitives that ship with select-none. */
+  .select-none {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+  }
+}
+
 @media (max-width: 640px) {
   html {
     font-size: 15px;

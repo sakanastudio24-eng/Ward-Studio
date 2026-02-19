@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "resend:templates": "node scripts/resend-templates.mjs"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

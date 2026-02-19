@@ -55,6 +55,10 @@ export function Footer({ onGameOpen, setTooltipText }: FooterProps) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const navItemClass = `text-sm font-medium leading-[1.5] transition-colors ${
+    isHoveringWard ? "hover:text-white/70" : "hover:text-muted-foreground"
+  }`;
+
   return (
     <footer 
       id="footer"
@@ -74,7 +78,7 @@ export function Footer({ onGameOpen, setTooltipText }: FooterProps) {
       <nav className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-12 text-sm ${isHoveringWard ? 'text-white' : ''}`}>
         <button 
           onClick={scrollToTop} 
-          className={`transition-colors ${isHoveringWard ? 'hover:text-white/70' : 'hover:text-muted-foreground'}`}
+          className={navItemClass}
           onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
           onMouseLeave={() => setTooltipText("")}
         >
@@ -82,7 +86,7 @@ export function Footer({ onGameOpen, setTooltipText }: FooterProps) {
         </button>
         <button 
           onClick={() => scrollToSection('work')} 
-          className={`transition-colors ${isHoveringWard ? 'hover:text-white/70' : 'hover:text-muted-foreground'}`}
+          className={navItemClass}
           onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
           onMouseLeave={() => setTooltipText("")}
         >
@@ -90,27 +94,36 @@ export function Footer({ onGameOpen, setTooltipText }: FooterProps) {
         </button>
         <button 
           onClick={() => scrollToSection('contact')} 
-          className={`transition-colors ${isHoveringWard ? 'hover:text-white/70' : 'hover:text-muted-foreground'}`}
+          className={navItemClass}
           onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
           onMouseLeave={() => setTooltipText("")}
         >
           Contact
         </button>
+        <a
+          href="/products"
+          className={navItemClass}
+          onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
+          onMouseLeave={() => setTooltipText("")}
+        >
+          Products
+        </a>
         <button 
           onClick={onGameOpen} 
-          className={`transition-colors ${isHoveringWard ? 'hover:text-white/70' : 'hover:text-muted-foreground'}`}
+          className={navItemClass}
           onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
           onMouseLeave={() => setTooltipText("")}
         >
           Games
         </button>
-        <button 
-          className={`transition-colors ${isHoveringWard ? 'hover:text-white/70' : 'hover:text-muted-foreground'}`}
+        <a
+          href="/terms"
+          className={navItemClass}
           onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
           onMouseLeave={() => setTooltipText("")}
         >
           Terms & Conditions
-        </button>
+        </a>
       </nav>
       <div className={`flex flex-col md:flex-row items-center gap-2 md:gap-4 mt-8 ${isHoveringWard ? 'text-white' : ''}`}>
         <p className={`text-xs ${isHoveringWard ? 'text-white/70' : 'text-muted-foreground'}`}>

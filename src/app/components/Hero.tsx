@@ -21,13 +21,20 @@ export function Hero({ setTooltipText }: HeroProps) {
   // getBackgroundClass: Maps the hovered keyword to the hero background class.
   const getBackgroundClass = () => {
     if (hoveredWord === 'design') return 'bg-orange-500';
-    if (hoveredWord === 'engineering') return 'bg-black';
+    if (hoveredWord === 'engineering') return 'bg-black dark:bg-white';
     return '';
   };
 
   // getTextClass: Sets text color classes for high-contrast hover states.
   const getTextClass = () => {
-    if (hoveredWord === 'design' || hoveredWord === 'engineering') return 'text-white';
+    if (hoveredWord === 'design') return 'text-white';
+    if (hoveredWord === 'engineering') return 'text-white dark:text-black';
+    return '';
+  };
+
+  const getSubtextClass = () => {
+    if (hoveredWord === 'design') return 'text-white/70';
+    if (hoveredWord === 'engineering') return 'text-white/70 dark:text-black/70';
     return '';
   };
 
@@ -36,7 +43,7 @@ export function Hero({ setTooltipText }: HeroProps) {
       <div className="max-w-5xl w-full">
         <div className="mb-6">
           <motion.p 
-            className={`text-xs md:text-sm mb-4 transition-colors duration-300 ${hoveredWord ? 'text-white/70' : 'text-muted-foreground'}`}
+            className={`text-xs md:text-sm mb-4 transition-colors duration-300 ${hoveredWord ? getSubtextClass() : 'text-muted-foreground'}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
@@ -65,7 +72,7 @@ export function Hero({ setTooltipText }: HeroProps) {
             </span>.
           </motion.h1>
           <motion.p 
-            className={`text-base sm:text-lg md:text-xl max-w-2xl leading-relaxed transition-colors duration-300 ${hoveredWord ? 'text-white/70' : 'text-muted-foreground'}`}
+            className={`text-base sm:text-lg md:text-xl max-w-2xl leading-relaxed transition-colors duration-300 ${hoveredWord ? getSubtextClass() : 'text-muted-foreground'}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
