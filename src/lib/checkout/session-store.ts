@@ -72,9 +72,10 @@ export function createCheckoutSessionRecord(input: {
   tierId: DetailflowTierId;
   addonIds: DetailflowAddonId[];
   customerEmail?: string;
+  orderId?: string;
 }): CheckoutSessionRecord {
   const sessionId = buildSessionId();
-  const orderId = buildOrderId();
+  const orderId = input.orderId?.trim() || buildOrderId();
   const total = computeTotal(PRICING, input.tierId, input.addonIds);
   const deposit = computeDepositToday(PRICING, input.tierId, input.addonIds);
   const remaining = computeRemainingBalance(PRICING, input.tierId, input.addonIds);

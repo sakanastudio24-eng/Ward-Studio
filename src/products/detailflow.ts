@@ -158,6 +158,14 @@ export function createDetailflowConfig(): DetailflowAddonConfig {
       "Kickoff starts when required config and minimum assets are received.",
     ],
     checkoutEndpoints: {
+      orderCreate: {
+        method: "POST",
+        path: "/api/orders/create",
+        label: "Create order record",
+        responseFields: [
+          { key: "order_id", label: "Persistent order id for payment and onboarding." },
+        ],
+      },
       create: {
         method: "POST",
         path: "/api/checkout/create",
@@ -174,10 +182,20 @@ export function createDetailflowConfig(): DetailflowAddonConfig {
           { key: "currency", label: "Currency for all amounts." },
         ],
       },
+      onboardingSubmit: {
+        method: "POST",
+        path: "/api/onboarding/submit",
+        label: "Submit setup details",
+        responseFields: [
+          { key: "ok", label: "True when onboarding details are stored." },
+          { key: "warning", label: "Optional notice when sensitive keys are removed." },
+        ],
+      },
       verify: {
         method: "GET",
         path: "/api/checkout/verify",
         label: "Verify checkout session",
+        optional: true,
         responseFields: [
           { key: "paid", label: "True when checkout is captured and verified." },
           { key: "status", label: "Verification/payment status for UI state." },

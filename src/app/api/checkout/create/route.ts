@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { PRODUCTS } from "../../../../config/products";
 import {
   createCheckoutSessionRecord,
   isDetailflowAddonId,
@@ -11,6 +12,7 @@ type CreateCheckoutRequestBody = {
   tierId?: string;
   addonIds?: unknown;
   customerEmail?: string;
+  orderId?: string;
 };
 
 function toStringArray(value: unknown): string[] {
@@ -33,10 +35,11 @@ export async function POST(request: Request) {
   const productId = (body.productId || "").trim();
   const tierId = (body.tierId || "").trim();
   const customerEmail = (body.customerEmail || "").trim();
+  const providedOrderId = (body.orderId || "").trim();
   const rawAddonIds = toStringArray(body.addonIds);
   const addonIds = Array.from(new Set(rawAddonIds));
 
-  if (productId !== "detailflow") {
+  if (productId !== PRODUCTS.detailflow.product_id) {
     return NextResponse.json({ error: "Only detailflow checkout is supported in this route." }, { status: 400 });
   }
 
@@ -60,6 +63,7 @@ export async function POST(request: Request) {
     tierId,
     addonIds: typedAddonIds,
     customerEmail,
+    orderId: providedOrderId || undefined,
   });
 
   return NextResponse.json({

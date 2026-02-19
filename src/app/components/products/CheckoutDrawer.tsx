@@ -63,6 +63,7 @@ import {
   type HandoffChecklist,
   type SafeConfigInput,
 } from "../../../lib/config-generator/detailflow";
+import { PRODUCTS } from "../../../config/products";
 
 export type DetailflowStep = "package" | "readiness" | "payment";
 
@@ -98,6 +99,7 @@ export type CheckoutEndpointContract = {
   path: string;
   label: string;
   responseFields: EndpointFieldSpec[];
+  optional?: boolean;
 };
 
 export type DetailflowAddonConfig = {
@@ -134,8 +136,10 @@ export type DetailflowAddonConfig = {
   };
   refundSummary: string[];
   checkoutEndpoints: {
+    orderCreate: CheckoutEndpointContract;
     create: CheckoutEndpointContract;
-    verify: CheckoutEndpointContract;
+    onboardingSubmit: CheckoutEndpointContract;
+    verify?: CheckoutEndpointContract;
   };
   strategyCallUrl?: string;
   secureUploadUrl?: string;
@@ -194,6 +198,10 @@ type CheckoutCreateResponse = {
   url: string;
   sessionId: string;
   orderId: string;
+};
+
+type OrderCreateResponse = {
+  order_id: string;
 };
 
 type CheckoutVerifyResponse = {
@@ -314,13 +322,13 @@ function buildDetailflowSummary(
   return summary;
 }
 
-/**
- * Generates a temporary order id for the placeholder checkout flow.
- */
-function generateOrderId(): string {
-  const year = new Date().getFullYear();
-  const sequence = `${Math.floor(Math.random() * 9000) + 1000}`;
-  return `DF-${year}-${sequence}`;
+function isHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -351,6 +359,7 @@ export function CheckoutDrawer({
   const [bookingTimeLabel, setBookingTimeLabel] = useState("{Time}");
   const [resendNotice, setResendNotice] = useState("");
   const [activeSessionId, setActiveSessionId] = useState("");
+  const [createdOrderId, setCreatedOrderId] = useState("");
   const [safeConfig, setSafeConfig] = useState<SafeConfigInput>(() => buildInitialSafeConfig("external_link"));
   const [isSubmittingConfig, setIsSubmittingConfig] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
@@ -418,7 +427,7 @@ export function CheckoutDrawer({
   const selectedTierLabel =
     config.packagePresets.find((preset) => preset.id === form.selectedPackageId)?.label ||
     form.selectedPackageId;
-  const fallbackOrderId = `DF-${new Date().getFullYear()}-0000`;
+  const fallbackOrderId = createdOrderId || `DF-${new Date().getFullYear()}-0000`;
 
   const selectedAddOnLabels = useMemo(() => {
     const labelMap = new Map<string, string>([
@@ -438,10 +447,19 @@ export function CheckoutDrawer({
           price_total: total,
           deposit_amount: depositToday,
           remaining_balance: remainingBalance,
-          order_id: flow.orderId || undefined,
+          order_id: flow.orderId || createdOrderId || undefined,
         },
       }),
-    [depositToday, flow.orderId, form.selectedPackageId, remainingBalance, safeConfig, selectedAddOnIds, total],
+    [
+      createdOrderId,
+      depositToday,
+      flow.orderId,
+      form.selectedPackageId,
+      remainingBalance,
+      safeConfig,
+      selectedAddOnIds,
+      total,
+    ],
   );
   const generatedConfigText = configGeneratorOutput.configSentence;
   const handoffChecklist: HandoffChecklist = configGeneratorOutput.handoffChecklist;
@@ -533,10 +551,10 @@ export function CheckoutDrawer({
       addon_ids: selectedAddOnIds,
       price_total: total,
       deposit_amount: depositToday,
-      order_id: flow.orderId || undefined,
+      order_id: flow.orderId || createdOrderId || undefined,
       session_id: null,
     }),
-    [depositToday, flow.orderId, form.selectedPackageId, selectedAddOnIds, total],
+    [createdOrderId, depositToday, flow.orderId, form.selectedPackageId, selectedAddOnIds, total],
   );
 
   function trackCheckoutEvent(
@@ -623,6 +641,7 @@ export function CheckoutDrawer({
     setBookingTimeLabel("{Time}");
     setResendNotice("");
     setActiveSessionId("");
+    setCreatedOrderId("");
     setSafeConfig(buildInitialSafeConfig("external_link"));
     setIsSubmittingConfig(false);
     setSubmitStatus("idle");
@@ -797,19 +816,50 @@ export function CheckoutDrawer({
   }
 
   /**
+   * Creates a persistent order row before checkout so onboarding can reference a stable id.
+   */
+  async function requestOrderCreation(): Promise<string> {
+    const response = await fetch(config.checkoutEndpoints.orderCreate.path, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        product_id: PRODUCTS.detailflow.product_id,
+        tier_id: form.selectedPackageId,
+        addon_ids: selectedAddOnIds,
+        customer_email: form.customerEmail.trim(),
+      }),
+    });
+
+    if (!response.ok) {
+      const message = await parseApiError(response, "Could not create order.");
+      throw new Error(message);
+    }
+
+    const data = (await response.json()) as Partial<OrderCreateResponse>;
+    const orderId = data.order_id?.trim();
+    if (!orderId) {
+      throw new Error("Order create response is missing order_id.");
+    }
+    return orderId;
+  }
+
+  /**
    * Requests a checkout session and order id from the configured create endpoint.
    */
-  async function requestCheckoutSession(): Promise<CheckoutCreateResponse> {
+  async function requestCheckoutSession(orderId: string): Promise<CheckoutCreateResponse> {
     const response = await fetch(config.checkoutEndpoints.create.path, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        productId: "detailflow",
+        productId: PRODUCTS.detailflow.product_id,
         tierId: form.selectedPackageId,
         addonIds: selectedAddOnIds,
         customerEmail: form.customerEmail.trim(),
+        orderId,
       }),
     });
 
@@ -834,8 +884,18 @@ export function CheckoutDrawer({
    * Verifies checkout status from the configured verify endpoint.
    */
   async function requestCheckoutVerification(sessionId: string): Promise<CheckoutVerifyResponse> {
+    const verifyPath = config.checkoutEndpoints.verify?.path;
+    if (!verifyPath) {
+      return {
+        paid: true,
+        status: "paid",
+        orderId: createdOrderId || undefined,
+        sessionId,
+      };
+    }
+
     const response = await fetch(
-      `${config.checkoutEndpoints.verify.path}?session_id=${encodeURIComponent(sessionId)}`,
+      `${verifyPath}?session_id=${encodeURIComponent(sessionId)}`,
       {
         method: "GET",
       },
@@ -886,8 +946,14 @@ export function CheckoutDrawer({
     setIsAfterPurchaseOpen(true);
 
     try {
+      let nextOrderId = createdOrderId;
+      if (!nextOrderId) {
+        nextOrderId = await requestOrderCreation();
+        setCreatedOrderId(nextOrderId);
+      }
+
       dispatchFlow({ type: "REDIRECT_TO_STRIPE" });
-      const checkout = await requestCheckoutSession();
+      const checkout = await requestCheckoutSession(nextOrderId);
       setActiveSessionId(checkout.sessionId);
       trackCheckoutEvent("stripe_redirected", { stripe_url_present: Boolean(checkout.url) });
 
@@ -904,7 +970,7 @@ export function CheckoutDrawer({
 
       dispatchFlow({
         type: "PAYMENT_CONFIRMED",
-        orderId: verification.orderId || checkout.orderId || generateOrderId(),
+        orderId: verification.orderId || checkout.orderId || nextOrderId || fallbackOrderId,
       });
     } catch (error) {
       dispatchFlow({
@@ -940,7 +1006,7 @@ export function CheckoutDrawer({
 
       dispatchFlow({
         type: "PAYMENT_CONFIRMED",
-        orderId: verification.orderId || generateOrderId(),
+        orderId: verification.orderId || createdOrderId || fallbackOrderId,
       });
     } catch (error) {
       dispatchFlow({
@@ -969,33 +1035,19 @@ export function CheckoutDrawer({
     setSubmitMessage("");
 
     try {
-      const fallbackName = safeConfig.business_name.trim() || "DetailFlow Customer";
-      const fallbackEmail = safeConfig.contact_email.trim() || configGeneratorOutput.projectEmail;
-      const drivePlaceholderUrl = "https://drive.google.com/drive/my-drive";
+      const orderId = flow.orderId || createdOrderId || fallbackOrderId;
+      const fallbackUploadUrl = "https://drive.google.com/drive/my-drive";
+      const assetLink = isHttpUrl(secureUploadUrl) ? secureUploadUrl : fallbackUploadUrl;
 
-      const response = await fetch("/api/orders", {
+      const response = await fetch(config.checkoutEndpoints.onboardingSubmit.path, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          orderId: flow.orderId || fallbackOrderId,
-          customer: {
-            name: fallbackName,
-            email: fallbackEmail,
-          },
-          packageId: form.selectedPackageId,
-          packageLabel: selectedTierLabel,
-          readinessPath: form.readinessPath,
-          readinessChecks: form.readinessChecks,
-          depositType: "deposit",
-          addOnSummary: selectedAddOnLabels,
-          generatedConfigJson: generatedConfigText,
-          safeConfig: configGeneratorOutput.configObject,
-          handoffChecklist,
-          assetLinks: [drivePlaceholderUrl],
-          secretsNotice:
-            "Please don’t email API keys or passwords. We’ll never ask for them by email.",
+          order_id: orderId,
+          config_json: configGeneratorOutput.configObject,
+          asset_links: [assetLink],
         }),
       });
 
@@ -1009,15 +1061,15 @@ export function CheckoutDrawer({
       }
 
       const message = data?.warning
-        ? `Configuration submitted. ${data.warning}`
-        : "Configuration submitted successfully.";
+        ? `Setup details submitted. ${data.warning}`
+        : "Setup details submitted successfully.";
       setSubmitStatus("success");
       setSubmitMessage(message);
-      toast.success("Configuration submitted");
+      toast.success("Setup details submitted");
     } catch {
       setSubmitStatus("error");
-      setSubmitMessage("Configuration submit failed. Please try again.");
-      toast.error("Configuration submit failed");
+      setSubmitMessage("Setup details submit failed. Please try again.");
+      toast.error("Setup details submit failed");
     } finally {
       setIsSubmittingConfig(false);
     }
@@ -1207,9 +1259,21 @@ export function CheckoutDrawer({
                     Endpoint Contract (Review)
                   </h3>
                   <div className="space-y-4">
-                    {[config.checkoutEndpoints.create, config.checkoutEndpoints.verify].map((endpoint) => (
+                    {[
+                      config.checkoutEndpoints.orderCreate,
+                      config.checkoutEndpoints.create,
+                      config.checkoutEndpoints.onboardingSubmit,
+                      ...(config.checkoutEndpoints.verify ? [config.checkoutEndpoints.verify] : []),
+                    ].map((endpoint) => (
                       <div key={`${endpoint.method}-${endpoint.path}`} className="rounded-md border border-border p-3">
-                        <p className="text-sm font-medium">{endpoint.label}</p>
+                        <p className="text-sm font-medium">
+                          {endpoint.label}
+                          {endpoint.optional ? (
+                            <span className="ml-2 text-xs font-normal text-muted-foreground">
+                              (optional)
+                            </span>
+                          ) : null}
+                        </p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {endpoint.method} {endpoint.path}
                         </p>

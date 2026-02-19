@@ -364,7 +364,7 @@ export function SuccessDrawer({
                   disabled={isSubmittingConfiguration}
                   onClick={onSubmitConfiguration}
                 >
-                  {isSubmittingConfiguration ? "Submitting..." : "Submit Configuration"}
+                  {isSubmittingConfiguration ? "Submitting..." : "Submit setup details"}
                 </Button>
                 {submitStatus !== "idle" && (
                   <p className={`mt-2 text-xs ${submitStatus === "error" ? "text-destructive" : "text-muted-foreground"}`}>
