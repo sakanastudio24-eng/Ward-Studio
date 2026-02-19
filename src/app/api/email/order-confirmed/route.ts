@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sendOrderConfirmedBundle, type OrderSummary } from "../../../../../lib/email";
+import { sendOrderConfirmedBundle, type OrderSummary } from "../../../../lib/email";
 
 type OrderConfirmedRequestBody = {
   orderId?: string;

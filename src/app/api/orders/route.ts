@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import {
   sendBuyerConfigSubmissionAck,
   sendInternalConfigSubmission,
-} from "../../../../lib/email";
+} from "../../../lib/email";
 
 interface OrderRequestBody {
   orderId?: string;
