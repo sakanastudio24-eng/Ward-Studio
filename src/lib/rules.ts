@@ -36,6 +36,15 @@ function buildResult(errors: string[] = [], notices: string[] = []): ValidationR
   };
 }
 
+function isHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Validates booking inputs required in the package step.
  */
@@ -49,9 +58,15 @@ export function validatePackageStep(input: {
   if (input.bookingMode === "external_link" && !input.bookingUrl.trim()) {
     errors.push("External booking mode requires a booking URL.");
   }
+  if (input.bookingMode === "external_link" && input.bookingUrl.trim() && !isHttpUrl(input.bookingUrl)) {
+    errors.push("External booking URL must be a valid http or https URL.");
+  }
 
   if (input.bookingMode === "iframe" && !input.bookingEmbedUrl.trim()) {
     errors.push("Iframe booking mode requires an embed URL.");
+  }
+  if (input.bookingMode === "iframe" && input.bookingEmbedUrl.trim() && !isHttpUrl(input.bookingEmbedUrl)) {
+    errors.push("Iframe embed URL must be a valid http or https URL.");
   }
 
   return buildResult(errors);
