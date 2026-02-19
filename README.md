@@ -73,6 +73,28 @@ Pricing/rules are centralized in:
 - `src/lib/pricing.ts`
 - `src/lib/rules.ts`
 
+## Server-Only Order Emails
+
+Order emails are server-only and centralized in:
+- `src/lib/email.ts`
+
+Payment-confirmed trigger:
+- `GET /api/checkout/verify?session_id=...`
+- On paid status, server sends:
+  - client "Order Confirmed + Next Steps"
+  - internal "New Order"
+- Includes in-memory dedupe by order id for v1.
+
+Testing endpoint:
+- `POST /api/email/order-confirmed`
+- Supports server-side/manual testing for order-confirmed emails.
+
+Config submission notifications:
+- `POST /api/orders`
+- Sends internal config-submission email.
+- Optional buyer acknowledgement can be enabled with:
+  - `ORDERS_SEND_BUYER_ACK=true`
+
 ## Success Page Verification + Confetti
 
 Success route:
@@ -80,11 +102,11 @@ Success route:
 - `src/app/products/success/SuccessClient.tsx`
 
 Verification endpoint:
-- `src/app/api/stripe/session/route.ts`
+- `src/app/api/checkout/verify/route.ts`
 
 Behavior:
 - Success page starts with `Confirming payment...`
-- Calls `/api/stripe/session?session_id=...`
+- Calls `/api/checkout/verify?session_id=...`
 - On verified paid state and `celebrate=1`, launches confetti once per browser session using:
   - `sessionStorage` key: `ward_welcome_confetti_shown`
 
@@ -92,11 +114,12 @@ Behavior:
 
 Set these in `.env.local` as needed:
 
-- `STRIPE_LINK_CONSULTATION=...`
-- `STRIPE_LINK_BUILD_DEPOSIT=...`
-- `STRIPE_LINK_HOLD_SPOT=...`
+- `RESEND_API_KEY=...`
+- `EMAIL_FROM="Ward Studio <onboarding@resend.dev>"`
+- `EMAIL_INTERNAL_TO=owner@yourdomain.com`
 - `NEXT_PUBLIC_STRATEGY_CALL_URL=...`
 - `NEXT_PUBLIC_SECURE_UPLOAD_URL=...`
+- `ORDERS_SEND_BUYER_ACK=false` (set to `true` to send buyer config-submission ack)
 
 ## Git remote
 

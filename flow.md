@@ -26,7 +26,7 @@ Step sequence:
    - Select **Readiness Add-Ons**
 3. `payment`
    - View `Total`, `Deposit Today`, `Remaining`
-   - Trigger simulated checkout transition
+   - Trigger server checkout create + verify sequence
    - Open policy dialogs (`Terms`, `Refund`)
 
 Post-purchase:
@@ -88,6 +88,29 @@ Safe config generation:
 
 Submission endpoint currently used by success drawer:
 - `POST /src/app/api/orders/route.ts`
+- Sends internal config-submission notification
+- Optional buyer acknowledgement via `ORDERS_SEND_BUYER_ACK=true`
+
+## Server-Only Email Triggers
+
+Shared mailer module:
+- `/src/lib/email.ts`
+
+Payment-confirmed email trigger:
+- `GET /src/app/api/checkout/verify/route.ts`
+- On paid verification:
+  - sends buyer "Next Steps" email
+  - sends internal "New Order" email
+  - applies in-memory dedupe by `orderId` in v1
+
+Manual/testing order-confirmed route:
+- `POST /src/app/api/email/order-confirmed/route.ts`
+
+Future booking-confirmed contract:
+- Implemented in `src/lib/email.ts` types/functions for later webhook wiring:
+  - `sendBookingReminder`
+  - `sendInternalBookingConfirmed`
+  - `sendBookingConfirmedBundle`
 
 ## Analytics + Confetti
 
@@ -104,4 +127,3 @@ Confetti trigger:
 
 - Terms: `/src/app/terms/page.tsx`
 - Success route: `/src/app/products/success/page.tsx`
-
