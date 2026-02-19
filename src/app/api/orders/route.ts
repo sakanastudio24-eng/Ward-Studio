@@ -1,5 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
+import {
+  sendBuyerConfigSubmissionAck,
+  sendInternalConfigSubmission,
+} from "../../../../lib/email";
 
 interface OrderRequestBody {
   orderId?: string;
@@ -31,7 +35,6 @@ interface OrderRequestBody {
   };
 }
 
-const RESEND_ENDPOINT = "https://api.resend.com/emails";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SENSITIVE_KEY_REGEX = /(api[_-]?key|token|password|secret|webhook)/i;
 
@@ -83,55 +86,11 @@ function sanitizeSafeConfig(input: unknown): {
   };
 }
 
-async function sendTemplatedEmail(
-  resendApiKey: string,
-  from: string,
-  to: string[],
-  templateId: string,
-  subject: string,
-  variables: Record<string, string>,
-) {
-  const response = await fetch(RESEND_ENDPOINT, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      "Content-Type": "application/json",
-      "Idempotency-Key": randomUUID(),
-    },
-    body: JSON.stringify({
-      from,
-      to,
-      subject,
-      template: {
-        id: templateId,
-        variables,
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    const details = await response.text();
-    throw new Error(details || response.statusText);
-  }
-}
-
+/**
+ * Receives post-purchase configuration submission and notifies internal owner inbox.
+ * Buyer acknowledgement is optional and controlled by ORDERS_SEND_BUYER_ACK=true.
+ */
 export async function POST(request: Request) {
-  const resendApiKey = process.env.RESEND_API_KEY;
-  const ownerEmail = process.env.ORDERS_OWNER_EMAIL;
-  const ownerTemplateId = process.env.RESEND_ORDER_OWNER_TEMPLATE_ID;
-  const buyerTemplateId = process.env.RESEND_ORDER_BUYER_TEMPLATE_ID;
-  const fromEmail = process.env.ORDERS_FROM_EMAIL || "onboarding@resend.dev";
-
-  if (!resendApiKey || !ownerEmail || !ownerTemplateId || !buyerTemplateId) {
-    return NextResponse.json(
-      {
-        error:
-          "Server order email config is missing. Set RESEND_API_KEY, ORDERS_OWNER_EMAIL, RESEND_ORDER_OWNER_TEMPLATE_ID, and RESEND_ORDER_BUYER_TEMPLATE_ID.",
-      },
-      { status: 500 },
-    );
-  }
-
   const payload = (await request.json().catch(() => null)) as OrderRequestBody | null;
   if (!payload) {
     return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
@@ -144,11 +103,8 @@ export async function POST(request: Request) {
   const customerName = getString(payload.customer?.name) || safeBusinessName || "DetailFlow Customer";
   const customerEmail = getString(payload.customer?.email) || safeContactEmail || "pending@example.com";
   const packageLabel = getString(payload.packageLabel);
-  const packageId = getString(payload.packageId);
-  const readinessPath = getString(payload.readinessPath);
-  const depositType = getString(payload.depositType);
   const generatedConfigJson = getString(payload.generatedConfigJson);
-  const secretsNotice = getString(payload.secretsNotice);
+  const secretsNotice = getString(payload.secretsNotice) || "Secrets not included.";
   const addOnSummary = toStringList(payload.addOnSummary);
   const assetLinks = toStringList(payload.assetLinks);
   const handoffChecklist =
@@ -159,11 +115,10 @@ export async function POST(request: Request) {
   const handoffUpload = toStringList(handoffChecklist.upload_files);
   const handoffCall = toStringList(handoffChecklist.during_call);
   const handoffRulesText = getString(handoffChecklist.rules_text);
-  const safeConfigJson = JSON.stringify(safeConfig, null, 2);
   const sensitiveWarning =
     strippedKeys.length > 0
       ? `Sensitive fields were removed from safe config: ${strippedKeys.join(", ")}.`
-      : "";
+      : "No sensitive fields detected.";
 
   if (!customerName || !customerEmail || !packageLabel || !generatedConfigJson) {
     return NextResponse.json(
@@ -188,11 +143,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const readinessChecks = payload.readinessChecks || {};
-  const readinessSummary = `identity=${Boolean(readinessChecks.identity)}, photos=${Boolean(
-    readinessChecks.photos,
-  )}, bookingMethod=${Boolean(readinessChecks.bookingMethod)}`;
-
   const addOnSummaryText = addOnSummary.length > 0 ? addOnSummary.join(", ") : "None";
   const assetLinksText = assetLinks.length > 0 ? assetLinks.join("\n") : "None provided";
   const handoffSummary = [
@@ -204,57 +154,44 @@ export async function POST(request: Request) {
     .filter(Boolean)
     .join("\n");
   const submittedAt = new Date().toISOString();
+  const buyerAckEnabled = process.env.ORDERS_SEND_BUYER_ACK === "true";
+  let buyerAckSent = false;
 
   try {
-    await sendTemplatedEmail(
-      resendApiKey,
-      fromEmail,
-      [ownerEmail],
-      ownerTemplateId,
-      `New DetailFlow Order ${orderId}`,
-      {
-        ORDER_ID: orderId,
-        CUSTOMER_NAME: customerName,
-        CUSTOMER_EMAIL: customerEmail,
-        PACKAGE_LABEL: packageLabel,
-        PACKAGE_ID: packageId,
-        DEPOSIT_TYPE: depositType,
-        READINESS_PATH: readinessPath,
-        READINESS_CHECKS: readinessSummary,
-        ADD_ONS: addOnSummaryText,
-        ASSET_LINKS: assetLinksText,
-        GENERATED_CONFIG_JSON: generatedConfigJson,
-        SAFE_CONFIG_JSON: safeConfigJson,
-        HANDOFF_SUMMARY: handoffSummary,
-        SAFE_CONFIG_WARNING: sensitiveWarning || "No sensitive fields detected.",
-        SECRETS_NOTICE: secretsNotice || "Secrets not included.",
-        SUBMITTED_AT: submittedAt,
-      },
-    );
+    await sendInternalConfigSubmission({
+      orderId,
+      customerName,
+      customerEmail,
+      packageLabel,
+      addOnSummaryText,
+      generatedConfigJson,
+      handoffSummary,
+      assetLinksText,
+      safeConfigWarning: sensitiveWarning,
+      secretsNotice,
+      submittedAt,
+    });
 
-    await sendTemplatedEmail(
-      resendApiKey,
-      fromEmail,
-      [customerEmail],
-      buyerTemplateId,
-      `Your DetailFlow submission ${orderId}`,
-      {
-        ORDER_ID: orderId,
-        CUSTOMER_NAME: customerName,
-        PACKAGE_LABEL: packageLabel,
-        DEPOSIT_TYPE: depositType,
-        ADD_ONS: addOnSummaryText,
-        GENERATED_CONFIG_JSON: generatedConfigJson,
-        HANDOFF_SUMMARY: handoffSummary,
-        SAFE_CONFIG_WARNING: sensitiveWarning || "No sensitive fields detected.",
-        SECRETS_NOTICE: secretsNotice || "Secrets not included.",
-        SUBMITTED_AT: submittedAt,
-      },
-    );
+    if (buyerAckEnabled) {
+      await sendBuyerConfigSubmissionAck({
+        orderId,
+        customerName,
+        customerEmail,
+        packageLabel,
+        addOnSummaryText,
+        generatedConfigJson,
+        handoffSummary,
+        assetLinksText,
+        safeConfigWarning: sensitiveWarning,
+        secretsNotice,
+        submittedAt,
+      });
+      buyerAckSent = true;
+    }
   } catch (error) {
     return NextResponse.json(
       {
-        error: `Email provider rejected order submission: ${
+        error: `Email provider rejected config submission: ${
           error instanceof Error ? error.message : "Unknown error"
         }`,
       },
@@ -265,6 +202,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     orderId,
-    ...(sensitiveWarning ? { warning: sensitiveWarning } : {}),
+    buyerAckSent,
+    warning: sensitiveWarning,
   });
 }
