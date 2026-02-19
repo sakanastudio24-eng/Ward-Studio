@@ -175,7 +175,6 @@ type DetailflowFormState = {
   };
 };
 
-type SimulatedFailureMode = "none" | "payment_failed" | "verification_error";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
@@ -287,7 +286,7 @@ function buildDetailflowSummary(
 }
 
 /**
- * Generates a temporary order id for the simulated checkout flow.
+ * Generates a temporary order id for the placeholder checkout flow.
  */
 function generateOrderId(): string {
   const year = new Date().getFullYear();
@@ -322,7 +321,6 @@ export function CheckoutDrawer({
   const [bookingDateLabel, setBookingDateLabel] = useState("{Date}");
   const [bookingTimeLabel, setBookingTimeLabel] = useState("{Time}");
   const [resendNotice, setResendNotice] = useState("");
-  const [failureMode, setFailureMode] = useState<SimulatedFailureMode>("none");
   const [safeConfig, setSafeConfig] = useState<SafeConfigInput>(() => buildInitialSafeConfig("external_link"));
   const [isSubmittingConfig, setIsSubmittingConfig] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
@@ -498,7 +496,6 @@ export function CheckoutDrawer({
     flow.primaryState === "redirecting_to_stripe" ||
     flow.primaryState === "return_success_loading" ||
     flow.transitionLocked;
-  const showTestingOptions = process.env.NODE_ENV !== "production";
 
   const analyticsSharedProps = useMemo(
     () => ({
@@ -618,7 +615,6 @@ export function CheckoutDrawer({
     setBookingDateLabel("{Date}");
     setBookingTimeLabel("{Time}");
     setResendNotice("");
-    setFailureMode("none");
     setSafeConfig(buildInitialSafeConfig("external_link"));
     setIsSubmittingConfig(false);
     setSubmitStatus("idle");
@@ -783,34 +779,23 @@ export function CheckoutDrawer({
   }
 
   /**
-   * Resolves the simulated verification state to success or failure paths.
+   * Marks checkout as confirmed after placeholder verification completes.
    */
-  function finishVerification(mode: SimulatedFailureMode) {
-    if (mode === "payment_failed") {
-      dispatchFlow({ type: "PAYMENT_FAILED", errorMessage: "Payment was not captured. Please retry checkout." });
-      return;
-    }
-    if (mode === "verification_error") {
-      dispatchFlow({
-        type: "VERIFICATION_ERROR",
-        errorMessage: "Verification service returned an error. Please retry in a moment.",
-      });
-      return;
-    }
+  function finishVerification() {
     dispatchFlow({ type: "PAYMENT_CONFIRMED", orderId: generateOrderId() });
   }
 
   /**
    * Queues delayed verification to mimic async return from checkout.
    */
-  function runVerification(mode: SimulatedFailureMode) {
+  function runVerification() {
     queueTimeout(() => {
-      finishVerification(mode);
+      finishVerification();
     }, 1300);
   }
 
   /**
-   * Starts the simulated payment lifecycle and opens the success drawer.
+   * Starts the placeholder payment lifecycle and opens the success drawer.
    */
   function handlePayDeposit() {
     if (transitionBusy) return;
@@ -848,19 +833,12 @@ export function CheckoutDrawer({
 
     queueTimeout(() => {
       dispatchFlow({ type: "START_RETURN_CONFIRM" });
-      runVerification(failureMode);
-      setFailureMode("none");
+      runVerification();
     }, 720);
 
     setIsOpen(false);
     setIsAfterPurchaseOpen(true);
-
-    trackCheckoutEvent("stripe_redirected", {
-      stripe_url_present: Boolean(config.stripeCheckoutUrl),
-    });
-    if (config.stripeCheckoutUrl) {
-      window.open(config.stripeCheckoutUrl, "_blank", "noopener,noreferrer");
-    }
+    trackCheckoutEvent("stripe_redirected", { stripe_url_present: false });
   }
 
   /**
@@ -869,7 +847,7 @@ export function CheckoutDrawer({
   function handleRetryVerification() {
     clearScheduledTimeouts();
     dispatchFlow({ type: "RETRY_VERIFICATION" });
-    runVerification(failureMode);
+    runVerification();
   }
 
   /**
@@ -1108,7 +1086,7 @@ export function CheckoutDrawer({
                     Stripe Checkout
                   </h3>
                   <p className="mb-3 text-sm text-muted-foreground">
-                    Simulated checkout flow for pre-analytics implementation.
+                    Continue to reserve your build slot and trigger the post-purchase handoff flow.
                   </p>
 
                   <div className="mb-4 flex flex-wrap gap-2">
@@ -1248,9 +1226,6 @@ export function CheckoutDrawer({
             error_message: "Copy configuration failed.",
           });
         }}
-        testingMode={failureMode}
-        onTestingModeChange={setFailureMode}
-        showTestingOptions={showTestingOptions}
         safeConfig={safeConfig}
         onSafeConfigChange={setSafeConfig}
         handoffChecklist={handoffChecklist}

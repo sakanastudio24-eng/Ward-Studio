@@ -45,9 +45,6 @@ export interface SuccessDrawerProps {
   onSupportClick: () => void;
   onConfigCopied: () => void;
   onConfigCopyFailed: () => void;
-  testingMode: "none" | "payment_failed" | "verification_error";
-  onTestingModeChange: (mode: "none" | "payment_failed" | "verification_error") => void;
-  showTestingOptions: boolean;
   safeConfig: SafeConfigInput;
   onSafeConfigChange: (next: SafeConfigInput) => void;
   handoffChecklist: HandoffChecklist;
@@ -102,9 +99,6 @@ export function SuccessDrawer({
   onSupportClick,
   onConfigCopied,
   onConfigCopyFailed,
-  testingMode,
-  onTestingModeChange,
-  showTestingOptions,
   safeConfig,
   onSafeConfigChange,
   handoffChecklist,
@@ -477,41 +471,6 @@ export function SuccessDrawer({
             </>
           )}
 
-          {showTestingOptions && (
-            <section className="rounded-lg border border-border p-4">
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Testing options
-              </h3>
-              <p className="mb-3 text-sm text-muted-foreground">Choose what result to test next.</p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={testingMode === "none" ? "default" : "outline"}
-                  className={testingMode === "none" ? "bg-orange-500 text-white hover:bg-orange-600" : ""}
-                  onClick={() => onTestingModeChange("none")}
-                >
-                  Success
-                </Button>
-                <Button
-                  variant={testingMode === "payment_failed" ? "default" : "outline"}
-                  className={
-                    testingMode === "payment_failed" ? "bg-orange-500 text-white hover:bg-orange-600" : ""
-                  }
-                  onClick={() => onTestingModeChange("payment_failed")}
-                >
-                  Payment issue
-                </Button>
-                <Button
-                  variant={testingMode === "verification_error" ? "default" : "outline"}
-                  className={
-                    testingMode === "verification_error" ? "bg-orange-500 text-white hover:bg-orange-600" : ""
-                  }
-                  onClick={() => onTestingModeChange("verification_error")}
-                >
-                  Verification issue
-                </Button>
-              </div>
-            </section>
-          )}
         </div>
 
         <DrawerFooter>
