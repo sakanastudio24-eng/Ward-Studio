@@ -47,6 +47,10 @@ export const initialCheckoutFlowContext: CheckoutFlowContext = {
   transitionLocked: false,
 };
 
+/**
+ * Reducer for checkout state transitions used by DetailFlow purchase flow.
+ * Keeps network/verification states and interaction markers centralized.
+ */
 export function checkoutFlowReducer(
   state: CheckoutFlowContext,
   action: CheckoutFlowAction,

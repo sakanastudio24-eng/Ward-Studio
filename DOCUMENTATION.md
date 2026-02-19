@@ -1,5 +1,8 @@
 # Ward Studio Portfolio - Technical Documentation
 
+Quick flow reference:
+- `flow.md` (purchase drawer architecture + state transitions)
+
 ## Project Overview
 
 This is a professional contractor portfolio website for Ward Studio, showcasing capabilities in both design and development work. The site features a minimal, typography-focused design with advanced interactions, SEO optimization, and keyboard navigation.

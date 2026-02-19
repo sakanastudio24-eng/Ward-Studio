@@ -68,12 +68,18 @@ function isManagementMode(value: string): value is ManagementMode {
   return value === "self-managed" || value === "ward-managed";
 }
 
+/**
+ * Type guard to route config into the DetailFlow staged drawer variant.
+ */
 function isDetailflowAddonConfig(
   config: ProductPricingConfig | DetailflowAddonConfig,
 ): config is DetailflowAddonConfig {
   return "pricing" in config;
 }
 
+/**
+ * Simple one-step options + confirmation flow used by non-DetailFlow products.
+ */
 function ProductPurchaseDrawerSimple({
   productName,
   config,
@@ -362,6 +368,9 @@ function ProductPurchaseDrawerSimple({
   );
 }
 
+/**
+ * Public entry for product purchase UI. Delegates to detailflow-pro or simple variant.
+ */
 export function ProductPurchaseDrawer({
   productName,
   config,

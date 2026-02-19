@@ -8,10 +8,16 @@ import type {
 
 const ANONYMOUS_ID_KEY = "ward_analytics_anonymous_id";
 
+/**
+ * Global analytics feature flag controlled by NEXT_PUBLIC_ANALYTICS_ENABLED.
+ */
 function analyticsEnabled(): boolean {
   return process.env.NEXT_PUBLIC_ANALYTICS_ENABLED !== "false";
 }
 
+/**
+ * Creates a best-effort anonymous id for client analytics correlation.
+ */
 function createAnonymousId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
@@ -20,6 +26,9 @@ function createAnonymousId(): string {
   return `anon_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
+/**
+ * Returns persisted anonymous id or creates one on first client event.
+ */
 function getAnonymousId(): string {
   if (typeof window === "undefined") {
     return "server-anonymous";
@@ -35,6 +44,9 @@ function getAnonymousId(): string {
   return nextId;
 }
 
+/**
+ * Sends non-blocking telemetry events to /api/analytics/events.
+ */
 export async function track(
   event: AnalyticsEventName,
   props: Partial<AnalyticsSharedProps> & Record<string, unknown>,

@@ -44,11 +44,17 @@ export type ConfigGeneratorOutput = {
   projectEmail: string;
 };
 
+/**
+ * Trims and removes empty values from list-like fields.
+ */
 function normalizeList(values?: string[]): string[] {
   if (!Array.isArray(values)) return [];
   return values.map((value) => value.trim()).filter(Boolean);
 }
 
+/**
+ * Normalizes the safe onboarding payload before config generation.
+ */
 function cleanSafeInput(input: SafeConfigInput): SafeConfigInput {
   return {
     ...input,
@@ -69,6 +75,9 @@ function cleanSafeInput(input: SafeConfigInput): SafeConfigInput {
   };
 }
 
+/**
+ * Generates a slug for deterministic ids and generated email aliases.
+ */
 function slugify(value: string): string {
   return value
     .toLowerCase()
@@ -76,16 +85,25 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+/**
+ * Flattens rich text input into a sentence-safe single line.
+ */
 function flattenForSentence(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
 
+/**
+ * Builds the project alias email for internal handoff tracking.
+ */
 function buildProjectEmail(businessName: string, orderId?: string): string {
   const businessSlug = slugify(businessName) || "detailflow";
   const orderSlug = slugify(orderId || "pending-order");
   return `${businessSlug}.${orderSlug}@projects.wardstudio.com`;
 }
 
+/**
+ * Builds next-step checklist content based on selected tier and add-ons.
+ */
 function buildHandoffChecklist(
   safe: SafeConfigInput,
   selection: CheckoutSelectionInput,
@@ -150,6 +168,9 @@ function buildHandoffChecklist(
   };
 }
 
+/**
+ * Produces the safe config JSON payload, checklist, and copy-ready summary sentence.
+ */
 export function generateDetailflowConfigAndHandoff(input: {
   safe: SafeConfigInput;
   selection: CheckoutSelectionInput;

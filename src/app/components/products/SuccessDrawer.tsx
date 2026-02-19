@@ -61,6 +61,9 @@ export interface SuccessDrawerProps {
 const isErrorState = (state: CheckoutPrimaryState) =>
   state === "payment_failed" || state === "verification_error";
 
+/**
+ * Normalizes comma/newline textarea input into trimmed list values.
+ */
 function parseLineList(value: string): string[] {
   return value
     .split(/\n|,/)
@@ -68,6 +71,10 @@ function parseLineList(value: string): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Post-purchase right-side drawer shown after payment verification.
+ * Handles booking CTA, onboarding inputs, config copy, and support actions.
+ */
 export function SuccessDrawer({
   open,
   onOpenChange,

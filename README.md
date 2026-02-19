@@ -54,10 +54,14 @@ Example:
 
 ## Product Purchase Drawer Flow
 
+Flow reference:
+- `flow.md`
+
 DetailFlow and InkBot purchase flows live under:
 - `src/app/components/products/ProductPurchaseDrawer.tsx`
 - `src/app/components/products/CheckoutDrawer.tsx` (DetailFlow staged flow)
-- `src/app/components/products/PlanAndAddons.tsx`
+- `src/app/components/products/PlanSelector.tsx`
+- `src/app/components/products/AddonSelector.tsx`
 - `src/app/components/products/PriceSummary.tsx`
 
 DetailFlow flow behavior:

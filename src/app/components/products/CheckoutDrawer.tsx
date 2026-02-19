@@ -173,6 +173,9 @@ type DetailflowFormState = {
 
 type SimulatedFailureMode = "none" | "payment_failed" | "verification_error";
 
+/**
+ * Seeds a safe config object used by the post-purchase handoff form.
+ */
 function buildInitialSafeConfig(bookingMode: BookingMode): SafeConfigInput {
   return {
     business_name: "",
@@ -193,6 +196,9 @@ function buildInitialSafeConfig(bookingMode: BookingMode): SafeConfigInput {
   };
 }
 
+/**
+ * Builds form defaults for a selected tier while preserving user-entered fields.
+ */
 function buildDetailflowPresetState(
   config: DetailflowAddonConfig,
   packageId: DetailflowTierId,
@@ -233,6 +239,9 @@ function buildDetailflowPresetState(
   };
 }
 
+/**
+ * Converts current selections into user-facing summary lines for readiness review.
+ */
 function buildDetailflowSummary(
   config: DetailflowAddonConfig,
   form: DetailflowFormState,
@@ -270,12 +279,19 @@ function buildDetailflowSummary(
   return summary;
 }
 
+/**
+ * Generates a temporary order id for the simulated checkout flow.
+ */
 function generateOrderId(): string {
   const year = new Date().getFullYear();
   const sequence = `${Math.floor(Math.random() * 9000) + 1000}`;
   return `DF-${year}-${sequence}`;
 }
 
+/**
+ * Main controller for the DetailFlow staged checkout:
+ * package -> readiness -> payment, then post-purchase success drawer.
+ */
 export function CheckoutDrawer({
   productName,
   config,
@@ -629,6 +645,9 @@ export function CheckoutDrawer({
     setForm((prev) => buildDetailflowPresetState(config, packageId, prev));
   }
 
+  /**
+   * Toggles a general add-on and emits analytics for pricing behavior.
+   */
   function handleGeneralAddOnToggle(addOnId: DetailflowGeneralAddonId, checked: boolean) {
     const availability = getAddonAvailability(form.selectedPackageId, addOnId);
     if (!availability.enabled) return;
@@ -663,6 +682,9 @@ export function CheckoutDrawer({
     });
   }
 
+  /**
+   * Toggles readiness-focused add-ons used in the readiness step.
+   */
   function handleReadinessAddOnToggle(addOnId: DetailflowReadinessAddonId, checked: boolean) {
     const availability = getAddonAvailability(form.selectedPackageId, addOnId);
     if (!availability.enabled) return;
@@ -697,6 +719,9 @@ export function CheckoutDrawer({
     });
   }
 
+  /**
+   * Validates package-step requirements before entering readiness.
+   */
   function goToReadiness() {
     const packageValidation = validatePackageStep({
       bookingMode: form.bookingMode,
@@ -711,6 +736,9 @@ export function CheckoutDrawer({
     setStep("readiness");
   }
 
+  /**
+   * Validates package + readiness constraints before entering payment.
+   */
   function goToPayment() {
     const packageValidation = validatePackageStep({
       bookingMode: form.bookingMode,
@@ -747,6 +775,9 @@ export function CheckoutDrawer({
     onGenerateConfig?.(generatedConfig);
   }
 
+  /**
+   * Resolves the simulated verification state to success or failure paths.
+   */
   function finishVerification(mode: SimulatedFailureMode) {
     if (mode === "payment_failed") {
       dispatchFlow({ type: "PAYMENT_FAILED", errorMessage: "Payment was not captured. Please retry checkout." });
@@ -762,12 +793,18 @@ export function CheckoutDrawer({
     dispatchFlow({ type: "PAYMENT_CONFIRMED", orderId: generateOrderId() });
   }
 
+  /**
+   * Queues delayed verification to mimic async return from checkout.
+   */
   function runVerification(mode: SimulatedFailureMode) {
     queueTimeout(() => {
       finishVerification(mode);
     }, 1300);
   }
 
+  /**
+   * Starts the simulated payment lifecycle and opens the success drawer.
+   */
   function handlePayDeposit() {
     if (transitionBusy) return;
 
@@ -799,12 +836,18 @@ export function CheckoutDrawer({
     }
   }
 
+  /**
+   * Retries verification from failure states without resetting form selections.
+   */
   function handleRetryVerification() {
     clearScheduledTimeouts();
     dispatchFlow({ type: "RETRY_VERIFICATION" });
     runVerification(failureMode);
   }
 
+  /**
+   * Resets flow and reopens the initial purchase drawer for a fresh run.
+   */
   function handleStartNewPurchase() {
     resetToDefaults();
     setIsAfterPurchaseOpen(false);
@@ -812,6 +855,9 @@ export function CheckoutDrawer({
     dispatchFlow({ type: "OPEN_DRAWER" });
   }
 
+  /**
+   * Submits post-purchase safe configuration details to the orders endpoint.
+   */
   async function handleSubmitConfiguration() {
     setIsSubmittingConfig(true);
     setSubmitStatus("idle");

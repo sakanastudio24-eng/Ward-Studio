@@ -2,6 +2,18 @@
 
 Date: 2026-02-15
 
+Update: 2026-02-19
+
+## In-File Function Notes + Flow Doc Pass
+
+- Added concise JSDoc notes above core purchase-flow, pricing, validation, analytics, and supabase helper functions.
+- Added `flow.md` at repository root documenting:
+  - DetailFlow 3-step drawer flow
+  - InkBot simple drawer flow
+  - reducer states
+  - pricing/rules/config/analytics integration points
+- Updated `README.md` and `DOCUMENTATION.md` to point to `flow.md`.
+
 ## Work Completed Before Next.js Migration
 
 ### Repository setup

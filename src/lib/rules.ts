@@ -25,6 +25,9 @@ export type AddonAvailability = {
 
 export type AddonConflictPair = readonly [DetailflowAddonId, DetailflowAddonId];
 
+/**
+ * Standard validation response builder used by all step validators.
+ */
 function buildResult(errors: string[] = [], notices: string[] = []): ValidationResult {
   return {
     valid: errors.length === 0,
@@ -33,6 +36,9 @@ function buildResult(errors: string[] = [], notices: string[] = []): ValidationR
   };
 }
 
+/**
+ * Validates booking inputs required in the package step.
+ */
 export function validatePackageStep(input: {
   bookingMode: BookingMode;
   bookingUrl: string;
@@ -51,6 +57,9 @@ export function validatePackageStep(input: {
   return buildResult(errors);
 }
 
+/**
+ * Validates readiness gate requirements before payment step access.
+ */
 export function validateReadinessStep(input: {
   readinessPath: ReadinessPath;
   readinessChecks: ReadinessChecks;
@@ -73,6 +82,9 @@ export function validateReadinessStep(input: {
   return buildResult(errors, notices);
 }
 
+/**
+ * Validates checkout completion status before final completion.
+ */
 export function validatePaymentStep(input: {
   stripeCheckoutPassed: boolean;
 }): ValidationResult {
@@ -83,6 +95,9 @@ export function validatePaymentStep(input: {
   return buildResult();
 }
 
+/**
+ * Returns whether an add-on is selectable for the current tier.
+ */
 export function getAddonAvailability(
   tierId: DetailflowTierId,
   addonId: DetailflowAddonId,
@@ -107,6 +122,9 @@ export function getAddonAvailability(
   return { enabled: true };
 }
 
+/**
+ * Drops add-ons that are no longer allowed after tier changes.
+ */
 export function sanitizeAddonsForTier(
   tierId: DetailflowTierId,
   selectedAddonIds: DetailflowAddonId[],
@@ -132,6 +150,9 @@ export function sanitizeAddonsForTier(
   };
 }
 
+/**
+ * Checks selected add-ons against explicit incompatibility pairs.
+ */
 export function validateAddonConflicts(input: {
   selectedAddonIds: DetailflowAddonId[];
   conflictPairs: AddonConflictPair[];
@@ -150,6 +171,9 @@ export function validateAddonConflicts(input: {
   return buildResult(errors);
 }
 
+/**
+ * Lists missing readiness items and enforces them for the ready-now path.
+ */
 export function validateRequiredItems(input: {
   readinessPath: ReadinessPath;
   readinessChecks: ReadinessChecks;

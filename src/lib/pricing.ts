@@ -90,6 +90,9 @@ export const PRICING: DetailflowPricingConfig = {
   },
 };
 
+/**
+ * Sums all selected add-ons for the active DetailFlow order.
+ */
 export function computeAddonSubtotal(
   pricing: DetailflowPricingConfig,
   selectedAddons: DetailflowAddonId[],
@@ -97,6 +100,9 @@ export function computeAddonSubtotal(
   return selectedAddons.reduce((sum, addonId) => sum + (pricing.addons[addonId] || 0), 0);
 }
 
+/**
+ * Computes the full order total using tier base price plus selected add-ons.
+ */
 export function computeTotal(
   pricing: DetailflowPricingConfig,
   tierId: DetailflowTierId,
@@ -105,6 +111,9 @@ export function computeTotal(
   return pricing.tiers[tierId].price + computeAddonSubtotal(pricing, selectedAddons);
 }
 
+/**
+ * Calculates the amount due today using base tier deposit plus 50% of add-ons.
+ */
 export function computeDepositToday(
   pricing: DetailflowPricingConfig,
   tierId: DetailflowTierId,
@@ -114,6 +123,9 @@ export function computeDepositToday(
   return pricing.tiers[tierId].deposit + addonSubtotal * 0.5;
 }
 
+/**
+ * Calculates the remaining balance after today's deposit is paid.
+ */
 export function computeRemainingBalance(
   pricing: DetailflowPricingConfig,
   tierId: DetailflowTierId,
