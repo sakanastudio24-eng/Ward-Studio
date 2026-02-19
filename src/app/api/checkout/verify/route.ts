@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getCheckoutSessionRecord } from "../../../../../lib/checkout/session-store";
 
+/**
+ * Verifies a checkout session and returns the server-trusted payment summary.
+ */
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const sessionId = (url.searchParams.get("session_id") || "").trim();
@@ -21,14 +24,15 @@ export async function GET(request: Request) {
       {
         paid: false,
         status: "not_found",
-        error: "Checkout session not found.",
+        error: "Checkout session not found. Start checkout again.",
       },
       { status: 404 },
     );
   }
 
+  const paid = record.status === "paid";
   return NextResponse.json({
-    paid: record.status === "paid",
+    paid,
     status: record.status,
     sessionId: record.sessionId,
     orderId: record.orderId,

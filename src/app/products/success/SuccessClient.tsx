@@ -7,6 +7,8 @@ type VerifyStatus = "checking" | "paid" | "failed";
 
 type VerifyResponse = {
   paid: boolean;
+  orderId?: string;
+  status?: string;
   sessionId?: string;
   error?: string;
 };
@@ -35,7 +37,7 @@ export default function SuccessClient() {
 
       try {
         const response = await fetch(
-          `/api/stripe/session?session_id=${encodeURIComponent(sessionId)}`,
+          `/api/checkout/verify?session_id=${encodeURIComponent(sessionId)}`,
           {
             method: "GET",
           },

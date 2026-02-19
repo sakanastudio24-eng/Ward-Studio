@@ -88,6 +88,18 @@ export type DetailflowReadinessAddOn = {
   includes: string[];
 };
 
+export type EndpointFieldSpec = {
+  key: string;
+  label: string;
+};
+
+export type CheckoutEndpointContract = {
+  method: "GET" | "POST";
+  path: string;
+  label: string;
+  responseFields: EndpointFieldSpec[];
+};
+
 export type DetailflowAddonConfig = {
   productKey: "detailflow";
   subtitle: string;
@@ -122,6 +134,10 @@ export type DetailflowAddonConfig = {
   };
   refundSummary: string[];
   stripeCheckoutUrl: string;
+  checkoutEndpoints: {
+    create: CheckoutEndpointContract;
+    verify: CheckoutEndpointContract;
+  };
   strategyCallUrl?: string;
   secureUploadUrl?: string;
   confirmationEmail?: string;
