@@ -51,7 +51,8 @@ export async function POST(request: Request) {
   const typedAddonIds = addonIds.filter((id): id is DetailflowAddonId => isDetailflowAddonId(id));
 
   const requestUrl = new URL(request.url);
-  const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const configuredOrigin =
+    process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.NEXT_PUBLIC_APP_URL?.trim();
   const origin = configuredOrigin || requestUrl.origin;
 
   const record = createCheckoutSessionRecord({

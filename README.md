@@ -125,6 +125,9 @@ Set these in `.env.local` as needed:
 - `RESEND_API_KEY=...`
 - `EMAIL_FROM="Ward Studio <onboarding@resend.dev>"`
 - `EMAIL_INTERNAL_TO=owner@yourdomain.com`
+- `SUPABASE_URL=...`
+- `SUPABASE_SERVICE_ROLE_KEY=...` (server only)
+- `NEXT_PUBLIC_SITE_URL=https://yourdomain.com`
 - `NEXT_PUBLIC_STRATEGY_CALL_URL=...`
 - `NEXT_PUBLIC_SECURE_UPLOAD_URL=...`
 - `ORDERS_SEND_BUYER_ACK=false` (set to `true` to send buyer config-submission ack)
