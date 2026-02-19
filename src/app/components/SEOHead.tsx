@@ -7,11 +7,11 @@ interface SEOProps {
   image?: string;
 }
 
-const DEFAULT_TITLE = "Ward Studio - Design & Engineering Contractor | Zechariah Ward";
+const DEFAULT_TITLE = "Ward Studio — Design & Engineering Systems";
 const DEFAULT_DESCRIPTION =
-  "Professional contractor specializing in design systems, brand identity, web engineering with Next.js/React, and digital integrations. Building production-ready tools for growing businesses.";
+  "Design systems, brand identity, and production-ready web engineering. Built by Zechariah Ward for growing businesses.";
 const DEFAULT_CANONICAL = "https://wardstudio.com/";
-const DEFAULT_IMAGE = "https://wardstudio.com/favicon.svg";
+const DEFAULT_IMAGE = "https://wardstudio.com/og-image.png";
 
 // upsertMetaByName: Creates or updates a meta tag selected by name.
 function upsertMetaByName(name: string, content: string) {

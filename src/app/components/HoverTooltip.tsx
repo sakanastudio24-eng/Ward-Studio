@@ -58,35 +58,36 @@ export function useHoverTooltip() {
  */
 export const tooltipMessages: Record<string, string> = {
   // Hero section
-  "let's work": "Jump to contact and start your project brief.",
-  "view work": "Scroll to case studies and shipped builds.",
-  "see my work": "Scroll to case studies and shipped builds.",
+  "let's work": "Open the contact form to start a scoped project.",
+  "view work": "Review engineering systems and case studies.",
+  "see my work": "Review engineering systems and case studies.",
   
   // Contact section
-  "get in touch": "Share your goals, timeline, and budget.",
-  "send message": "Submit your inquiry for a 24-48 hour response.",
+  "get in touch": "Share your goals, timeline, and constraints.",
+  "send message": "Send your inquiry for a structured response.",
   "submit": "Send your project details.",
   
   // Footer
   "home": "Back to the top of the page.",
-  "work": "Go to the portfolio section.",
+  "work": "Go to the work section.",
   "contact": "Open the contact section.",
   "games": "Open the mini game.",
-  "terms & conditions": "View service terms and project policies.",
-  "back to portfolio": "Return to the case studies and project grid.",
+  "terms & conditions": "Review terms, agreements, and refund policy.",
+  "privacy policy": "Review how inquiry and onboarding data is handled.",
+  "back to portfolio": "Return to the project index.",
   "back to home": "Head back to the homepage.",
-  "view product": "Jump from case study to the product setup room.",
-  "view products": "Browse all live product builds and packages.",
-  "show all projects": "Open the full project and case-study index.",
-  "products": "Open product builds, options, and pricing drawers.",
-  "purchase": "Lock in the build scope and total in one swipe.",
+  "view product": "Open the related product configuration flow.",
+  "view products": "Open all product systems and onboarding flows.",
+  "show all projects": "Open the full projects index.",
+  "products": "Open configurable product systems and pricing.",
+  "purchase": "Start the purchase flow and confirm scope.",
   "github": "Open the source repository.",
   
   // Portfolio cards
-  "detailflow / cruz n clean": "From missed calls to booked slots. Open the full flow.",
-  "inkbot discord bot": "Turns chat chaos into clean ops. See how InkBot keeps order.",
-  "drawer flow": "See the 4-part drawer system plus the full combined flow.",
-  "terminal adventure - systems-driven cli game": "Still in dev, still dangerous. Enter the command line arena.",
+  "detailflow / cruz n clean": "See the booking and confirmation system architecture.",
+  "inkbot discord bot": "See the modular community automation system.",
+  "drawer flow": "See the staged drawer system and combined flow.",
+  "terminal adventure - systems-driven cli game": "See the CLI game systems and state architecture.",
   
   // Games
   "close game": "Close the game overlay.",

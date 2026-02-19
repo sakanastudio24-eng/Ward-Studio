@@ -33,6 +33,9 @@ export function HowIWork() {
         <h2 className="text-[1.75rem] sm:text-[2rem] md:text-[3rem] mb-12 md:mb-16 tracking-tight">
           How I Work
         </h2>
+        <p className="mb-8 text-base text-muted-foreground">
+          I am a systems-oriented contract creative developer. I build systems that reduce friction and help businesses move faster with clarity.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {principles.map((principle, idx) => (
             <div key={idx} className="border-l-2 border-foreground pl-4 sm:pl-6">

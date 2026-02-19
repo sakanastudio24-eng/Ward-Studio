@@ -5,39 +5,46 @@ import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: {
-    default: "Ward Studio - Design & Engineering Contractor | Zechariah Ward",
+    default: "Ward Studio — Design & Engineering Systems",
     template: "%s | Ward Studio",
   },
   description:
-    "Professional contractor specializing in design systems, brand identity, web engineering with Next.js/React, and digital integrations.",
+    "Design systems, brand identity, and production-ready web engineering. Built by Zechariah Ward for growing businesses.",
   keywords: [
-    "web design contractor",
+    "design contractor",
     "next.js developer",
-    "react engineer",
-    "portfolio case studies",
-    "automation systems",
-    "booking system development",
+    "web systems",
+    "booking systems",
     "discord bot development",
+    "brand identity",
     "ward studio",
-    "zechariah ward",
   ],
   metadataBase: new URL("https://wardstudio.com"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "Ward Studio - Design & Engineering Contractor | Zechariah Ward",
+    title: "Ward Studio — Design & Engineering Systems",
     description:
-      "Professional contractor specializing in design systems, brand identity, web engineering with Next.js/React, and digital integrations.",
+      "Design systems, brand identity, and production-ready web engineering. Built by Zechariah Ward for growing businesses.",
     url: "https://wardstudio.com/",
     siteName: "Ward Studio",
     type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Ward Studio",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ward Studio - Design & Engineering Contractor | Zechariah Ward",
+    title: "Ward Studio — Design & Engineering Systems",
     description:
-      "Professional contractor specializing in design systems, brand identity, web engineering with Next.js/React, and digital integrations.",
+      "Design systems, brand identity, and production-ready web engineering. Built by Zechariah Ward for growing businesses.",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,

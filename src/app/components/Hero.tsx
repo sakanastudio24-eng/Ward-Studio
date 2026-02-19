@@ -62,14 +62,14 @@ export function Hero({ setTooltipText }: HeroProps) {
               onMouseLeave={() => setHoveredWord(null)}
             >
               Design
-            </span> meets<br />
-            <span 
+            </span> meets <span 
               className="cursor-default"
               onMouseEnter={() => setHoveredWord('engineering')}
               onMouseLeave={() => setHoveredWord(null)}
             >
               engineering
-            </span>.
+            </span>.<br />
+            Systems built to ship.
           </motion.h1>
           <motion.p 
             className={`text-base sm:text-lg md:text-xl max-w-2xl leading-relaxed transition-colors duration-300 ${hoveredWord ? getSubtextClass() : 'text-muted-foreground'}`}
@@ -77,7 +77,7 @@ export function Hero({ setTooltipText }: HeroProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            I contract with growing businesses to design brand systems, build modern web experiences, and ship production-ready digital tools.
+            I design and engineer production-ready systems for clear execution and reliable delivery.
           </motion.p>
         </div>
         <motion.div 

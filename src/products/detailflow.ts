@@ -11,7 +11,7 @@ export function createDetailflowConfig(stripeLinks: DetailflowStripeLinks): Deta
   return {
     productKey: "detailflow",
     subtitle:
-      "Approachable tier pricing with optional add-ons and a clear deposit split at checkout.",
+      "Structured product systems built for real-world use. Configure what you need. Ship with clarity.",
     defaultPackageId: "starter",
     timelineEstimate: "Estimated launch window: 7-14 days once required assets are in.",
     requiredItems: [

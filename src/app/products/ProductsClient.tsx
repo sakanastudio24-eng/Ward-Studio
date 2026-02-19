@@ -21,7 +21,7 @@ interface ProductsClientProps {
 const inkbotPricingConfig: ProductPricingConfig = {
   productKey: "inkbot",
   subtitle:
-    "Set up a simplified MEE6-style configuration with transparent pricing before purchase.",
+    "Structured moderation and automation options with clear configuration before purchase.",
   basePrice: 300,
   baseLabel: "InkBot base package",
   optionsHeading: "Core Community Pack",
@@ -72,30 +72,29 @@ export default function ProductsClient({ stripeLinks }: ProductsClientProps) {
               DetailFlow Template
             </h1>
             <p className="leading-relaxed text-muted-foreground">
-              Booking and confirmation product template for service businesses.
-              Includes form validation, API-ready payload structure,
-              owner/client email flow design, and mobile-first UI behavior.
+              Structured product systems built for real-world use.
+              Configure what you need. Ship with clarity.
             </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <img
                 src="/case-studies/detailflow-1.png"
                 alt="DetailFlow product image 1"
                 className="aspect-[16/10] w-full rounded-lg border border-border object-cover"
-                onMouseEnter={() => setTooltipText("Where leads stop ghosting and start booking.")}
+                onMouseEnter={() => setTooltipText("Structured intake and booking flow view.")}
                 onMouseLeave={() => setTooltipText("")}
               />
               <img
                 src="/case-studies/detailflow-2.png"
                 alt="DetailFlow product image 2"
                 className="aspect-[16/10] w-full rounded-lg border border-border object-cover"
-                onMouseEnter={() => setTooltipText("Validation that catches bad input before bad days.")}
+                onMouseEnter={() => setTooltipText("Validation and reliability states overview.")}
                 onMouseLeave={() => setTooltipText("")}
               />
               <img
                 src="/case-studies/detailflow-3.png"
                 alt="DetailFlow product image 3"
                 className="aspect-[16/10] w-full rounded-lg border border-border object-cover"
-                onMouseEnter={() => setTooltipText("Clean confirmations, fewer follow-up headaches.")}
+                onMouseEnter={() => setTooltipText("Confirmation system and messaging behavior.")}
                 onMouseLeave={() => setTooltipText("")}
               />
             </div>
@@ -118,30 +117,30 @@ export default function ProductsClient({ stripeLinks }: ProductsClientProps) {
               InkBot Product
             </h2>
             <p className="leading-relaxed text-muted-foreground">
-              Community collaboration bot product focused on role-driven
-              workflows, reaction state transitions, and moderation-safe command
-              handling.
+              Modular community automation system focused on role-driven
+              workflows, reliable state transitions, and maintainable moderation
+              controls.
             </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <img
                 src="/case-studies/inkbot-1.png"
                 alt="InkBot product image 1"
                 className="aspect-[16/10] w-full rounded-lg border border-border object-cover"
-                onMouseEnter={() => setTooltipText("From chat chaos to organized creative ops.")}
+                onMouseEnter={() => setTooltipText("Role and flow architecture preview.")}
                 onMouseLeave={() => setTooltipText("")}
               />
               <img
                 src="/case-studies/inkbot-2.png"
                 alt="InkBot product image 2"
                 className="aspect-[16/10] w-full rounded-lg border border-border object-cover"
-                onMouseEnter={() => setTooltipText("Roles, rules, and reminders without the mess.")}
+                onMouseEnter={() => setTooltipText("Configurable moderation and reminder system.")}
                 onMouseLeave={() => setTooltipText("")}
               />
               <img
                 src="/case-studies/inkbot-3.png"
                 alt="InkBot product image 3"
                 className="aspect-[16/10] w-full rounded-lg border border-border object-cover"
-                onMouseEnter={() => setTooltipText("Moderation logic that behaves when pressure spikes.")}
+                onMouseEnter={() => setTooltipText("Reliable command handling and event controls.")}
                 onMouseLeave={() => setTooltipText("")}
               />
             </div>

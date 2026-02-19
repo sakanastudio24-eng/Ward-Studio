@@ -124,6 +124,14 @@ export function Footer({ onGameOpen, setTooltipText }: FooterProps) {
         >
           Terms & Conditions
         </a>
+        <a
+          href="/privacy"
+          className={navItemClass}
+          onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
+          onMouseLeave={() => setTooltipText("")}
+        >
+          Privacy Policy
+        </a>
       </nav>
       <div className={`flex flex-col md:flex-row items-center gap-2 md:gap-4 mt-8 ${isHoveringWard ? 'text-white' : ''}`}>
         <p className={`text-xs ${isHoveringWard ? 'text-white/70' : 'text-muted-foreground'}`}>

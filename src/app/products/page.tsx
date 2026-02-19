@@ -2,33 +2,42 @@ import type { Metadata } from "next";
 import ProductsClient from "./ProductsClient";
 
 export const metadata: Metadata = {
-  title: "Products",
+  title: "Products — Ward Studio",
   description:
-    "DetailFlow and InkBot product packages from Ward Studio with configurable options, management modes, and transparent pricing.",
+    "Structured product packages including DetailFlow and InkBot. Configurable, production-ready systems with clear onboarding.",
   keywords: [
     "ward studio products",
     "detailflow template",
     "inkbot discord bot",
     "booking system package",
     "discord bot package",
-    "purchase configuration",
+    "configurable systems",
   ],
   alternates: {
     canonical: "/products",
   },
   openGraph: {
-    title: "Products | Ward Studio",
+    title: "Products — Ward Studio",
     description:
-      "Configure DetailFlow and InkBot packages with add-ons, management mode, and live pricing.",
+      "Structured product packages including DetailFlow and InkBot. Configurable, production-ready systems with clear onboarding.",
     url: "https://wardstudio.com/products",
     siteName: "Ward Studio",
     type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Ward Studio products",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Products | Ward Studio",
+    title: "Products — Ward Studio",
     description:
-      "Configure DetailFlow and InkBot packages with add-ons, management mode, and live pricing.",
+      "Structured product packages including DetailFlow and InkBot. Configurable, production-ready systems with clear onboarding.",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,

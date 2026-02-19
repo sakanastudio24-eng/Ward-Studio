@@ -2,9 +2,32 @@ import type { Metadata } from "next";
 import { ProjectsClient } from "./ProjectsClient";
 
 export const metadata: Metadata = {
-  title: "All Projects | Ward Studio",
+  title: "Projects — Ward Studio",
   description:
-    "Full project index with engineering builds and case studies, including Terminal Adventure Vr 1.",
+    "Engineering builds and design case studies including Terminal Adventure and system-based applications.",
+  openGraph: {
+    title: "Projects — Ward Studio",
+    description:
+      "Engineering builds and design case studies including Terminal Adventure and system-based applications.",
+    url: "https://wardstudio.com/projects",
+    siteName: "Ward Studio",
+    type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Ward Studio projects",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Projects — Ward Studio",
+    description:
+      "Engineering builds and design case studies including Terminal Adventure and system-based applications.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function ProjectsPage() {
