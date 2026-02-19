@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { getTooltipMessage } from "../HoverTooltip";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import {
   Dialog,
   DialogContent,
@@ -160,6 +162,8 @@ type DetailflowFormState = {
   selectedPackageId: DetailflowTierId;
   selectedGeneralAddOnIds: DetailflowGeneralAddonId[];
   selectedReadinessAddOnIds: DetailflowReadinessAddonId[];
+  customerName: string;
+  customerEmail: string;
   bookingMode: BookingMode;
   bookingUrl: string;
   bookingEmbedUrl: string;
@@ -172,6 +176,7 @@ type DetailflowFormState = {
 };
 
 type SimulatedFailureMode = "none" | "payment_failed" | "verification_error";
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Seeds a safe config object used by the post-purchase handoff form.
@@ -212,6 +217,8 @@ function buildDetailflowPresetState(
     selectedPackageId: packageId,
     selectedGeneralAddOnIds: previous?.selectedGeneralAddOnIds || [],
     selectedReadinessAddOnIds: previous?.selectedReadinessAddOnIds || [],
+    customerName: previous?.customerName || "",
+    customerEmail: previous?.customerEmail || "",
     bookingMode: hasEmbedCandidate && packageId !== "starter" ? "iframe" : "external_link",
     bookingUrl: preservedBookingUrl,
     bookingEmbedUrl: preservedEmbedUrl,
@@ -808,10 +815,30 @@ export function CheckoutDrawer({
   function handlePayDeposit() {
     if (transitionBusy) return;
 
+    const paymentValidationErrors: string[] = [];
+    if (!form.customerName.trim()) {
+      paymentValidationErrors.push("Customer name is required before checkout.");
+    }
+    if (!form.customerEmail.trim()) {
+      paymentValidationErrors.push("Customer email is required before checkout.");
+    } else if (!EMAIL_REGEX.test(form.customerEmail.trim())) {
+      paymentValidationErrors.push("Customer email must be a valid email address.");
+    }
+
+    if (paymentValidationErrors.length > 0) {
+      setValidationErrors(paymentValidationErrors);
+      return;
+    }
+
     setValidationErrors([]);
     setResendNotice("");
     setBookingConfirmed(false);
     setAwaitingBookingReturn(false);
+    setSafeConfig((prev) => ({
+      ...prev,
+      business_name: form.customerName.trim() || prev.business_name,
+      contact_email: form.customerEmail.trim() || prev.contact_email,
+    }));
     trackCheckoutEvent("checkout_clicked");
     dispatchFlow({ type: "START_CHECKOUT" });
 
@@ -1035,6 +1062,46 @@ export function CheckoutDrawer({
                   depositToday={depositToday}
                   remainingBalance={remainingBalance}
                 />
+
+                <section className="rounded-lg border border-border p-4">
+                  <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    Buyer Details
+                  </h3>
+                  <p className="mb-3 text-sm text-muted-foreground">
+                    Needed to generate order details and confirmation communication.
+                  </p>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="customer-name">Name</Label>
+                      <Input
+                        id="customer-name"
+                        value={form.customerName}
+                        onChange={(event) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            customerName: event.target.value,
+                          }))
+                        }
+                        placeholder="Your name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="customer-email">Email</Label>
+                      <Input
+                        id="customer-email"
+                        type="email"
+                        value={form.customerEmail}
+                        onChange={(event) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            customerEmail: event.target.value,
+                          }))
+                        }
+                        placeholder="you@example.com"
+                      />
+                    </div>
+                  </div>
+                </section>
 
                 <section className="rounded-lg border border-border p-4">
                   <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
