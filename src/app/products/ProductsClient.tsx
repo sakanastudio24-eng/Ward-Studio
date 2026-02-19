@@ -9,14 +9,7 @@ import {
   ProductPurchaseDrawer,
   type ProductPricingConfig,
 } from "../components/products/ProductPurchaseDrawer";
-import {
-  createDetailflowConfig,
-  type DetailflowStripeLinks,
-} from "../../products/detailflow";
-
-interface ProductsClientProps {
-  stripeLinks?: DetailflowStripeLinks;
-}
+import { createDetailflowConfig } from "../../products/detailflow";
 
 const inkbotPricingConfig: ProductPricingConfig = {
   productKey: "inkbot",
@@ -39,15 +32,9 @@ const inkbotPricingConfig: ProductPricingConfig = {
   ],
 };
 
-export default function ProductsClient({ stripeLinks }: ProductsClientProps) {
+export default function ProductsClient() {
   const { tooltipText, mousePosition, setTooltipText } = useHoverTooltip();
-  const detailflowPricingConfig = createDetailflowConfig(
-    stripeLinks || {
-      consultation: "",
-      buildDeposit: "",
-      holdSpot: "",
-    },
-  );
+  const detailflowPricingConfig = createDetailflowConfig();
 
   return (
     <main className="min-h-screen px-4 py-16 sm:px-6 md:px-12 md:py-24">

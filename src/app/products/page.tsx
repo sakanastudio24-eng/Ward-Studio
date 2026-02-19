@@ -46,13 +46,5 @@ export const metadata: Metadata = {
 };
 
 export default function ProductsPage() {
-  return (
-    <ProductsClient
-      stripeLinks={{
-        consultation: process.env.STRIPE_LINK_CONSULTATION || "",
-        buildDeposit: process.env.STRIPE_LINK_BUILD_DEPOSIT || "",
-        holdSpot: process.env.STRIPE_LINK_HOLD_SPOT || "",
-      }}
-    />
-  );
+  return <ProductsClient />;
 }

@@ -1,13 +1,7 @@
 import { PRICING } from "../lib/pricing";
 import type { DetailflowAddonConfig } from "../app/components/products/CheckoutDrawer";
 
-export interface DetailflowStripeLinks {
-  consultation: string;
-  buildDeposit: string;
-  holdSpot: string;
-}
-
-export function createDetailflowConfig(stripeLinks: DetailflowStripeLinks): DetailflowAddonConfig {
+export function createDetailflowConfig(): DetailflowAddonConfig {
   return {
     productKey: "detailflow",
     subtitle:
@@ -163,12 +157,46 @@ export function createDetailflowConfig(stripeLinks: DetailflowStripeLinks): Deta
       "Hold my spot fee is refundable within 24 hours, then non-refundable.",
       "Kickoff starts when required config and minimum assets are received.",
     ],
+    checkoutEndpoints: {
+      create: {
+        method: "POST",
+        path: "/api/checkout/create",
+        label: "Create checkout session",
+        responseFields: [
+          { key: "url", label: "Checkout redirect URL for Stripe/success flow." },
+          { key: "sessionId", label: "Server session id used for verify calls." },
+          { key: "orderId", label: "Order id for post-purchase state and emails." },
+          { key: "tierId", label: "Tier server accepted for this order." },
+          { key: "addonIds", label: "Add-ons server accepted for this order." },
+          { key: "deposit", label: "Deposit amount due now." },
+          { key: "remaining", label: "Remaining balance after deposit." },
+          { key: "amountTotal", label: "Total order amount." },
+          { key: "currency", label: "Currency for all amounts." },
+        ],
+      },
+      verify: {
+        method: "GET",
+        path: "/api/checkout/verify",
+        label: "Verify checkout session",
+        responseFields: [
+          { key: "paid", label: "True when checkout is captured and verified." },
+          { key: "status", label: "Verification/payment status for UI state." },
+          { key: "sessionId", label: "Session id returned from server verification." },
+          { key: "orderId", label: "Order id to persist in success flow." },
+          { key: "tierId", label: "Paid tier id." },
+          { key: "addonIds", label: "Paid add-on ids." },
+          { key: "deposit", label: "Paid deposit amount." },
+          { key: "remaining", label: "Remaining balance amount." },
+          { key: "amountTotal", label: "Total order amount." },
+          { key: "currency", label: "Currency for all amounts." },
+          { key: "customerEmail", label: "Customer email tied to the checkout." },
+        ],
+      },
+    },
     strategyCallUrl:
-      process.env.NEXT_PUBLIC_STRATEGY_CALL_URL || "/products/success?session_id=demo&celebrate=1",
+      process.env.NEXT_PUBLIC_STRATEGY_CALL_URL || "https://cal.com/",
     secureUploadUrl: process.env.NEXT_PUBLIC_SECURE_UPLOAD_URL || "#",
     confirmationEmail: "customer@email.com",
     supportEmail: "support@wardstudio.com",
-    stripeCheckoutUrl:
-      stripeLinks.buildDeposit || stripeLinks.holdSpot || stripeLinks.consultation || "",
   };
 }
