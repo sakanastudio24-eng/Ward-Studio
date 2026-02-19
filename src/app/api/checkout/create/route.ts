@@ -3,7 +3,8 @@ import {
   createCheckoutSessionRecord,
   isDetailflowAddonId,
   isDetailflowTierId,
-} from "../../../../../lib/checkout/session-store";
+} from "../../../../lib/checkout/session-store";
+import type { DetailflowAddonId } from "../../../../lib/pricing";
 
 type CreateCheckoutRequestBody = {
   productId?: string;
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
   if (invalidAddon) {
     return NextResponse.json({ error: `Invalid add-on id: ${invalidAddon}` }, { status: 400 });
   }
+  const typedAddonIds = addonIds.filter((id): id is DetailflowAddonId => isDetailflowAddonId(id));
 
   const requestUrl = new URL(request.url);
   const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
@@ -55,7 +57,7 @@ export async function POST(request: Request) {
   const record = createCheckoutSessionRecord({
     origin,
     tierId,
-    addonIds,
+    addonIds: typedAddonIds,
     customerEmail,
   });
 

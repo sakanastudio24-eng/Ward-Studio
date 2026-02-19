@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCheckoutSessionRecord } from "../../../../../lib/checkout/session-store";
+import { getCheckoutSessionRecord } from "../../../../lib/checkout/session-store";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);

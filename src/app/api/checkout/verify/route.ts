@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCheckoutSessionRecord } from "../../../../../lib/checkout/session-store";
+import { getCheckoutSessionRecord } from "../../../../lib/checkout/session-store";
 
 /**
  * Verifies a checkout session and returns the server-trusted payment summary.
