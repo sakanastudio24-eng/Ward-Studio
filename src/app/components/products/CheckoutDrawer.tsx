@@ -133,7 +133,6 @@ export type DetailflowAddonConfig = {
     stronglyRecommended: string[];
   };
   refundSummary: string[];
-  stripeCheckoutUrl: string;
   checkoutEndpoints: {
     create: CheckoutEndpointContract;
     verify: CheckoutEndpointContract;
@@ -189,6 +188,20 @@ type DetailflowFormState = {
     photos: boolean;
     bookingMethod: boolean;
   };
+};
+
+type CheckoutCreateResponse = {
+  url: string;
+  sessionId: string;
+  orderId: string;
+};
+
+type CheckoutVerifyResponse = {
+  paid: boolean;
+  status?: string;
+  error?: string;
+  orderId?: string;
+  sessionId?: string;
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -337,11 +350,11 @@ export function CheckoutDrawer({
   const [bookingDateLabel, setBookingDateLabel] = useState("{Date}");
   const [bookingTimeLabel, setBookingTimeLabel] = useState("{Time}");
   const [resendNotice, setResendNotice] = useState("");
+  const [activeSessionId, setActiveSessionId] = useState("");
   const [safeConfig, setSafeConfig] = useState<SafeConfigInput>(() => buildInitialSafeConfig("external_link"));
   const [isSubmittingConfig, setIsSubmittingConfig] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
   const [submitMessage, setSubmitMessage] = useState("");
-  const scheduledTimeoutsRef = useRef<number[]>([]);
   const successViewedTrackedRef = useRef(false);
   const previousPrimaryStateRef = useRef<CheckoutPrimaryState>(initialCheckoutFlowContext.primaryState);
 
@@ -598,29 +611,7 @@ export function CheckoutDrawer({
     return () => window.removeEventListener("focus", handleFocus);
   }, [awaitingBookingReturn, isAfterPurchaseOpen]);
 
-  useEffect(() => {
-    return () => {
-      for (const timer of scheduledTimeoutsRef.current) {
-        window.clearTimeout(timer);
-      }
-      scheduledTimeoutsRef.current = [];
-    };
-  }, []);
-
-  function queueTimeout(callback: () => void, delayMs: number) {
-    const timeoutId = window.setTimeout(callback, delayMs);
-    scheduledTimeoutsRef.current.push(timeoutId);
-  }
-
-  function clearScheduledTimeouts() {
-    for (const timer of scheduledTimeoutsRef.current) {
-      window.clearTimeout(timer);
-    }
-    scheduledTimeoutsRef.current = [];
-  }
-
   function resetToDefaults() {
-    clearScheduledTimeouts();
     setStep("package");
     setValidationErrors([]);
     setReadinessNotice("");
@@ -631,6 +622,7 @@ export function CheckoutDrawer({
     setBookingDateLabel("{Date}");
     setBookingTimeLabel("{Time}");
     setResendNotice("");
+    setActiveSessionId("");
     setSafeConfig(buildInitialSafeConfig("external_link"));
     setIsSubmittingConfig(false);
     setSubmitStatus("idle");
@@ -794,26 +786,74 @@ export function CheckoutDrawer({
     onGenerateConfig?.(generatedConfig);
   }
 
-  /**
-   * Marks checkout as confirmed after placeholder verification completes.
-   */
-  function finishVerification() {
-    dispatchFlow({ type: "PAYMENT_CONFIRMED", orderId: generateOrderId() });
+  async function parseApiError(response: Response, fallbackMessage: string): Promise<string> {
+    const fallback = fallbackMessage || "Request failed.";
+    try {
+      const data = (await response.json()) as { error?: string; message?: string };
+      return data.error || data.message || fallback;
+    } catch {
+      return fallback;
+    }
   }
 
   /**
-   * Queues delayed verification to mimic async return from checkout.
+   * Requests a checkout session and order id from the configured create endpoint.
    */
-  function runVerification() {
-    queueTimeout(() => {
-      finishVerification();
-    }, 1300);
+  async function requestCheckoutSession(): Promise<CheckoutCreateResponse> {
+    const response = await fetch(config.checkoutEndpoints.create.path, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        productId: "detailflow",
+        tierId: form.selectedPackageId,
+        addonIds: selectedAddOnIds,
+        customerEmail: form.customerEmail.trim(),
+      }),
+    });
+
+    if (!response.ok) {
+      const message = await parseApiError(response, "Could not create checkout session.");
+      throw new Error(message);
+    }
+
+    const data = (await response.json()) as Partial<CheckoutCreateResponse>;
+    if (!data.sessionId || !data.orderId) {
+      throw new Error("Checkout create response is missing sessionId or orderId.");
+    }
+
+    return {
+      url: data.url || "",
+      sessionId: data.sessionId,
+      orderId: data.orderId,
+    };
+  }
+
+  /**
+   * Verifies checkout status from the configured verify endpoint.
+   */
+  async function requestCheckoutVerification(sessionId: string): Promise<CheckoutVerifyResponse> {
+    const response = await fetch(
+      `${config.checkoutEndpoints.verify.path}?session_id=${encodeURIComponent(sessionId)}`,
+      {
+        method: "GET",
+      },
+    );
+
+    if (!response.ok) {
+      const message = await parseApiError(response, "Could not verify checkout session.");
+      throw new Error(message);
+    }
+
+    const data = (await response.json()) as CheckoutVerifyResponse;
+    return data;
   }
 
   /**
    * Starts the placeholder payment lifecycle and opens the success drawer.
    */
-  function handlePayDeposit() {
+  async function handlePayDeposit() {
     if (transitionBusy) return;
 
     const paymentValidationErrors: string[] = [];
@@ -842,28 +882,72 @@ export function CheckoutDrawer({
     }));
     trackCheckoutEvent("checkout_clicked");
     dispatchFlow({ type: "START_CHECKOUT" });
-
-    queueTimeout(() => {
-      dispatchFlow({ type: "REDIRECT_TO_STRIPE" });
-    }, 120);
-
-    queueTimeout(() => {
-      dispatchFlow({ type: "START_RETURN_CONFIRM" });
-      runVerification();
-    }, 720);
-
     setIsOpen(false);
     setIsAfterPurchaseOpen(true);
-    trackCheckoutEvent("stripe_redirected", { stripe_url_present: false });
+
+    try {
+      dispatchFlow({ type: "REDIRECT_TO_STRIPE" });
+      const checkout = await requestCheckoutSession();
+      setActiveSessionId(checkout.sessionId);
+      trackCheckoutEvent("stripe_redirected", { stripe_url_present: Boolean(checkout.url) });
+
+      dispatchFlow({ type: "START_RETURN_CONFIRM" });
+      const verification = await requestCheckoutVerification(checkout.sessionId);
+
+      if (!verification.paid) {
+        dispatchFlow({
+          type: "PAYMENT_FAILED",
+          errorMessage: verification.error || "Payment was not captured. Please retry checkout.",
+        });
+        return;
+      }
+
+      dispatchFlow({
+        type: "PAYMENT_CONFIRMED",
+        orderId: verification.orderId || checkout.orderId || generateOrderId(),
+      });
+    } catch (error) {
+      dispatchFlow({
+        type: "VERIFICATION_ERROR",
+        errorMessage: error instanceof Error ? error.message : "Verification service failed.",
+      });
+    }
   }
 
   /**
    * Retries verification from failure states without resetting form selections.
    */
-  function handleRetryVerification() {
-    clearScheduledTimeouts();
+  async function handleRetryVerification() {
+    if (!activeSessionId) {
+      dispatchFlow({
+        type: "VERIFICATION_ERROR",
+        errorMessage: "No checkout session found. Start purchase again.",
+      });
+      return;
+    }
+
     dispatchFlow({ type: "RETRY_VERIFICATION" });
-    runVerification();
+    try {
+      const verification = await requestCheckoutVerification(activeSessionId);
+
+      if (!verification.paid) {
+        dispatchFlow({
+          type: "PAYMENT_FAILED",
+          errorMessage: verification.error || "Payment was not captured. Please retry checkout.",
+        });
+        return;
+      }
+
+      dispatchFlow({
+        type: "PAYMENT_CONFIRMED",
+        orderId: verification.orderId || generateOrderId(),
+      });
+    } catch (error) {
+      dispatchFlow({
+        type: "VERIFICATION_ERROR",
+        errorMessage: error instanceof Error ? error.message : "Verification service failed.",
+      });
+    }
   }
 
   /**
@@ -1116,6 +1200,32 @@ export function CheckoutDrawer({
                   </div>
 
                   <p className="mt-3 text-xs text-muted-foreground">Flow status: {flow.primaryState}</p>
+                </section>
+
+                <section className="rounded-lg border border-border p-4">
+                  <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    Endpoint Contract (Review)
+                  </h3>
+                  <div className="space-y-4">
+                    {[config.checkoutEndpoints.create, config.checkoutEndpoints.verify].map((endpoint) => (
+                      <div key={`${endpoint.method}-${endpoint.path}`} className="rounded-md border border-border p-3">
+                        <p className="text-sm font-medium">{endpoint.label}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {endpoint.method} {endpoint.path}
+                        </p>
+                        <p className="mt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          Response fields
+                        </p>
+                        <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
+                          {endpoint.responseFields.map((field) => (
+                            <li key={`${endpoint.path}-${field.key}`}>
+                              • <span className="font-mono text-[11px]">{field.key}</span>: {field.label}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
                 </section>
 
                 <section className="rounded-lg border border-border p-4">
