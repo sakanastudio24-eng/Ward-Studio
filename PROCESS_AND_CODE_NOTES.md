@@ -70,3 +70,28 @@ Convert the project from Vite to Next.js and preserve existing section-based app
 - Contact
 - Footer
 - Game overlays (DinoGame and FlappyBird)
+
+## Product Purchase Updates (2026-02-18)
+
+### Component refactor
+- Extracted reusable purchase flow blocks:
+  - `CheckoutDrawer`
+  - `PlanAndAddons`
+  - `PriceSummary`
+- Moved shared pricing/rules to:
+  - `src/lib/pricing.ts`
+  - `src/lib/rules.ts`
+- Preserved InkBot simple drawer path while isolating DetailFlow staged logic.
+
+### Success verification flow
+- Added payment verification API:
+  - `src/app/api/stripe/session/route.ts`
+- Added client success state machine:
+  - checking -> paid -> failed in `src/app/products/success/SuccessClient.tsx`
+- Added confetti launch helper in `src/lib/confetti.ts`
+  - gated by `celebrate=1`
+  - once per session via `sessionStorage`
+
+### Current known review risks
+- Booking confirmation in right drawer is currently inferred from window focus return, not a booking provider callback.
+- Default strategy call URL fallback points to success route when `NEXT_PUBLIC_STRATEGY_CALL_URL` is unset.

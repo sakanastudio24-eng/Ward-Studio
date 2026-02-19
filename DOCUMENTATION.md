@@ -4,6 +4,50 @@
 
 This is a professional contractor portfolio website for Ward Studio, showcasing capabilities in both design and development work. The site features a minimal, typography-focused design with advanced interactions, SEO optimization, and keyboard navigation.
 
+## Product Drawer System (Current)
+
+The `/products` page now includes a staged purchase flow with reusable components:
+
+- `src/app/components/products/ProductPurchaseDrawer.tsx`
+- `src/app/components/products/CheckoutDrawer.tsx`
+- `src/app/components/products/PlanAndAddons.tsx`
+- `src/app/components/products/PriceSummary.tsx`
+- `src/lib/pricing.ts`
+- `src/lib/rules.ts`
+
+### DetailFlow Flow
+
+1. `package` step:
+- Tier selection
+- Booking preference
+- General functional add-ons
+
+2. `readiness` step:
+- Readiness add-ons
+- Readiness checklist + gate
+- Compatibility guidance
+
+3. `payment` step:
+- Total/deposit/remaining summary
+- Stripe checkout trigger (current demo pass flow)
+- Terms/refund policy overlay links
+
+4. Post-purchase right drawer:
+- Confirmation and order summary
+- Strategy call CTA
+- Preparation checklist
+- Email/support messaging
+- Booking-confirmed upload instructions on return focus
+
+### Success Verification + Celebration
+
+- Route: `src/app/products/success/SuccessClient.tsx`
+- Verify API: `src/app/api/stripe/session/route.ts`
+- Confetti:
+  - Fires only after verification resolves to paid
+  - Requires `celebrate=1` query param
+  - Limited to once per browser session via `sessionStorage`
+
 ## Table of Contents
 
 1. [Architecture Overview](#architecture-overview)
