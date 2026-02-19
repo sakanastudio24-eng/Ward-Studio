@@ -167,7 +167,7 @@ export const allWorkProjects: WorkProject[] = [
       "Case study: booking and confirmation system with validated intake and messaging",
     stack: ["Figma", "Next.js", "Tailwind CSS"],
     summary:
-      "DetailFlow / Cruz n Clean was designed to give small service businesses a production-grade booking path without SaaS lock-in. It combines a clear booking UI, API submission flow, and owner/client confirmation messaging. The experience is optimized for mobile and desktop use.",
+      "DetailFlow / Cruz n Clean was designed to give small service businesses a production-ready booking path without SaaS lock-in. It combines a clear booking UI, API submission flow, and owner/client confirmation messaging. The experience is optimized for mobile and desktop use.",
     whatItCanDo: [
       "Structured booking intake",
       "Client confirmation messaging",
@@ -204,7 +204,7 @@ export const allWorkProjects: WorkProject[] = [
       "Designed in Figma, translated to production-ready Next.js UI, and integrated with backend routing and email confirmations.",
     tools: ["Component design", "Interaction states", "Form UX", "Accessibility pass"],
     resultDetail:
-      "The final system supports reliable booking intake, clear confirmations, and production-grade UX behavior.",
+      "The final system supports reliable booking intake, clear confirmations, and production-ready UX behavior.",
     image: "/case-studies/detailflow-1.png",
     galleryImages: [
       "/case-studies/detailflow-1.png",
@@ -255,7 +255,7 @@ export const allWorkProjects: WorkProject[] = [
     placeholderColor: "#2563eb",
   },
   {
-    section: "case-study",
+    section: "engineering",
     visibility: ["home", "all-projects"],
     title: "Drawer Flow",
     statusLabel: "Vr 1",
