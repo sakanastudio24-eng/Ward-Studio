@@ -63,11 +63,11 @@ export function Footer({ onGameOpen, setTooltipText }: FooterProps) {
     <footer 
       id="footer"
       ref={footerRef} 
-      className={`min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 md:px-12 border-t border-border transition-colors duration-300 ${isHoveringWard ? 'bg-orange-500' : ''}`}
+      className={`flex min-h-[78vh] flex-col items-center justify-center border-t border-border px-4 py-10 transition-colors duration-300 sm:min-h-screen sm:px-6 sm:py-12 md:px-12 ${isHoveringWard ? 'bg-orange-500' : ''}`}
     >
       <div className="flex-1 flex items-center justify-center w-full overflow-hidden">
         <h2 
-          className={`text-[4rem] sm:text-[8rem] md:text-[12rem] lg:text-[16rem] xl:text-[20rem] tracking-tighter leading-none transition-all duration-300 ease-out whitespace-nowrap cursor-default ${isHoveringWard ? 'text-white' : ''}`}
+          className={`cursor-default whitespace-nowrap text-[3rem] leading-none tracking-tighter transition-all duration-300 ease-out sm:text-[8rem] md:text-[12rem] lg:text-[16rem] xl:text-[20rem] ${isHoveringWard ? 'text-white' : ''}`}
           style={{ transform: `scale(${scale})` }}
           onMouseEnter={() => setIsHoveringWard(true)}
           onMouseLeave={() => setIsHoveringWard(false)}
@@ -75,7 +75,7 @@ export function Footer({ onGameOpen, setTooltipText }: FooterProps) {
           WARD
         </h2>
       </div>
-      <nav className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-12 text-sm ${isHoveringWard ? 'text-white' : ''}`}>
+      <nav className={`flex max-w-[21rem] flex-wrap items-center justify-center gap-x-4 gap-y-3 text-sm sm:max-w-none sm:gap-6 md:gap-12 ${isHoveringWard ? 'text-white' : ''}`}>
         <button 
           onClick={scrollToTop} 
           className={navItemClass}
@@ -133,7 +133,7 @@ export function Footer({ onGameOpen, setTooltipText }: FooterProps) {
           Privacy Policy
         </a>
       </nav>
-      <div className={`flex flex-col md:flex-row items-center gap-2 md:gap-4 mt-8 ${isHoveringWard ? 'text-white' : ''}`}>
+      <div className={`mt-7 flex flex-col items-center gap-2 md:mt-8 md:flex-row md:gap-4 ${isHoveringWard ? 'text-white' : ''}`}>
         <p className={`text-xs ${isHoveringWard ? 'text-white/70' : 'text-muted-foreground'}`}>
           © {new Date().getFullYear()} Ward Studio
         </p>

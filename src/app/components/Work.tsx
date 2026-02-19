@@ -29,18 +29,20 @@ export function Work({ scope, setTooltipText }: WorkProps) {
   const caseStudyProjects = visibleProjects.filter((project) => project.section === "case-study");
 
   return (
-    <section id="work" className="bg-muted/30 px-4 py-24 sm:px-6 md:px-12 md:py-32">
+    <section id="work" className="bg-muted/30 px-4 py-16 sm:px-6 sm:py-20 md:px-12 md:py-28">
       <div
         className={`pointer-events-none fixed inset-0 z-40 bg-background transition-opacity duration-200 ${
           isRoutingToProducts ? "opacity-100" : "opacity-0"
         }`}
       />
       <div className="mx-auto max-w-6xl">
-        <div className="mb-20">
-          <h2 className="mb-4 text-[1.75rem] tracking-tight sm:text-[2rem] md:text-[3rem]">
+        <div className="mb-14 sm:mb-16 md:mb-20">
+          <h2 className="mb-3 text-[1.55rem] tracking-tight sm:mb-4 sm:text-[2rem] md:text-[3rem]">
             Engineering Work
           </h2>
-          <p className="mb-12 text-muted-foreground">Production systems and automation builds</p>
+          <p className="mb-8 text-sm text-muted-foreground sm:mb-10 sm:text-base md:mb-12">
+            Production systems and automation builds
+          </p>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {engineeringProjects.map((project, idx) => {
               const { section, visibility, ...cardProps } = project;
@@ -57,10 +59,10 @@ export function Work({ scope, setTooltipText }: WorkProps) {
 
         <div>
           <div className={scope === "home" ? "text-center" : ""}>
-            <h2 className="mb-4 text-[1.75rem] tracking-tight sm:text-[2rem] md:text-[3rem]">
+            <h2 className="mb-3 text-[1.55rem] tracking-tight sm:mb-4 sm:text-[2rem] md:text-[3rem]">
               Product & UX Case Studies
             </h2>
-            <p className="mb-12 text-muted-foreground">
+            <p className="mb-8 text-sm text-muted-foreground sm:mb-10 sm:text-base md:mb-12">
               Interaction systems and interface execution across active projects
             </p>
           </div>

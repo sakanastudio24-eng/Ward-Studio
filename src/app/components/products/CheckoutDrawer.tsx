@@ -1088,13 +1088,13 @@ export function CheckoutDrawer({
           </Button>
         </DrawerTrigger>
 
-        <DrawerContent className="mx-auto w-full max-w-4xl">
+        <DrawerContent className="mx-auto max-h-[92vh] w-full max-w-4xl">
           <DrawerHeader className="pb-2">
             <DrawerTitle className="text-xl">{productName}</DrawerTitle>
             <DrawerDescription>{config.subtitle}</DrawerDescription>
           </DrawerHeader>
 
-          <div className="space-y-5 overflow-y-auto px-4 pb-2">
+          <div className="space-y-4 overflow-y-auto px-4 pb-3 sm:space-y-5 sm:px-5">
             {step === "package" && (
               <>
                 <PlanSelector
@@ -1200,7 +1200,7 @@ export function CheckoutDrawer({
                   <p className="mb-3 text-sm text-muted-foreground">
                     Needed to generate order details and confirmation communication.
                   </p>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
                     <div className="space-y-2">
                       <Label htmlFor="customer-name">Name</Label>
                       <Input
@@ -1243,7 +1243,7 @@ export function CheckoutDrawer({
 
                   <div className="mb-4 flex flex-wrap gap-2">
                     <Button
-                      className="bg-orange-500 text-white hover:bg-orange-600"
+                      className="w-full bg-orange-500 text-white hover:bg-orange-600 sm:w-auto"
                       disabled={transitionBusy}
                       onClick={handlePayDeposit}
                     >
@@ -1353,7 +1353,7 @@ export function CheckoutDrawer({
             {step === "payment" && (
               <>
                 <Button
-                  className="bg-orange-500 text-white hover:bg-orange-600"
+                  className="w-full bg-orange-500 text-white hover:bg-orange-600 sm:w-auto"
                   disabled={transitionBusy}
                   onClick={handlePayDeposit}
                 >

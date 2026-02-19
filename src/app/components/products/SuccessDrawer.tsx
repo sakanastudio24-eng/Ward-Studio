@@ -120,7 +120,7 @@ export function SuccessDrawer({
 
   return (
     <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="h-full w-full sm:max-w-[40rem]">
+      <DrawerContent className="h-full w-full sm:max-w-[44rem]">
         <ConfettiTrigger shouldFire={primaryState === "payment_confirmed"} />
 
         <DrawerHeader className="pb-2">
@@ -128,7 +128,7 @@ export function SuccessDrawer({
           <DrawerDescription>{productName} onboarding and next steps.</DrawerDescription>
         </DrawerHeader>
 
-        <div className="space-y-5 overflow-y-auto px-4 pb-2">
+        <div className="space-y-4 overflow-y-auto px-4 pb-4 sm:space-y-5 sm:px-5">
           {loading && (
             <section className="space-y-3 rounded-lg border border-border p-4">
               <h3 className="text-base font-semibold">Confirming payment...</h3>
@@ -165,7 +165,7 @@ export function SuccessDrawer({
               <section className="rounded-lg border border-border p-4">
                 <h3 className="text-base font-semibold">Payment Confirmed</h3>
                 <p className="mt-1 text-sm text-muted-foreground">Your project slot is officially reserved.</p>
-                <p className="mt-3 text-sm font-medium">Order ID: {orderId || fallbackOrderId}</p>
+                <p className="mt-3 break-all text-sm font-medium">Order ID: {orderId || fallbackOrderId}</p>
               </section>
 
               <section className="rounded-lg border border-border p-4">
@@ -436,7 +436,7 @@ export function SuccessDrawer({
               <section className="rounded-lg border border-border p-4">
                 <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Email Confirmation</h3>
                 <p className="text-sm text-muted-foreground">We have sent your receipt and next steps to:</p>
-                <p className="mt-1 text-sm font-medium">{confirmationEmail}</p>
+                <p className="mt-1 break-all text-sm font-medium">{confirmationEmail}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button variant="outline" onClick={onResendClick}>
                     Resend confirmation
