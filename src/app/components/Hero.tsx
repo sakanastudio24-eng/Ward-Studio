@@ -38,6 +38,12 @@ export function Hero({ setTooltipText }: HeroProps) {
     return '';
   };
 
+  const getTaglineClass = () => {
+    if (hoveredWord === "design") return "text-orange-100";
+    if (hoveredWord === "engineering") return "text-orange-400 dark:text-orange-600";
+    return "text-orange-500 dark:text-orange-400";
+  };
+
   return (
     <section id="hero" className={`min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-12 transition-colors duration-300 ${getBackgroundClass()}`}>
       <div className="max-w-5xl w-full">
@@ -68,8 +74,10 @@ export function Hero({ setTooltipText }: HeroProps) {
               onMouseLeave={() => setHoveredWord(null)}
             >
               engineering
-            </span>.<br />
-            Systems built to ship.
+            </span>.
+            <span className={`mt-4 block text-[1.05rem] font-medium leading-[1.2] sm:text-[1.35rem] md:text-[1.8rem] ${getTaglineClass()}`}>
+              Systems built to ship.
+            </span>
           </motion.h1>
           <motion.p 
             className={`text-base sm:text-lg md:text-xl max-w-2xl leading-relaxed transition-colors duration-300 ${hoveredWord ? getSubtextClass() : 'text-muted-foreground'}`}

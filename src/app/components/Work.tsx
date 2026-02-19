@@ -56,12 +56,14 @@ export function Work({ scope, setTooltipText }: WorkProps) {
         </div>
 
         <div>
-          <h2 className="mb-4 text-[1.75rem] tracking-tight sm:text-[2rem] md:text-[3rem]">
-            Product & UX Case Studies
-          </h2>
-          <p className="mb-12 text-muted-foreground">
-            Interaction systems and interface execution across active projects
-          </p>
+          <div className={scope === "home" ? "text-center" : ""}>
+            <h2 className="mb-4 text-[1.75rem] tracking-tight sm:text-[2rem] md:text-[3rem]">
+              Product & UX Case Studies
+            </h2>
+            <p className="mb-12 text-muted-foreground">
+              Interaction systems and interface execution across active projects
+            </p>
+          </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {caseStudyProjects.map((project, idx) => {
               const { section, visibility, ...cardProps } = project;
