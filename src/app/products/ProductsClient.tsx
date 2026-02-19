@@ -7,30 +7,8 @@ import {
 } from "../components/HoverTooltip";
 import {
   ProductPurchaseDrawer,
-  type ProductPricingConfig,
 } from "../components/products/ProductPurchaseDrawer";
 import { createDetailflowConfig } from "../../products/detailflow";
-
-const inkbotPricingConfig: ProductPricingConfig = {
-  productKey: "inkbot",
-  subtitle:
-    "Structured moderation and automation options with clear configuration before purchase.",
-  basePrice: 300,
-  baseLabel: "InkBot base package",
-  optionsHeading: "Core Community Pack",
-  optionsHint: "Customizable settings in chat.",
-  options: [
-    { id: "welcome-message", label: "Welcome Message", price: 25 },
-    { id: "auto-role-assign", label: "Auto-Role Assign", price: 40 },
-    { id: "digest-schedule", label: "Digest Schedule", price: 35 },
-    { id: "anti-spam-cooldown", label: "Anti-Spam Cooldown", price: 30 },
-    { id: "moderation-logging", label: "Moderation Logging", price: 45 },
-  ],
-  managementOptions: [
-    { id: "self-managed", label: "Self-managed", price: 0 },
-    { id: "ward-managed", label: "Ward.studio managed", price: 250 },
-  ],
-};
 
 export default function ProductsClient() {
   const { tooltipText, mousePosition, setTooltipText } = useHoverTooltip();
@@ -100,9 +78,14 @@ export default function ProductsClient() {
             id="inkbot-product"
             className="scroll-mt-24 space-y-5 rounded-2xl border border-border p-5 sm:p-7"
           >
-            <h2 className="tracking-tight text-[1.8rem] sm:text-[2.4rem]">
-              InkBot Product
-            </h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="tracking-tight text-[1.8rem] sm:text-[2.4rem]">
+                InkBot Product
+              </h2>
+              <span className="inline-flex items-center rounded-full border border-orange-300/40 bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-600">
+                In development
+              </span>
+            </div>
             <p className="leading-relaxed text-muted-foreground">
               Modular community automation system focused on role-driven
               workflows, reliable state transitions, and maintainable moderation
@@ -132,12 +115,14 @@ export default function ProductsClient() {
               />
             </div>
             <div className="pt-1">
-              <ProductPurchaseDrawer
-                productName="InkBot Product"
-                config={inkbotPricingConfig}
-                triggerLabel="Purchase"
-                setTooltipText={setTooltipText}
-              />
+              <a
+                href="/#contact"
+                className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                onMouseEnter={() => setTooltipText("InkBot access is currently opened by request.")}
+                onMouseLeave={() => setTooltipText("")}
+              >
+                Request access
+              </a>
             </div>
           </section>
         </div>
