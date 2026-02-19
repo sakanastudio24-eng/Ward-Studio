@@ -99,7 +99,7 @@ export function getSupabaseServerClient() {
      */
     async findOrderBySessionId(sessionId: string) {
       const data = await request<Record<string, unknown>[]>(
-        `${ORDERS_TABLE}?checkout_session_id=eq.${encodeURIComponent(sessionId)}&select=*&limit=1`,
+        `${ORDERS_TABLE}?stripe_session_id=eq.${encodeURIComponent(sessionId)}&select=*&limit=1`,
         { method: "GET" },
       );
       return data[0] || null;
@@ -116,10 +116,7 @@ export function getSupabaseServerClient() {
           headers: {
             Prefer: "return=representation",
           },
-          body: JSON.stringify({
-            ...patch,
-            updated_at: new Date().toISOString(),
-          }),
+          body: JSON.stringify(patch),
         },
       );
     },
@@ -129,16 +126,13 @@ export function getSupabaseServerClient() {
      */
     async updateOrderBySessionId(sessionId: string, patch: Record<string, unknown>) {
       return request<Record<string, unknown>[]>(
-        `${ORDERS_TABLE}?checkout_session_id=eq.${encodeURIComponent(sessionId)}&select=*`,
+        `${ORDERS_TABLE}?stripe_session_id=eq.${encodeURIComponent(sessionId)}&select=*`,
         {
           method: "PATCH",
           headers: {
             Prefer: "return=representation",
           },
-          body: JSON.stringify({
-            ...patch,
-            updated_at: new Date().toISOString(),
-          }),
+          body: JSON.stringify(patch),
         },
       );
     },

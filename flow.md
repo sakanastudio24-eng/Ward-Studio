@@ -112,6 +112,11 @@ Future booking-confirmed contract:
   - `sendInternalBookingConfirmed`
   - `sendBookingConfirmedBundle`
 
+Webhook endpoint:
+- `POST /src/app/api/cal/webhook/route.ts`
+- Triggered by Cal booking-created events.
+- Sends booking-confirmed emails and dedupes by `eventId + orderId`.
+
 ## Analytics + Confetti
 
 Analytics client:

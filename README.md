@@ -95,6 +95,14 @@ Config submission notifications:
 - Optional buyer acknowledgement can be enabled with:
   - `ORDERS_SEND_BUYER_ACK=true`
 
+Booking-confirmed trigger:
+- `POST /api/cal/webhook`
+- Validates `CAL_WEBHOOK_SECRET` when configured.
+- Sends:
+  - client reminder + upload instructions
+  - internal booking-confirmed notification
+- Uses in-memory dedupe by `eventId + orderId`.
+
 ## Success Page Verification + Confetti
 
 Success route:
@@ -120,6 +128,16 @@ Set these in `.env.local` as needed:
 - `NEXT_PUBLIC_STRATEGY_CALL_URL=...`
 - `NEXT_PUBLIC_SECURE_UPLOAD_URL=...`
 - `ORDERS_SEND_BUYER_ACK=false` (set to `true` to send buyer config-submission ack)
+- `CAL_WEBHOOK_SECRET=...`
+
+## Supabase Minimal Setup
+
+Run this SQL in Supabase SQL editor:
+- `scripts/supabase_minimal_setup.sql`
+
+It creates:
+- `orders`
+- `onboarding_submissions`
 
 ## Git remote
 
