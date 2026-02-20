@@ -288,46 +288,6 @@ function buildDetailflowPresetState(
   };
 }
 
-/**
- * Converts current selections into user-facing summary lines for readiness review.
- */
-function buildDetailflowSummary(
-  config: DetailflowAddonConfig,
-  form: DetailflowFormState,
-): string[] {
-  const selectedTier = config.packagePresets.find((preset) => preset.id === form.selectedPackageId);
-  const generalLabelMap = new Map(config.generalAddOns.map((item) => [item.id, item.title]));
-  const readinessLabelMap = new Map(config.readinessAddOns.map((item) => [item.id, item.title]));
-
-  const summary: string[] = [];
-  summary.push(`Tier: ${selectedTier?.label || form.selectedPackageId}`);
-  summary.push(`Booking: ${form.bookingMode}`);
-
-  if (form.selectedGeneralAddOnIds.length === 0) {
-    summary.push("General add-ons: none");
-  } else {
-    for (const id of form.selectedGeneralAddOnIds) {
-      const label = generalLabelMap.get(id) || id;
-      if (id === "advanced_email_styling") {
-        summary.push(`${label} (replaces basic email templates)`);
-      } else {
-        summary.push(label);
-      }
-    }
-  }
-
-  if (form.selectedReadinessAddOnIds.length === 0) {
-    summary.push("Readiness add-ons: none");
-  } else {
-    for (const id of form.selectedReadinessAddOnIds) {
-      const label = readinessLabelMap.get(id) || id;
-      summary.push(label);
-    }
-  }
-
-  return summary;
-}
-
 function isHttpUrl(value: string): boolean {
   try {
     const parsed = new URL(value);
@@ -429,7 +389,6 @@ export function CheckoutDrawer({
     ],
   );
 
-  const summaryItems = useMemo(() => buildDetailflowSummary(config, form), [config, form]);
   const selectedTierLabel =
     config.packagePresets.find((preset) => preset.id === form.selectedPackageId)?.label ||
     form.selectedPackageId;
@@ -572,6 +531,59 @@ export function CheckoutDrawer({
       ...analyticsSharedProps,
       ...eventProps,
     });
+  }
+
+  function scrollAndFocusById(id: string) {
+    window.requestAnimationFrame(() => {
+      const target = document.getElementById(id);
+      if (!target) return;
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      if ("focus" in target && typeof target.focus === "function") {
+        target.focus();
+      }
+    });
+  }
+
+  function jumpToPackageField(errors: string[]) {
+    if (
+      errors.some((error) => error.includes("External booking mode requires a booking URL")) ||
+      errors.some((error) => error.includes("External booking URL must be a valid"))
+    ) {
+      scrollAndFocusById("booking-url");
+      return;
+    }
+    if (
+      errors.some((error) => error.includes("Iframe booking mode requires an embed URL")) ||
+      errors.some((error) => error.includes("Iframe embed URL must be a valid"))
+    ) {
+      scrollAndFocusById("booking-embed-url");
+    }
+  }
+
+  function jumpToReadinessField() {
+    if (!form.readinessChecks.identity) {
+      scrollAndFocusById("readiness-identity");
+      return;
+    }
+    if (!form.readinessChecks.photos) {
+      scrollAndFocusById("readiness-photos");
+      return;
+    }
+    if (!form.readinessChecks.bookingMethod) {
+      scrollAndFocusById("readiness-booking-method");
+      return;
+    }
+    scrollAndFocusById("readiness-meter-section");
+  }
+
+  function jumpToPaymentField(errors: string[]) {
+    if (errors.some((error) => error.includes("Customer name is required"))) {
+      scrollAndFocusById("customer-name");
+      return;
+    }
+    if (errors.some((error) => error.includes("Customer email"))) {
+      scrollAndFocusById("customer-email");
+    }
   }
 
   useEffect(() => {
@@ -769,7 +781,10 @@ export function CheckoutDrawer({
     setValidationErrors(packageValidation.errors);
     setReadinessNotice("");
 
-    if (!packageValidation.valid) return;
+    if (!packageValidation.valid) {
+      jumpToPackageField(packageValidation.errors);
+      return;
+    }
     setStep("readiness");
   }
 
@@ -799,7 +814,15 @@ export function CheckoutDrawer({
     setValidationErrors(combinedErrors);
     setReadinessNotice(readinessValidation.notices[0] || "");
 
-    if (combinedErrors.length > 0) return;
+    if (combinedErrors.length > 0) {
+      if (packageValidation.errors.length > 0) {
+        setStep("package");
+        jumpToPackageField(packageValidation.errors);
+        return;
+      }
+      jumpToReadinessField();
+      return;
+    }
 
     setSafeConfig((prev) => ({
       ...prev,
@@ -935,6 +958,7 @@ export function CheckoutDrawer({
 
     if (paymentValidationErrors.length > 0) {
       setValidationErrors(paymentValidationErrors);
+      jumpToPaymentField(paymentValidationErrors);
       return;
     }
 
@@ -1095,7 +1119,7 @@ export function CheckoutDrawer({
           </Button>
         </DrawerTrigger>
 
-        <DrawerContent className="mx-auto max-h-[92vh] w-full max-w-4xl">
+      <DrawerContent className="mx-auto max-h-[92vh] w-full max-w-4xl">
           <DrawerHeader className="pb-2">
             <DrawerTitle className="text-xl">{productName}</DrawerTitle>
             <DrawerDescription>{config.subtitle}</DrawerDescription>
@@ -1148,7 +1172,6 @@ export function CheckoutDrawer({
             {step === "readiness" && (
               <>
                 <ReadinessGate
-                  summaryItems={summaryItems}
                   timelineEstimate={config.timelineEstimate}
                   requiredItems={config.requiredItems}
                   readinessScore={readinessScore}
@@ -1258,45 +1281,6 @@ export function CheckoutDrawer({
                     </Button>
                   </div>
 
-                  <p className="mt-3 text-xs text-muted-foreground">Flow status: {flow.primaryState}</p>
-                </section>
-
-                <section className="rounded-lg border border-border p-4">
-                  <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                    Endpoint Contract (Review)
-                  </h3>
-                  <div className="space-y-4">
-                    {[
-                      config.checkoutEndpoints.orderCreate,
-                      config.checkoutEndpoints.create,
-                      config.checkoutEndpoints.onboardingSubmit,
-                      ...(config.checkoutEndpoints.verify ? [config.checkoutEndpoints.verify] : []),
-                    ].map((endpoint) => (
-                      <div key={`${endpoint.method}-${endpoint.path}`} className="rounded-md border border-border p-3">
-                        <p className="text-sm font-medium">
-                          {endpoint.label}
-                          {endpoint.optional ? (
-                            <span className="ml-2 text-xs font-normal text-muted-foreground">
-                              (optional)
-                            </span>
-                          ) : null}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {endpoint.method} {endpoint.path}
-                        </p>
-                        <p className="mt-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                          Response fields
-                        </p>
-                        <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
-                          {endpoint.responseFields.map((field) => (
-                            <li key={`${endpoint.path}-${field.key}`}>
-                              • <span className="font-mono text-[11px]">{field.key}</span>: {field.label}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
                 </section>
 
                 <section className="rounded-lg border border-border p-4">
@@ -1377,7 +1361,9 @@ export function CheckoutDrawer({
 
       <SuccessDrawer
         open={isAfterPurchaseOpen}
-        onOpenChange={setIsAfterPurchaseOpen}
+        onOpenChange={(nextOpen) => {
+          if (nextOpen) setIsAfterPurchaseOpen(true);
+        }}
         primaryState={flow.primaryState}
         errorMessage={flow.errorMessage}
         productName={productName}
@@ -1396,6 +1382,7 @@ export function CheckoutDrawer({
         bookingDateLabel={bookingDateLabel}
         bookingTimeLabel={bookingTimeLabel}
         onRetryVerification={handleRetryVerification}
+        onBack={() => setIsAfterPurchaseOpen(false)}
         onStartNewPurchase={handleStartNewPurchase}
         onBookingClick={() => {
           const fallbackUrl = `${window.location.origin}/products/success?orderId=${encodeURIComponent(flow.orderId || fallbackOrderId)}`;

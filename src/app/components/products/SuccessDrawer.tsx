@@ -3,7 +3,6 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerFooter,
@@ -40,6 +39,7 @@ export interface SuccessDrawerProps {
   bookingTimeLabel: string;
   onRetryVerification: () => void;
   onStartNewPurchase: () => void;
+  onBack: () => void;
   onBookingClick: () => void;
   onResendClick: () => void;
   onSupportClick: () => void;
@@ -94,6 +94,7 @@ export function SuccessDrawer({
   bookingTimeLabel,
   onRetryVerification,
   onStartNewPurchase,
+  onBack,
   onBookingClick,
   onResendClick,
   onSupportClick,
@@ -109,7 +110,8 @@ export function SuccessDrawer({
   prepCallUrl,
 }: SuccessDrawerProps) {
   const loading = primaryState === "return_success_loading";
-  const driveUploadPlaceholderUrl = "https://drive.google.com/drive/my-drive";
+  const uploadLink = secureUploadUrl.trim();
+  const hasUploadLink = uploadLink.startsWith("http://") || uploadLink.startsWith("https://");
 
   function patchSafeConfig<K extends keyof SafeConfigInput>(key: K, value: SafeConfigInput[K]) {
     onSafeConfigChange({
@@ -119,7 +121,7 @@ export function SuccessDrawer({
   }
 
   return (
-    <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
+    <Drawer direction="right" open={open} onOpenChange={onOpenChange} dismissible={false}>
       <DrawerContent className="h-full w-full sm:max-w-[44rem]">
         <ConfettiTrigger shouldFire={primaryState === "payment_confirmed"} />
 
@@ -413,14 +415,20 @@ export function SuccessDrawer({
                   )}
                 </div>
 
-                <a
-                  href={driveUploadPlaceholderUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600"
-                >
-                  Drive upload (placeholder)
-                </a>
+                {hasUploadLink ? (
+                  <a
+                    href={uploadLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600"
+                  >
+                    Secure Upload Link
+                  </a>
+                ) : (
+                  <p className="mt-4 text-xs text-muted-foreground">
+                    Upload link will be shared after booking confirmation.
+                  </p>
+                )}
               </section>
 
               <section className="rounded-lg border border-border p-4">
@@ -474,12 +482,12 @@ export function SuccessDrawer({
         </div>
 
         <DrawerFooter>
+          <Button variant="outline" onClick={onBack}>
+            Back
+          </Button>
           <Button variant="outline" onClick={onStartNewPurchase}>
             Start new purchase
           </Button>
-          <DrawerClose asChild>
-            <Button className="bg-orange-500 text-white hover:bg-orange-600">Done</Button>
-          </DrawerClose>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

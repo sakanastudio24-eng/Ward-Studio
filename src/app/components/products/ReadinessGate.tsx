@@ -3,7 +3,6 @@ import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import type { ReadinessPath } from "../../../lib/rules";
 
 export interface ReadinessGateProps {
-  summaryItems: string[];
   timelineEstimate: string;
   requiredItems: string[];
   readinessScore: number;
@@ -34,7 +33,6 @@ export interface ReadinessGateProps {
 }
 
 export function ReadinessGate({
-  summaryItems,
   timelineEstimate,
   requiredItems,
   readinessScore,
@@ -51,18 +49,7 @@ export function ReadinessGate({
 }: ReadinessGateProps) {
   return (
     <>
-      <section className="rounded-lg border border-border p-4">
-        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Configuration Summary
-        </h3>
-        <ul className="space-y-1 text-xs text-muted-foreground">
-          {summaryItems.map((item) => (
-            <li key={item}>• {item}</li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="rounded-lg border border-border p-4">
+      <section id="readiness-meter-section" className="rounded-lg border border-border p-4">
         <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Requirements to Move Forward
         </h3>
@@ -87,6 +74,7 @@ export function ReadinessGate({
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Readiness checklist</p>
           <label className="flex items-start gap-2 text-sm">
             <Checkbox
+              id="readiness-identity"
               checked={readinessChecks.identity}
               onCheckedChange={(checked) => onReadinessCheckChange("identity", checked === true)}
             />
@@ -94,6 +82,7 @@ export function ReadinessGate({
           </label>
           <label className="flex items-start gap-2 text-sm">
             <Checkbox
+              id="readiness-photos"
               checked={readinessChecks.photos}
               onCheckedChange={(checked) => onReadinessCheckChange("photos", checked === true)}
             />
@@ -101,6 +90,7 @@ export function ReadinessGate({
           </label>
           <label className="flex items-start gap-2 text-sm">
             <Checkbox
+              id="readiness-booking-method"
               checked={readinessChecks.bookingMethod}
               onCheckedChange={(checked) => onReadinessCheckChange("bookingMethod", checked === true)}
             />
