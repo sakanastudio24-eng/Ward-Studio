@@ -1,179 +1,88 @@
-# Ward Studio
+# Ward Studio Website
 
-This project was exported from Figma Make and implemented as a Next.js app.
+This repository powers the public Ward Studio website at `zward.studio`.
 
-Original design file:
-https://www.figma.com/design/21pSCd2N9TKtVwZv4mwp2n/Ward-Studio-Positioning-Update
+It is a production site with portfolio presentation, product sales flow, legal pages, and contact/intake operations.
 
-## Local development
+## Site Overview
 
-1. Install dependencies:
-   `npm install`
-2. Start dev server:
-   `npm run dev`
-3. Build production bundle:
-   `npm run build`
-4. Run production server:
-   `npm run start`
+The site is structured around four public areas:
 
-## Contact Form Email Setup
+- Home (`/`): hero, engineering work, case studies, contact, and footer navigation.
+- Products (`/products`): product sales experience with staged drawers.
+- Projects (`/projects`): full work catalog.
+- Legal (`/terms`, `/privacy`): terms and refund context.
 
-The contact form now posts to `/api/contact` and sends inquiry details to the owner email using a Resend template.
+Other public behavior:
 
-Set these environment variables in `.env.local`:
+- Custom not found page: `/not-found` handler via `src/app/not-found.tsx`
+- Success route for purchase return state: `/products/success`
+- SEO endpoints: `/sitemap.xml` and `/robots.txt`
 
-- `RESEND_API_KEY=...`
-- `CONTACT_OWNER_EMAIL=owner@yourdomain.com`
-- `CONTACT_FROM_EMAIL=hello@yourdomain.com` (optional, defaults to `onboarding@resend.dev`)
-- `RESEND_CONTACT_TEMPLATE_ID=...` (template id from Resend)
-- `RESEND_TEMPLATE_NAME=wardstudio-contact-inquiry` (optional, used by template script)
+## Product State
 
-### Resend template workflow
+- DetailFlow is the active product flow.
+- InkBot is shown as in development with request-access CTA.
 
-This project includes a template manager:
+DetailFlow purchase experience:
 
-`npm run resend:templates -- <command> [--id=...]`
+1. Select plan and add-ons
+2. Complete readiness gate
+3. Review pricing and pay deposit
+4. Complete post-purchase setup drawer
 
-Commands:
+Implementation reference: `flow.md`
 
-- `create`
-- `get --id=<template-id>`
-- `update --id=<template-id>`
-- `publish --id=<template-id>`
-- `duplicate --id=<template-id>`
-- `delete --id=<template-id>`
-- `list --limit=10 --after=<template-id>`
+## Technical Architecture
 
-Example:
+- Framework: Next.js App Router
+- Language: TypeScript
+- Styling: Tailwind + custom theme CSS
+- Analytics: Vercel Analytics
+- Email: Resend (server-side only)
+- Persistence: Supabase (service-role server client)
 
-1. Create:
-   `npm run resend:templates -- create`
-2. Publish:
-   `npm run resend:templates -- publish --id=<template-id>`
-3. Set `RESEND_CONTACT_TEMPLATE_ID=<template-id>` in `.env.local`
+Key app areas:
 
-## Product Purchase Drawer Flow
+- Pages/routes: `src/app`
+- Shared UI: `src/app/components`
+- Product flows: `src/app/components/products`
+- Business rules and pricing: `src/lib`
+- Config constants: `src/config`
 
-Flow reference:
-- `flow.md`
+## API Surface (Current)
 
-DetailFlow and InkBot purchase flows live under:
-- `src/app/components/products/ProductPurchaseDrawer.tsx`
-- `src/app/components/products/CheckoutDrawer.tsx` (DetailFlow staged flow)
-- `src/app/components/products/PlanSelector.tsx`
-- `src/app/components/products/AddonSelector.tsx`
-- `src/app/components/products/PriceSummary.tsx`
+Core routes used by the live product wrapper:
 
-DetailFlow flow behavior:
-1. Bottom drawer flow: `package -> readiness -> payment`
-2. On `Pay deposit`, client first calls `POST /api/orders/create` and stores `order_id`
-3. Checkout then calls `POST /api/checkout/create` with that `orderId`
-4. Verification uses `GET /api/checkout/verify?session_id=...`
-5. Post-purchase right drawer handles booking CTA and setup submission via `POST /api/onboarding/submit`
+- `POST /api/orders/create`: create order record before checkout.
+- `POST /api/checkout/create`: create checkout session state.
+- `GET /api/checkout/verify`: verify paid status and return summary.
+- `POST /api/onboarding/submit`: store safe onboarding config and asset links.
 
-Activation note:
-- DetailFlow is active.
-- InkBot remains visible as roadmap context and is currently request-access only.
+Supporting routes:
 
-Pricing/rules are centralized in:
-- `src/lib/pricing.ts`
-- `src/lib/rules.ts`
-
-## Server-Only Order Emails
-
-Order emails are server-only and centralized in:
-- `src/lib/email.ts`
-
-Payment-confirmed trigger:
-- `GET /api/checkout/verify?session_id=...`
-- On paid status, server sends:
-  - client "Order Confirmed + Next Steps"
-  - internal "New Order"
-- Includes in-memory dedupe by order id for v1.
-
-Testing endpoint:
+- `POST /api/contact`
 - `POST /api/email/order-confirmed`
-- Supports server-side/manual testing for order-confirmed emails.
-
-Config submission notifications:
-- `POST /api/orders`
-- Sends internal config-submission email.
-- Optional buyer acknowledgement can be enabled with:
-  - `ORDERS_SEND_BUYER_ACK=true`
-
-Supabase-backed setup submission path used by DetailFlow UI:
-- `POST /api/onboarding/submit`
-- Validates `order_id`, strips sensitive config keys, validates asset links, stores onboarding payload.
-
-Booking-confirmed trigger:
 - `POST /api/cal/webhook`
-- Validates `CAL_WEBHOOK_SECRET` when configured.
-- Sends:
-  - client reminder + upload instructions
-  - internal booking-confirmed notification
-- Uses in-memory dedupe by `eventId + orderId`.
+- `POST /api/orders` (legacy-compatible config submission path)
 
-## Success Page Verification + Confetti
+## Operations and SEO
 
-Success route:
-- `src/app/products/success/page.tsx`
-- `src/app/products/success/SuccessClient.tsx`
+Canonical site URL is sourced from `NEXT_PUBLIC_SITE_URL` with fallback `https://www.zward.studio`.
 
-Verification endpoint:
-- `src/app/api/checkout/verify/route.ts`
+Sitemap and robots are generated via App Router metadata routes:
 
-Behavior:
-- Success page starts with `Confirming payment...`
-- Calls `/api/checkout/verify?session_id=...`
-- On verified paid state and `celebrate=1`, launches confetti once per browser session using:
-  - `sessionStorage` key: `ward_welcome_confetti_shown`
+- `src/app/sitemap.ts`
+- `src/app/robots.ts`
 
-## Product Flow Environment Variables
+## Local Development
 
-Set these in `.env.local` as needed:
+1. Install dependencies: `npm install`
+2. Start dev server: `npm run dev`
+3. Production build: `npm run build`
+4. Production run: `npm run start`
 
-- `RESEND_API_KEY=...`
-- `EMAIL_FROM="Ward Studio <onboarding@resend.dev>"`
-- `EMAIL_INTERNAL_TO=owner@yourdomain.com`
-- `SUPABASE_URL=...`
-- `SUPABASE_SERVICE_ROLE_KEY=...` (server only)
-- `NEXT_PUBLIC_SITE_URL=https://yourdomain.com`
-- `NEXT_PUBLIC_STRATEGY_CALL_URL=...`
-- `NEXT_PUBLIC_SECURE_UPLOAD_URL=...`
-- `ORDERS_SEND_BUYER_ACK=false` (set to `true` to send buyer config-submission ack)
-- `CAL_WEBHOOK_SECRET=...`
+## Notes
 
-## Supabase Minimal Setup
-
-Run this SQL in Supabase SQL editor:
-- `scripts/supabase_minimal_setup.sql`
-
-It creates:
-- `orders`
-- `onboarding_submissions`
-
-## DetailFlow API Endpoints (v1 Wrapper)
-
-- `POST /api/orders/create`
-  - Creates `orders` row before checkout
-  - Request: `{ product_id, tier_id, addon_ids, customer_email? }`
-  - Response: `{ order_id }`
-
-- `POST /api/checkout/create`
-  - Creates checkout session record
-  - Supports optional `orderId` so checkout and onboarding share one order id
-
-- `GET /api/checkout/verify?session_id=...`
-  - Verifies checkout state and returns paid summary payload
-
-- `POST /api/onboarding/submit`
-  - Stores post-purchase safe config and optional asset links
-  - Request: `{ order_id, config_json, asset_links? }`
-  - Response: `{ ok: true, warning?: string }`
-
-## Git remote
-
-`origin` is configured to:
-
-`https://github.com/sakanastudio24-eng/Ward-Studio.git`
-  
+- Keep secrets server-only.
+- Do not send API keys/passwords through customer-facing forms or emails.
