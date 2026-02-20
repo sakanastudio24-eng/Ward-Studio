@@ -10,6 +10,13 @@
     "resend:templates": "node scripts/resend-templates.mjs",
     "perf:optimize-previews": "node scripts/optimize-case-study-previews.mjs"
   },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Edge versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions",
+    "not dead"
+  ],
   "dependencies": {
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
