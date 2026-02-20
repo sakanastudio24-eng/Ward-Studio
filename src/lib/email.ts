@@ -54,6 +54,10 @@ export type EmailBundleResult = {
   };
 };
 
+export type EmailBundleOptions = {
+  force?: boolean;
+};
+
 function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
@@ -270,8 +274,11 @@ export async function sendInternalNewOrder(input: OrderConfirmedInput) {
 /**
  * Sends both order-confirmed emails with in-memory idempotency.
  */
-export async function sendOrderConfirmedBundle(input: OrderConfirmedInput): Promise<EmailBundleResult> {
-  if (markOrSkipOrderConfirmation(input.orderId)) {
+export async function sendOrderConfirmedBundle(
+  input: OrderConfirmedInput,
+  options: EmailBundleOptions = {},
+): Promise<EmailBundleResult> {
+  if (!options.force && markOrSkipOrderConfirmation(input.orderId)) {
     return {
       deduped: true,
       sent: {

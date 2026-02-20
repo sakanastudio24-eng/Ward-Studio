@@ -204,6 +204,8 @@ type CheckoutCreateResponse = {
   url: string;
   sessionId: string;
   orderId: string;
+  liveCheckout?: boolean;
+  liveCheckoutWarning?: string;
 };
 
 type OrderCreateResponse = {
@@ -319,7 +321,6 @@ export function CheckoutDrawer({
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [readinessNotice, setReadinessNotice] = useState("");
   const [policyOverlay, setPolicyOverlay] = useState<"terms" | "refund" | null>(null);
-  const [awaitingBookingReturn, setAwaitingBookingReturn] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [bookingDateLabel, setBookingDateLabel] = useState("{Date}");
   const [bookingTimeLabel, setBookingTimeLabel] = useState("{Time}");
@@ -620,41 +621,12 @@ export function CheckoutDrawer({
     successViewedTrackedRef.current = true;
   }, [isAfterPurchaseOpen, analyticsSharedProps]);
 
-  useEffect(() => {
-    if (!isAfterPurchaseOpen || !awaitingBookingReturn) return;
-
-    const handleFocus = () => {
-      const now = new Date();
-      setBookingDateLabel(
-        new Intl.DateTimeFormat("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }).format(now),
-      );
-      setBookingTimeLabel(
-        new Intl.DateTimeFormat("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-        }).format(now),
-      );
-      setBookingConfirmed(true);
-      setAwaitingBookingReturn(false);
-      dispatchFlow({ type: "MARK_INTERACTION", interaction: "booking_confirmed" });
-      trackCheckoutEvent("booking_confirmed");
-    };
-
-    window.addEventListener("focus", handleFocus, { once: true });
-    return () => window.removeEventListener("focus", handleFocus);
-  }, [awaitingBookingReturn, isAfterPurchaseOpen]);
-
   function resetToDefaults() {
     setStep("package");
     setValidationErrors([]);
     setReadinessNotice("");
     setIsAfterPurchaseOpen(false);
     setPolicyOverlay(null);
-    setAwaitingBookingReturn(false);
     setBookingConfirmed(false);
     setBookingDateLabel("{Date}");
     setBookingTimeLabel("{Time}");
@@ -907,6 +879,9 @@ export function CheckoutDrawer({
       url: data.url || "",
       sessionId: data.sessionId,
       orderId: data.orderId,
+      liveCheckout: data.liveCheckout === true,
+      liveCheckoutWarning:
+        typeof data.liveCheckoutWarning === "string" ? data.liveCheckoutWarning : "",
     };
   }
 
@@ -965,7 +940,6 @@ export function CheckoutDrawer({
     setValidationErrors([]);
     setResendNotice("");
     setBookingConfirmed(false);
-    setAwaitingBookingReturn(false);
     setSafeConfig((prev) => ({
       ...prev,
       business_name: form.customerName.trim() || prev.business_name,
@@ -974,7 +948,6 @@ export function CheckoutDrawer({
     trackCheckoutEvent("checkout_clicked");
     dispatchFlow({ type: "START_CHECKOUT" });
     setIsOpen(false);
-    setIsAfterPurchaseOpen(true);
 
     try {
       let nextOrderId = createdOrderId;
@@ -987,6 +960,20 @@ export function CheckoutDrawer({
       const checkout = await requestCheckoutSession(nextOrderId);
       setActiveSessionId(checkout.sessionId);
       trackCheckoutEvent("stripe_redirected", { stripe_url_present: Boolean(checkout.url) });
+
+      if (checkout.liveCheckoutWarning && !checkout.liveCheckout) {
+        toast.warning(`Stripe live checkout unavailable: ${checkout.liveCheckoutWarning}`);
+      }
+
+      if (checkout.liveCheckout && checkout.url) {
+        if (checkout.liveCheckoutWarning) {
+          toast.warning(checkout.liveCheckoutWarning);
+        }
+        window.location.assign(checkout.url);
+        return;
+      }
+
+      setIsAfterPurchaseOpen(true);
 
       dispatchFlow({ type: "START_RETURN_CONFIRM" });
       const verification = await requestCheckoutVerification(checkout.sessionId);
@@ -1395,14 +1382,64 @@ export function CheckoutDrawer({
 
           dispatchFlow({ type: "MARK_INTERACTION", interaction: "booking_clicked" });
           trackCheckoutEvent("booking_clicked");
-          setAwaitingBookingReturn(true);
           window.open(targetUrl.toString(), "_blank", "noopener,noreferrer");
         }}
         onResendClick={() => {
-          setResendNotice("Confirmation resent (demo).");
-          dispatchFlow({ type: "MARK_INTERACTION", interaction: "resend_clicked" });
-          dispatchFlow({ type: "MARK_INTERACTION", interaction: "email_sent_shown" });
-          trackCheckoutEvent("resend_email_clicked");
+          const targetEmail = form.customerEmail.trim();
+          const targetOrderId = flow.orderId || createdOrderId || fallbackOrderId;
+
+          if (!targetEmail) {
+            setResendNotice("Customer email is missing. Add buyer email before requesting resend.");
+            toast.error("Customer email is required to resend confirmation");
+            return;
+          }
+
+          void (async () => {
+            try {
+              const response = await fetch("/api/email/order-confirmed", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  orderId: targetOrderId,
+                  customerEmail: targetEmail,
+                  customerName: form.customerName.trim() || undefined,
+                  summary: {
+                    tierLabel: selectedTierLabel,
+                    addOnLabels: selectedAddOnLabels,
+                    deposit: depositToday,
+                    remaining: remainingBalance,
+                  },
+                  bookingUrl: config.strategyCallUrl || prepCallUrl,
+                  stripeSessionId: activeSessionId || undefined,
+                  force: true,
+                }),
+              });
+
+              const payload = (await response.json().catch(() => null)) as
+                | { error?: string; deduped?: boolean; sent?: { client?: boolean; internal?: boolean } }
+                | null;
+
+              if (!response.ok) {
+                throw new Error(payload?.error || "Resend failed.");
+              }
+
+              const wasSent = Boolean(payload?.sent?.client || payload?.sent?.internal);
+              const message = wasSent
+                ? "Confirmation email resent."
+                : "Confirmation request received.";
+              setResendNotice(message);
+              toast.success(message);
+              dispatchFlow({ type: "MARK_INTERACTION", interaction: "resend_clicked" });
+              dispatchFlow({ type: "MARK_INTERACTION", interaction: "email_sent_shown" });
+              trackCheckoutEvent("resend_email_clicked");
+            } catch (error) {
+              const message = error instanceof Error ? error.message : "Resend failed.";
+              setResendNotice(message);
+              toast.error(message);
+            }
+          })();
         }}
         onSupportClick={() => {
           dispatchFlow({ type: "MARK_INTERACTION", interaction: "support_clicked" });

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { launchConfetti } from "../../../lib/confetti";
+import { CAL_LINKS } from "../../../config/cal";
 
 type VerifyStatus = "checking" | "paid" | "failed";
 
@@ -136,6 +137,17 @@ export default function SuccessClient() {
                 You will receive a confirmation and next-step response within 24-48 hours.
               </p>
             </section>
+
+            <div className="pt-2">
+              <a
+                href={CAL_LINKS.detailflowSetup}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600"
+              >
+                Book Your Strategy Call
+              </a>
+            </div>
           </>
         )}
 

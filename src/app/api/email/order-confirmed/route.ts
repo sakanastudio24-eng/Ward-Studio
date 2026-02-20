@@ -13,6 +13,7 @@ type OrderConfirmedRequestBody = {
   };
   bookingUrl?: string;
   stripeSessionId?: string;
+  force?: boolean;
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -39,6 +40,10 @@ function isValidUrl(value: string): boolean {
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+function getBoolean(value: unknown): boolean {
+  return value === true;
 }
 
 function parseSummary(input: unknown): OrderSummary | null {
@@ -81,6 +86,7 @@ export async function POST(request: Request) {
   const customerName = getString(payload.customerName);
   const bookingUrl = getString(payload.bookingUrl);
   const stripeSessionId = getString(payload.stripeSessionId);
+  const force = getBoolean(payload.force);
   const summary = parseSummary(payload.summary);
 
   if (!orderId || !customerEmail || !summary || !bookingUrl) {
@@ -109,7 +115,7 @@ export async function POST(request: Request) {
       summary,
       bookingUrl,
       stripeSessionId: stripeSessionId || undefined,
-    });
+    }, { force });
 
     return NextResponse.json({
       ok: true,

@@ -5,7 +5,13 @@ import {
   isDetailflowAddonId,
   isDetailflowTierId,
 } from "../../../../lib/checkout/session-store";
-import type { DetailflowAddonId } from "../../../../lib/pricing";
+import {
+  PRICING,
+  computeDepositToday,
+  computeRemainingBalance,
+  computeTotal,
+  type DetailflowAddonId,
+} from "../../../../lib/pricing";
 import { getSupabaseServerClient } from "../../../../lib/supabase/server";
 
 type CreateCheckoutRequestBody = {
@@ -16,11 +22,103 @@ type CreateCheckoutRequestBody = {
   orderId?: string;
 };
 
+type StripeCheckoutSessionResponse = Record<string, unknown>;
+
+function getString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 function toStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value
     .map((item) => (typeof item === "string" ? item.trim() : ""))
     .filter(Boolean);
+}
+
+function toStripeAmountCents(amountUsd: number): number {
+  return Math.max(0, Math.round(amountUsd * 100));
+}
+
+function getStripeCheckoutEnabled(): boolean {
+  return process.env.STRIPE_CHECKOUT_LIVE_MODE === "true";
+}
+
+async function createStripeCheckoutSession(input: {
+  origin: string;
+  orderId: string;
+  tierId: string;
+  addonIds: DetailflowAddonId[];
+  customerEmail: string;
+  depositAmountUsd: number;
+}): Promise<
+  | { ok: true; url: string; sessionId: string }
+  | { ok: false; error: string }
+> {
+  const secretKey = process.env.STRIPE_SECRET_KEY?.trim() || "";
+  if (!secretKey) {
+    return { ok: false, error: "STRIPE_SECRET_KEY is missing." };
+  }
+
+  const successUrl = `${input.origin}/products/success?session_id={CHECKOUT_SESSION_ID}&celebrate=1`;
+  const cancelUrl = `${input.origin}/products#detailflow-template`;
+  const amountCents = toStripeAmountCents(input.depositAmountUsd);
+
+  const form = new URLSearchParams();
+  form.set("mode", "payment");
+  form.set("success_url", successUrl);
+  form.set("cancel_url", cancelUrl);
+  form.set("client_reference_id", input.orderId);
+  if (input.customerEmail) {
+    form.set("customer_email", input.customerEmail);
+  }
+
+  form.set("line_items[0][quantity]", "1");
+  form.set("line_items[0][price_data][currency]", "usd");
+  form.set("line_items[0][price_data][unit_amount]", String(amountCents));
+  form.set(
+    "line_items[0][price_data][product_data][name]",
+    "DetailFlow Deposit",
+  );
+  form.set(
+    "line_items[0][price_data][product_data][description]",
+    `Order ${input.orderId} deposit for ${input.tierId} tier`,
+  );
+
+  form.set("metadata[orderId]", input.orderId);
+  form.set("metadata[tierId]", input.tierId);
+  form.set("metadata[addonIds]", input.addonIds.join(","));
+
+  const response = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${secretKey}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: form,
+  });
+
+  const payload = (await response.json().catch(() => ({}))) as StripeCheckoutSessionResponse;
+
+  if (!response.ok) {
+    let message = "Stripe checkout session creation failed.";
+    const maybeError = payload.error;
+    if (maybeError && typeof maybeError === "object" && !Array.isArray(maybeError)) {
+      const errorMessage = (maybeError as Record<string, unknown>).message;
+      if (typeof errorMessage === "string" && errorMessage.trim()) {
+        message = errorMessage.trim();
+      }
+    }
+    return { ok: false, error: message };
+  }
+
+  const sessionId = getString(payload.id);
+  const checkoutUrl = getString(payload.url);
+
+  if (!sessionId || !checkoutUrl) {
+    return { ok: false, error: "Stripe response missing checkout url or session id." };
+  }
+
+  return { ok: true, url: checkoutUrl, sessionId };
 }
 
 /**
@@ -58,20 +156,66 @@ export async function POST(request: Request) {
   const configuredOrigin =
     process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.NEXT_PUBLIC_APP_URL?.trim();
   const origin = configuredOrigin || requestUrl.origin;
+  const orderId = providedOrderId || "";
+
+  let liveCheckoutWarning = "";
+  if (getStripeCheckoutEnabled() && orderId) {
+    const depositAmountUsd = computeDepositToday(PRICING, tierId, typedAddonIds);
+    const totalAmountUsd = computeTotal(PRICING, tierId, typedAddonIds);
+    const remainingAmountUsd = computeRemainingBalance(PRICING, tierId, typedAddonIds);
+    const stripeSession = await createStripeCheckoutSession({
+      origin,
+      orderId,
+      tierId,
+      addonIds: typedAddonIds,
+      customerEmail,
+      depositAmountUsd,
+    });
+
+    if (stripeSession.ok) {
+      let persistenceWarning = "";
+      try {
+        const supabase = getSupabaseServerClient();
+        await supabase.updateOrderByOrderId(orderId, {
+          stripe_session_id: stripeSession.sessionId,
+          customer_email: customerEmail || null,
+          status: "created",
+        });
+      } catch (error) {
+        persistenceWarning = error instanceof Error ? error.message : "Supabase order sync failed.";
+      }
+
+      return NextResponse.json({
+        url: stripeSession.url,
+        sessionId: stripeSession.sessionId,
+        orderId,
+        tierId,
+        addonIds: typedAddonIds,
+        deposit: depositAmountUsd,
+        remaining: remainingAmountUsd,
+        amountTotal: totalAmountUsd,
+        currency: "usd",
+        liveCheckout: true,
+        ...(persistenceWarning ? { persistenceWarning } : {}),
+      });
+    }
+
+    liveCheckoutWarning = stripeSession.error;
+  }
 
   const record = createCheckoutSessionRecord({
     origin,
     tierId,
     addonIds: typedAddonIds,
     customerEmail,
-    orderId: providedOrderId || undefined,
+    orderId: orderId || undefined,
   });
 
   let persistenceWarning = "";
-  if (providedOrderId) {
+  if (orderId) {
     try {
       const supabase = getSupabaseServerClient();
-      await supabase.updateOrderByOrderId(providedOrderId, {
+      await supabase.updateOrderByOrderId(orderId, {
         stripe_session_id: record.sessionId,
         customer_email: customerEmail || null,
       });
@@ -90,6 +234,8 @@ export async function POST(request: Request) {
     remaining: record.remaining,
     amountTotal: record.total,
     currency: record.currency,
+    liveCheckout: false,
+    ...(liveCheckoutWarning ? { liveCheckoutWarning } : {}),
     ...(persistenceWarning ? { persistenceWarning } : {}),
   });
 }
