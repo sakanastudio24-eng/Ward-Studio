@@ -64,6 +64,7 @@ import {
   type SafeConfigInput,
 } from "../../../lib/config-generator/detailflow";
 import { PRODUCTS } from "../../../config/products";
+import { DEFAULT_OWNER_EMAIL } from "../../../config/email";
 
 export type DetailflowStep = "package" | "readiness" | "payment";
 
@@ -472,8 +473,8 @@ export function CheckoutDrawer({
     [config.generalAddOns, config.readinessAddOns],
   );
 
-  const confirmationEmail = config.confirmationEmail || "customer@email.com";
-  const supportEmail = config.supportEmail || "support@wardstudio.com";
+  const confirmationEmail = config.confirmationEmail || DEFAULT_OWNER_EMAIL;
+  const supportEmail = config.supportEmail || DEFAULT_OWNER_EMAIL;
   const secureUploadUrl = config.secureUploadUrl || "#";
   const prepCallUrl = config.strategyCallUrl || "https://cal.com/";
 

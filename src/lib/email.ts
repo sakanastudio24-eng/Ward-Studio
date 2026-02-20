@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { DEFAULT_EMAIL_FROM, DEFAULT_OWNER_EMAIL } from "../config/email";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
@@ -78,9 +79,12 @@ function splitCsv(value: string): string[] {
 
 function getMailConfig() {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || process.env.ORDERS_FROM_EMAIL || "Ward Studio <onboarding@resend.dev>";
+  const from = process.env.EMAIL_FROM || process.env.ORDERS_FROM_EMAIL || DEFAULT_EMAIL_FROM;
   const internalTo =
-    process.env.EMAIL_INTERNAL_TO || process.env.ORDERS_OWNER_EMAIL || process.env.CONTACT_OWNER_EMAIL || "";
+    process.env.EMAIL_INTERNAL_TO ||
+    process.env.ORDERS_OWNER_EMAIL ||
+    process.env.CONTACT_OWNER_EMAIL ||
+    DEFAULT_OWNER_EMAIL;
 
   if (!apiKey) {
     throw new Error("Missing RESEND_API_KEY.");

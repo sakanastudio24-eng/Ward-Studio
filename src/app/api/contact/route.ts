@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
+import { DEFAULT_OWNER_EMAIL } from "../../../config/email";
 
 interface ContactRequestBody {
   name?: string;
@@ -29,15 +30,15 @@ function escapeHtml(value: string): string {
 
 export async function POST(request: Request) {
   const resendApiKey = process.env.RESEND_API_KEY;
-  const ownerEmail = process.env.CONTACT_OWNER_EMAIL;
+  const ownerEmail = process.env.CONTACT_OWNER_EMAIL || DEFAULT_OWNER_EMAIL;
   const templateId = process.env.RESEND_CONTACT_TEMPLATE_ID;
-  const fromEmail = process.env.CONTACT_FROM_EMAIL || "onboarding@resend.dev";
+  const fromEmail = process.env.CONTACT_FROM_EMAIL || DEFAULT_OWNER_EMAIL;
 
-  if (!resendApiKey || !ownerEmail || !templateId) {
+  if (!resendApiKey || !templateId) {
     return NextResponse.json(
       {
         error:
-          "Server email config is missing. Set RESEND_API_KEY, CONTACT_OWNER_EMAIL, and RESEND_CONTACT_TEMPLATE_ID.",
+          "Server email config is missing. Set RESEND_API_KEY and RESEND_CONTACT_TEMPLATE_ID.",
       },
       { status: 500 }
     );

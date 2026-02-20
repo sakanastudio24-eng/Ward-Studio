@@ -1,5 +1,6 @@
 import { PRICING } from "../lib/pricing";
 import type { DetailflowAddonConfig } from "../app/components/products/CheckoutDrawer";
+import { DEFAULT_OWNER_EMAIL } from "../config/email";
 
 export function createDetailflowConfig(): DetailflowAddonConfig {
   return {
@@ -214,7 +215,7 @@ export function createDetailflowConfig(): DetailflowAddonConfig {
     strategyCallUrl:
       process.env.NEXT_PUBLIC_STRATEGY_CALL_URL || "https://cal.com/",
     secureUploadUrl: process.env.NEXT_PUBLIC_SECURE_UPLOAD_URL || "#",
-    confirmationEmail: "customer@email.com",
-    supportEmail: "support@wardstudio.com",
+    confirmationEmail: DEFAULT_OWNER_EMAIL,
+    supportEmail: DEFAULT_OWNER_EMAIL,
   };
 }
