@@ -25,6 +25,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  icons: {
+    icon: "/favicon.svg",
+  },
   openGraph: {
     title: "Ward Studio — Design & Engineering Systems",
     description:
