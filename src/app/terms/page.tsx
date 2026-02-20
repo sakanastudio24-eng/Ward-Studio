@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Terms & Conditions | Ward Studio",
   description:
-    "DetailFlow Template terms, payment structure, and refund policy for Ward Studio projects.",
+    "Terms and conditions for Zward Studio services, deposits, refunds, licensing, and client responsibilities.",
 };
 
 export default function TermsPage() {
@@ -22,121 +22,161 @@ export default function TermsPage() {
         <h1 className="text-[2rem] sm:text-[2.5rem] md:text-[3.5rem] tracking-tight mb-4">
           Terms & Conditions
         </h1>
-        <p className="text-sm text-muted-foreground mb-10">Effective date: February 18, 2026</p>
+        <p className="text-sm text-muted-foreground mb-2">Effective Date: February 19, 2026</p>
+        <p className="text-sm text-muted-foreground mb-2">Website: https://zward.studio</p>
+        <p className="text-sm text-muted-foreground mb-10">
+          Owner: Zechariah Ward (&quot;Zward Studio&quot;, &quot;Ward Studio&quot;, &quot;we&quot;, &quot;us&quot;)
+        </p>
 
         <div className="space-y-8 text-sm sm:text-base">
+          <section className="space-y-2">
+            <h2 className="text-xl tracking-tight">1. Agreement to Terms</h2>
+            <p className="text-muted-foreground">
+              By accessing this website or purchasing any product or service from Zward Studio, you agree to be
+              bound by these Terms &amp; Conditions.
+            </p>
+            <p className="text-muted-foreground">
+              If you do not agree, please do not use this website or purchase services.
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-xl tracking-tight">2. Services Provided</h2>
+            <p className="text-muted-foreground">
+              Zward Studio provides design and development services, including but not limited to:
+            </p>
+            <ul className="space-y-1 text-muted-foreground">
+              <li>Website templates</li>
+              <li>Custom website development</li>
+              <li>Booking and automation systems</li>
+              <li>System configuration</li>
+              <li>Consultation and strategy calls</li>
+              <li>Digital product builds</li>
+            </ul>
+            <p className="text-muted-foreground">
+              All services are delivered as described at the time of purchase or written agreement.
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-xl tracking-tight">3. Payments &amp; Deposits</h2>
+            <h3 className="text-lg tracking-tight">3.1 Deposits</h3>
+            <p className="text-muted-foreground">
+              Certain products and services require a deposit to reserve scheduling, lock project scope, and begin
+              configuration or development. Deposits are applied toward the total project cost.
+            </p>
+            <h3 className="text-lg tracking-tight">3.2 Final Payment</h3>
+            <p className="text-muted-foreground">
+              Remaining balances are due before final deployment, code transfer, asset delivery, or hosting handoff.
+              Failure to complete final payment may result in delayed delivery.
+            </p>
+            <p className="text-muted-foreground">
+              All payments are processed through third-party providers (for example, Stripe).
+            </p>
+          </section>
+
           <section id="refund-policy" className="space-y-2 scroll-mt-24">
-            <h2 className="text-xl tracking-tight">Refund Policy</h2>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-xl tracking-tight">1. Consultation Bookings</h2>
+            <h2 className="text-xl tracking-tight">4. Refund Policy</h2>
             <p className="text-muted-foreground">
-              Consultation sessions are refundable up to 24 hours before the scheduled call.
-              No-shows or cancellations within 24 hours are non-refundable.
+              Zward Studio operates on a time-reserved, digital product model. Refund terms are as follows.
             </p>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-xl tracking-tight">2. Build Deposits (Template Projects)</h2>
+            <h3 className="text-lg tracking-tight">4.1 Deposits</h3>
             <p className="text-muted-foreground">
-              A build deposit reserves your production slot. Deposits are fully refundable until
-              project kickoff and non-refundable once project work has started.
+              Deposits are refundable only if no development or configuration work has begun, and no consultation
+              or onboarding session has taken place. Once work has started, deposits are non-refundable.
+            </p>
+            <h3 className="text-lg tracking-tight">4.2 Template Products</h3>
+            <p className="text-muted-foreground">
+              Template products (including DetailFlow and similar system builds) may be refunded within 3 calendar
+              days of purchase only if no configuration work has started and no onboarding assets have been submitted.
             </p>
             <p className="text-muted-foreground">
-              Project kickoff occurs when the client submits required configuration details and
-              minimum assets (logo, services, etc.), or 48 hours after confirmation of readiness is
-              acknowledged by both parties. Once kickoff begins, development resources are allocated
-              and the deposit becomes non-refundable.
+              Once configuration or setup begins, the purchase becomes non-refundable. Templates are licensed digital
+              products and cannot be returned once delivered or configured.
             </p>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-xl tracking-tight">3. Hold My Spot Reservations</h2>
+            <h3 className="text-lg tracking-tight">4.3 Custom Development</h3>
             <p className="text-muted-foreground">
-              If a client pays a reservation/hold fee: refundable within 24 hours of payment,
-              non-refundable after 24 hours, and applies toward the final invoice if the project
-              proceeds within 14 days.
+              Custom development services are non-refundable once development begins.
             </p>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-xl tracking-tight">4. Asset Delay Policy</h2>
             <p className="text-muted-foreground">
-              If required assets are not submitted within 14 days, the project may be paused. The
-              deposit may convert to credit toward future scheduling. No automatic refund is issued
-              after work has been scheduled.
+              If a client cancels after work has started, completed deliverables up to that point may be provided.
+              Deposits remain non-refundable. Additional costs may apply depending on scope progress.
             </p>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-xl tracking-tight">5. Custom Work</h2>
+            <h3 className="text-lg tracking-tight">4.4 Project Inactivity</h3>
             <p className="text-muted-foreground">
-              Custom modifications outside the template scope are non-refundable once work has begun.
+              If required materials (assets, content, credentials) are not provided within 30 days, the project may
+              be marked inactive. Deposits remain non-refundable. Reactivation may require a restart or scope review.
+            </p>
+            <h3 className="text-lg tracking-tight">4.5 Chargebacks</h3>
+            <p className="text-muted-foreground">
+              Clients agree to contact Zward Studio before initiating any chargeback or payment dispute. Fraudulent
+              disputes may result in service termination and refusal of future services.
             </p>
           </section>
 
           <section id="terms-agreement" className="space-y-2 scroll-mt-24">
-            <h2 className="text-xl tracking-tight">DetailFlow Template Terms & Agreement (v1)</h2>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-xl tracking-tight">1. Scope of Work</h2>
+            <h2 className="text-xl tracking-tight">5. Client Responsibilities</h2>
             <p className="text-muted-foreground">
-              Template packages include layout configuration, design customization within template
-              limits, and deployment guidance (if applicable). Custom features beyond template scope
-              require additional approval and payment.
+              Clients agree to provide accurate project information, supply necessary assets and credentials, not
+              transmit sensitive credentials through unsecured channels, and respond to project communication in a
+              timely manner.
+            </p>
+            <p className="text-muted-foreground">
+              Delays caused by missing materials may impact timelines.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl tracking-tight">2. Client Responsibilities</h2>
+            <h2 className="text-xl tracking-tight">6. Intellectual Property</h2>
+            <h3 className="text-lg tracking-tight">6.1 Client Content</h3>
             <p className="text-muted-foreground">
-              Clients must provide accurate business information, required assets (logo, service
-              details, photos), booking method preference, and hosting access if self-managed. Ward
-              Studio is not responsible for delays caused by missing or incomplete materials.
+              Clients retain ownership of their brand assets, content, and materials.
+            </p>
+            <h3 className="text-lg tracking-tight">6.2 Template Licensing</h3>
+            <p className="text-muted-foreground">
+              Template purchases grant a non-transferable, non-resellable license for use by the purchasing business.
+            </p>
+            <p className="text-muted-foreground">Templates may not be resold, redistributed, shared publicly, or republished as competing products.</p>
+            <h3 className="text-lg tracking-tight">6.3 Custom Work</h3>
+            <p className="text-muted-foreground">
+              Custom work ownership transfers upon full payment. Zward Studio may display completed projects in
+              portfolio materials unless otherwise agreed.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl tracking-tight">3. Payment Structure</h2>
+            <h2 className="text-xl tracking-tight">7. Third-Party Services</h2>
             <p className="text-muted-foreground">
-              Projects require a deposit to reserve development time. Remaining balance is due before
-              final delivery or deployment.
+              Projects may integrate third-party tools including hosting providers, payment processors, booking
+              platforms, database services, and email systems.
+            </p>
+            <p className="text-muted-foreground">
+              Zward Studio is not responsible for outages, pricing changes, or service disruptions from third-party providers.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl tracking-tight">4. Hosting & Third-Party Services</h2>
+            <h2 className="text-xl tracking-tight">8. Limitation of Liability</h2>
             <p className="text-muted-foreground">
-              If the client chooses self-managed hosting (e.g., Vercel), third-party email services,
-              or payment providers, the client is responsible for maintaining those services. Ward
-              Studio is not responsible for outages, API changes, or platform limitations of
-              third-party tools.
+              All services are provided &quot;as-is.&quot;
+            </p>
+            <p className="text-muted-foreground">
+              Zward Studio shall not be liable for lost revenue, indirect or consequential damages, third-party outages,
+              client misconfiguration of credentials, or business losses due to external platform issues.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl tracking-tight">5. Intellectual Property</h2>
+            <h2 className="text-xl tracking-tight">9. Modifications to Terms</h2>
             <p className="text-muted-foreground">
-              Clients receive rights to use the delivered template configuration for their business.
-              Template source code ownership remains with Ward Studio unless otherwise agreed in
-              writing. Resale, redistribution, or replication of template structure is prohibited.
+              We reserve the right to update these Terms at any time. Updates will be posted on this page.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-xl tracking-tight">6. Limitation of Liability</h2>
+            <h2 className="text-xl tracking-tight">10. Contact</h2>
             <p className="text-muted-foreground">
-              Ward Studio is not liable for revenue loss, data loss due to client hosting
-              misconfiguration, or third-party service failures.
-            </p>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-xl tracking-tight">7. Refund Policy</h2>
-            <p className="text-muted-foreground">
-              Refund terms are governed by the Refund Policy outlined above.
+              For questions regarding these Terms: hello@zward.studio
             </p>
           </section>
         </div>
