@@ -29,6 +29,7 @@ Step sequence:
    - Collect buyer name + email
    - Create order first with `POST /api/orders/create`
    - Trigger checkout create + verify sequence
+   - `GET /api/checkout/verify` checks Stripe by `session_id` when `STRIPE_SECRET_KEY` is set
    - Open policy dialogs (`Terms`, `Refund`)
 
 Post-purchase:
@@ -110,7 +111,8 @@ Payment-confirmed email trigger:
 - On paid verification:
   - sends buyer "Next Steps" email
   - sends internal "New Order" email
-  - applies in-memory dedupe by `orderId` in v1
+  - writes `email_sent_at` on the order row when possible
+  - falls back to in-memory dedupe by `orderId` in v1 if DB state is unavailable
 
 Manual/testing order-confirmed route:
 - `POST /src/app/api/email/order-confirmed/route.ts`
@@ -125,6 +127,21 @@ Webhook endpoint:
 - `POST /src/app/api/cal/webhook/route.ts`
 - Triggered by Cal booking-created events.
 - Sends booking-confirmed emails and dedupes by `eventId + orderId`.
+
+## Stripe Read-Key Mode (Current)
+
+No webhook is required for this mode.
+
+- Required env: `STRIPE_SECRET_KEY`
+- Recommended restricted key scopes:
+  - `Checkout Sessions: Read`
+  - `Customers: Read` (optional)
+  - `Payment Intents: Read` (optional)
+
+Behavior:
+- `/api/checkout/verify` retrieves checkout sessions directly from Stripe using `session_id`.
+- Paid sessions are synced into Supabase (`orders.status`, `stripe_session_id`, optional `customer_email`).
+- Order-confirmation emails are sent server-side only after successful paid verification.
 
 ## Analytics + Confetti
 

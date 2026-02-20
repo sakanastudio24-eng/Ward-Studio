@@ -67,7 +67,7 @@ Core routes used by the live product wrapper:
 
 - `POST /api/orders/create`: create order record before checkout.
 - `POST /api/checkout/create`: create checkout session state.
-- `GET /api/checkout/verify`: verify paid status and return summary.
+- `GET /api/checkout/verify`: verify paid status and return summary (Stripe-backed when `STRIPE_SECRET_KEY` is set).
 - `POST /api/onboarding/submit`: store safe onboarding config and asset links.
 
 Supporting routes:
@@ -117,6 +117,23 @@ Preview generation script:
 2. Start dev server: `npm run dev`
 3. Production build: `npm run build`
 4. Production run: `npm run start`
+
+## Stripe Preparation (No Webhook Yet)
+
+Current payment verification mode is server-read only.
+
+- Add `STRIPE_SECRET_KEY` in environment variables.
+- Use a restricted key with:
+  - `Checkout Sessions: Read` (required)
+  - `Customers: Read` (optional)
+  - `Payment Intents: Read` (optional)
+
+When configured, the server can:
+
+- Retrieve checkout sessions by `session_id`
+- Confirm payment state
+- Sync order payment/session state to Supabase
+- Send client/internal confirmation emails server-side
 
 ## Notes
 
