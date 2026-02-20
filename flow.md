@@ -142,3 +142,17 @@ Confetti trigger:
 - Terms: `/src/app/terms/page.tsx`
 - Success route: `/src/app/products/success/page.tsx`
 - Not found route: `/src/app/not-found.tsx`
+
+## Home Performance Notes
+
+Home route performance decisions:
+
+- Hero headline/primary copy render immediately (no initial delayed fade gate).
+- Dino/Flappy overlays are lazy-loaded via dynamic import and only downloaded when opened.
+- Project card preview surfaces support `<picture>` source sets and optimized AVIF/WebP previews.
+- High-resolution PNG files remain attached to modal/gallery flows for detail quality.
+
+Asset optimization helper:
+
+- Script: `scripts/optimize-case-study-previews.mjs`
+- Command: `npm run perf:optimize-previews`

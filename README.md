@@ -92,6 +92,25 @@ Notes:
 - Site config normalizes bare domains (for example, `zward.studio` -> `https://zward.studio`).
 - `/products/success` is intentionally excluded from sitemap indexing strategy.
 
+## Home Route Performance
+
+The home route includes an optimization pass focused on Lighthouse desktop metrics:
+
+- Above-the-fold hero content renders without initial opacity/delay gating.
+- Game overlays are code-split and loaded only when opened.
+- Case-study card previews use optimized AVIF/WebP assets in `public/case-studies/previews`.
+- Full-size PNG assets remain available for gallery/detail views.
+
+Preview generation script:
+
+- `npm run perf:optimize-previews`
+- Source files: `public/case-studies/detailflow-1.png`, `public/case-studies/inkbot-1.png`
+- Outputs:
+  - `public/case-studies/previews/detailflow-1-home.avif`
+  - `public/case-studies/previews/detailflow-1-home.webp`
+  - `public/case-studies/previews/inkbot-1-home.avif`
+  - `public/case-studies/previews/inkbot-1-home.webp`
+
 ## Local Development
 
 1. Install dependencies: `npm install`
