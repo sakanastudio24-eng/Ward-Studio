@@ -19,6 +19,17 @@ Other public behavior:
 - Success route for purchase return state: `/products/success`
 - SEO endpoints: `/sitemap.xml` and `/robots.txt`
 
+## Legal Pages
+
+The legal pages are active and client-facing:
+
+- `/terms` includes payments, deposits, refunds, licensing, liability, and client responsibilities.
+- `/privacy` includes data collection/use, third-party processors, retention, and security notes.
+
+Current legal contact:
+
+- `hello@zward.studio`
+
 ## Product State
 
 - DetailFlow is the active product flow.
@@ -74,6 +85,12 @@ Sitemap and robots are generated via App Router metadata routes:
 
 - `src/app/sitemap.ts`
 - `src/app/robots.ts`
+
+Notes:
+
+- `NEXT_PUBLIC_SITE_URL` may be set as either a full URL or bare domain.
+- Site config normalizes bare domains (for example, `zward.studio` -> `https://zward.studio`).
+- `/products/success` is intentionally excluded from sitemap indexing strategy.
 
 ## Local Development
 
