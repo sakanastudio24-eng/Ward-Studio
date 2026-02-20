@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/next";
 import "../styles/index.css";
 import { Providers } from "./providers";
 import { SITE_URL, toAbsoluteUrl } from "../config/site";
@@ -69,6 +70,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );
