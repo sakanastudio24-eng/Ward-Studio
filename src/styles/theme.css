@@ -227,6 +227,16 @@
   }
 }
 
+@media (max-width: 768px) {
+  [data-slot="drawer-content"] {
+    max-height: 100dvh;
+  }
+
+  [data-slot="drawer-content"] [data-slot="drawer-footer"] button {
+    width: 100%;
+  }
+}
+
 @media (max-width: 480px) {
   html {
     font-size: 14.5px;
@@ -242,6 +252,13 @@
   [data-slot="drawer-content"] select,
   [data-slot="drawer-content"] button {
     font-size: 0.95rem;
+    line-height: 1.35;
+  }
+
+  [data-slot="drawer-content"] p,
+  [data-slot="drawer-content"] li,
+  [data-slot="drawer-content"] a {
+    overflow-wrap: anywhere;
   }
 }
 
