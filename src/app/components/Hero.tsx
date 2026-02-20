@@ -78,7 +78,7 @@ export function Hero({ setTooltipText }: HeroProps) {
             >
               engineering
             </span>.
-            <span className={`mt-3 block text-[0.95rem] font-medium leading-[1.2] sm:mt-4 sm:text-[1.35rem] md:text-[1.8rem] ${getTaglineClass()}`}>
+            <span className={`mt-3 block text-[0.95rem] font-medium leading-[1.2] tracking-[0.08em] sm:mt-4 sm:text-[1.35rem] md:text-[1.8rem] ${getTaglineClass()}`}>
               Systems built to ship.
             </span>
           </motion.h1>
