@@ -62,7 +62,7 @@ export default function App() {
       <main>
         <Hero setTooltipText={setTooltipText} />
         <Capabilities />
-        <Work setTooltipText={setTooltipText} />
+        <Work scope="home" setTooltipText={setTooltipText} />
         <HowIWork />
         <Contact setTooltipText={setTooltipText} />
       </main>

@@ -2,6 +2,18 @@
 
 Date: 2026-02-15
 
+Update: 2026-02-19
+
+## In-File Function Notes + Flow Doc Pass
+
+- Added concise JSDoc notes above core purchase-flow, pricing, validation, analytics, and supabase helper functions.
+- Added `flow.md` at repository root documenting:
+  - DetailFlow 3-step drawer flow
+  - InkBot simple drawer flow
+  - reducer states
+  - pricing/rules/config/analytics integration points
+- Updated `README.md` and `DOCUMENTATION.md` to point to `flow.md`.
+
 ## Work Completed Before Next.js Migration
 
 ### Repository setup
@@ -70,3 +82,28 @@ Convert the project from Vite to Next.js and preserve existing section-based app
 - Contact
 - Footer
 - Game overlays (DinoGame and FlappyBird)
+
+## Product Purchase Updates (2026-02-18)
+
+### Component refactor
+- Extracted reusable purchase flow blocks:
+  - `CheckoutDrawer`
+  - `PlanAndAddons`
+  - `PriceSummary`
+- Moved shared pricing/rules to:
+  - `src/lib/pricing.ts`
+  - `src/lib/rules.ts`
+- Preserved InkBot simple drawer path while isolating DetailFlow staged logic.
+
+### Success verification flow
+- Added payment verification API:
+  - `src/app/api/stripe/session/route.ts`
+- Added client success state machine:
+  - checking -> paid -> failed in `src/app/products/success/SuccessClient.tsx`
+- Added confetti launch helper in `src/lib/confetti.ts`
+  - gated by `celebrate=1`
+  - once per session via `sessionStorage`
+
+### Current known review risks
+- Booking confirmation in right drawer is currently inferred from window focus return, not a booking provider callback.
+- Default strategy call URL fallback points to success route when `NEXT_PUBLIC_STRATEGY_CALL_URL` is unset.

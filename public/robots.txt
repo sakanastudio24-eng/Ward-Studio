@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://wardstudio.com/sitemap.xml
-Host: wardstudio.com
+Sitemap: https://www.zward.studio/sitemap.xml
+Host: www.zward.studio

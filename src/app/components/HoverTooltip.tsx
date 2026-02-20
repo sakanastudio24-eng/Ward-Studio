@@ -53,43 +53,48 @@ export function useHoverTooltip() {
 }
 
 /**
- * Map of button text to witty tooltip responses
- * Keys are lowercase button text, values are personality-driven messages
+ * Map of UI text to contextual tooltip responses.
+ * Keys are lowercase text values from buttons/links/card titles.
  */
 export const tooltipMessages: Record<string, string> = {
   // Hero section
-  "let's work": "Ready to see what we can do!",
-  "view work": "Prepare to be impressed!",
-  "see my work": "Prepare to be impressed!",
+  "let's work": "Open the contact form to start a scoped project.",
+  "view work": "Review engineering systems and case studies.",
+  "see my work": "Review engineering systems and case studies.",
   
   // Contact section
-  "get in touch": "Let's make something great!",
-  "send message": "I promise to respond!",
-  "submit": "Sending good vibes your way!",
+  "get in touch": "Share your goals, timeline, and constraints.",
+  "send message": "Send your inquiry for a structured response.",
+  "submit": "Send your project details.",
   
   // Footer
-  "home": "Back to the top!",
-  "work": "Check out the portfolio!",
-  "contact": "Let's chat!",
-  "games": "Time to play!",
-  "terms & conditions": "The boring legal stuff...",
+  "home": "Back to the top of the page.",
+  "work": "Go to the work section.",
+  "contact": "Open the contact section.",
+  "games": "Open the mini game.",
+  "terms & conditions": "Review terms, agreements, and refund policy.",
+  "privacy policy": "Review how inquiry and onboarding data is handled.",
+  "back to portfolio": "Return to the project index.",
+  "back to home": "Head back to the homepage.",
+  "view product": "Open the related product configuration flow.",
+  "view products": "Open all product systems and onboarding flows.",
+  "show all projects": "Open the full projects index.",
+  "products": "Open configurable product systems and pricing.",
+  "purchase": "Start the purchase flow and confirm scope.",
+  "github": "Open the source repository.",
   
-  // Case studies
-  "view case study": "Deep dive incoming!",
-  "close": "See you later!",
-  "heimdall grid analytics": "Real-time data at scale!",
-  "beagle booking system": "No more double bookings!",
-  "document processing pipeline": "Automation for the win!",
-  "catalyst brand system": "Brand consistency unlocked!",
-  "mobile-first redesign": "Mobile users deserve better!",
-  "editorial design system": "Typography done right!",
+  // Portfolio cards
+  "detailflow / cruz n clean": "See the booking and confirmation system architecture.",
+  "inkbot discord bot": "See the modular community automation system.",
+  "drawer flow": "See the staged drawer system and combined flow.",
+  "terminal adventure - systems-driven cli game": "See the CLI game systems and state architecture.",
   
   // Games
-  "close game": "Giving up already?",
-  "play game": "Challenge accepted!",
+  "close game": "Close the game overlay.",
+  "play game": "Start the game overlay.",
   
   // Default fallback
-  "default": "Click me, I dare you!",
+  "default": "Open details.",
 };
 
 // getTooltipMessage: Resolves normalized button text to a tooltip message.

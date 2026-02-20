@@ -9,33 +9,77 @@ interface ContactProps {
   setTooltipText: (text: string) => void;
 }
 
+const INITIAL_FORM_DATA = {
+  name: "",
+  company: "",
+  email: "",
+  budget: "",
+  timeline: "",
+  projectType: "",
+  goals: ""
+};
+
 // Contact: Captures project inquiry details and handles contact form submission.
 export function Contact({ setTooltipText }: ContactProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    company: "",
-    email: "",
-    budget: "",
-    timeline: "",
-    projectType: "",
-    goals: ""
-  });
+  const buildServices = [
+    "Landing Pages",
+    "Portfolio Sites",
+    "Booking Platforms",
+    "SaaS Dashboards",
+    "Design Systems",
+    "Discord Bots",
+    "Automation Workflows",
+    "API Backends",
+    "Internal Tools",
+    "UX Case Studies",
+    "Brand + Product Sites",
+    "Interactive Web Apps",
+    "Marketing Sites",
+    "Admin Panels",
+    "Client Portals",
+    "Payment Integrations",
+    "Email Automations",
+    "AI-Enhanced Features",
+  ];
+  const carouselServices = [...buildServices, ...buildServices, ...buildServices];
 
-  // handleSubmit: Handles form submission and resets the form after confirmation.
-  const handleSubmit = (e: React.FormEvent) => {
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+  const [submitMessage, setSubmitMessage] = useState("");
+
+  // handleSubmit: Sends form data to the contact API and updates UI status.
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock form submission
-    console.log("Form submitted:", formData);
-    alert("Thanks for reaching out! I'll respond within 24-48 hours.");
-    setFormData({
-      name: "",
-      company: "",
-      email: "",
-      budget: "",
-      timeline: "",
-      projectType: "",
-      goals: ""
-    });
+    setIsSubmitting(true);
+    setSubmitStatus("idle");
+    setSubmitMessage("");
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const responseData = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(responseData?.error || "Could not send your message right now.");
+      }
+
+      setSubmitStatus("success");
+      setSubmitMessage("Thanks for reaching out. Your message was sent to the owner email.");
+      setFormData(INITIAL_FORM_DATA);
+    } catch (error) {
+      setSubmitStatus("error");
+      setSubmitMessage(
+        error instanceof Error ? error.message : "Something went wrong while sending your message."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // handleChange: Updates text and textarea fields in the contact form state.
@@ -63,6 +107,24 @@ export function Contact({ setTooltipText }: ContactProps) {
   return (
     <section id="contact" className="py-24 md:py-32 px-4 sm:px-6 md:px-12">
       <div className="max-w-3xl mx-auto">
+        <div className="mb-10">
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">
+            What I Can Build For You
+          </p>
+          <div className="relative overflow-hidden py-1">
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-background via-background/80 to-transparent z-10" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background via-background/80 to-transparent z-10" />
+            <div className="word-carousel-right-track flex items-center gap-3 whitespace-nowrap">
+              {carouselServices.map((service, idx) => (
+                <div key={`${service}-${idx}`} className="flex items-center gap-3">
+                  <span className="text-sm sm:text-base text-muted-foreground">{service}</span>
+                  <span className="text-muted-foreground/40">•</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div className="mb-12">
           <h2 className="text-[2rem] sm:text-[2.5rem] md:text-[4rem] mb-4 tracking-tight">
             Get in Touch
@@ -160,11 +222,21 @@ export function Contact({ setTooltipText }: ContactProps) {
             type="submit" 
             size="lg" 
             className="w-full md:w-auto px-12"
+            disabled={isSubmitting}
             onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
             onMouseLeave={() => setTooltipText("")}
           >
-            Send Message
+            {isSubmitting ? "Sending..." : "Send Message"}
           </Button>
+
+          {submitStatus !== "idle" && (
+            <p
+              role="status"
+              className={`text-sm ${submitStatus === "success" ? "text-emerald-600" : "text-destructive"}`}
+            >
+              {submitMessage}
+            </p>
+          )}
         </form>
       </div>
     </section>

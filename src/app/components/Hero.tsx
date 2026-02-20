@@ -21,30 +21,46 @@ export function Hero({ setTooltipText }: HeroProps) {
   // getBackgroundClass: Maps the hovered keyword to the hero background class.
   const getBackgroundClass = () => {
     if (hoveredWord === 'design') return 'bg-orange-500';
-    if (hoveredWord === 'engineering') return 'bg-black';
+    if (hoveredWord === 'engineering') return 'bg-black dark:bg-white';
     return '';
   };
 
   // getTextClass: Sets text color classes for high-contrast hover states.
   const getTextClass = () => {
-    if (hoveredWord === 'design' || hoveredWord === 'engineering') return 'text-white';
+    if (hoveredWord === 'design') return 'text-white';
+    if (hoveredWord === 'engineering') return 'text-white dark:text-black';
     return '';
   };
 
+  const getSubtextClass = () => {
+    if (hoveredWord === 'design') return 'text-white/70';
+    if (hoveredWord === 'engineering') return 'text-white/70 dark:text-black/70';
+    return '';
+  };
+
+  const getTaglineClass = () => {
+    if (hoveredWord === "design") return "text-orange-100";
+    if (hoveredWord === "engineering") return "text-orange-400 dark:text-orange-600";
+    return "text-orange-500 dark:text-orange-400";
+  };
+
   return (
-    <section id="hero" className={`min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-12 transition-colors duration-300 ${getBackgroundClass()}`}>
+    <section
+      id="hero"
+      className={`flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 md:px-12 transition-colors duration-300 ${getBackgroundClass()}`}
+    >
       <div className="max-w-5xl w-full">
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <motion.p 
-            className={`text-xs md:text-sm mb-4 transition-colors duration-300 ${hoveredWord ? 'text-white/70' : 'text-muted-foreground'}`}
+            className={`text-xs md:text-sm mb-4 transition-colors duration-300 ${hoveredWord ? getSubtextClass() : 'text-muted-foreground'}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
             by Zechariah Ward
           </motion.p>
-          <motion.h1 
-            className={`text-[2.5rem] sm:text-[3rem] md:text-[5rem] lg:text-[6rem] leading-[0.95] tracking-tight mb-6 transition-colors duration-300 ${getTextClass()}`}
+          <motion.h1
+            className={`mb-5 text-[2.15rem] leading-[0.97] tracking-tight transition-colors duration-300 sm:mb-6 sm:text-[3rem] md:text-[5rem] lg:text-[6rem] ${getTextClass()}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -55,26 +71,28 @@ export function Hero({ setTooltipText }: HeroProps) {
               onMouseLeave={() => setHoveredWord(null)}
             >
               Design
-            </span> meets<br />
-            <span 
+            </span> meets <span 
               className="cursor-default"
               onMouseEnter={() => setHoveredWord('engineering')}
               onMouseLeave={() => setHoveredWord(null)}
             >
               engineering
             </span>.
+            <span className={`mt-3 block text-[0.95rem] font-medium leading-[1.2] sm:mt-4 sm:text-[1.35rem] md:text-[1.8rem] ${getTaglineClass()}`}>
+              Systems built to ship.
+            </span>
           </motion.h1>
           <motion.p 
-            className={`text-base sm:text-lg md:text-xl max-w-2xl leading-relaxed transition-colors duration-300 ${hoveredWord ? 'text-white/70' : 'text-muted-foreground'}`}
+            className={`max-w-2xl text-[0.98rem] leading-relaxed transition-colors duration-300 sm:text-lg md:text-xl ${hoveredWord ? getSubtextClass() : 'text-muted-foreground'}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            I contract with growing businesses to design brand systems, build modern web experiences, and ship production-ready digital tools.
+            I design and engineer production-ready systems for clear execution and reliable delivery.
           </motion.p>
         </div>
-        <motion.div 
-          className="flex flex-col sm:flex-row gap-4 mt-12"
+        <motion.div
+          className="mt-8 flex flex-col gap-3 sm:mt-12 sm:flex-row sm:gap-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
@@ -82,7 +100,7 @@ export function Hero({ setTooltipText }: HeroProps) {
           <Button 
             size="lg" 
             onClick={() => scrollToSection('contact')}
-            className="px-8"
+            className="w-full px-8 sm:w-auto"
             onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
             onMouseLeave={() => setTooltipText("")}
           >
@@ -92,7 +110,7 @@ export function Hero({ setTooltipText }: HeroProps) {
             size="lg" 
             variant="outline"
             onClick={() => scrollToSection('work')}
-            className="px-8"
+            className="w-full px-8 sm:w-auto"
             onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
             onMouseLeave={() => setTooltipText("")}
           >

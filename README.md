@@ -1,24 +1,88 @@
-# Ward Studio
+# Ward Studio Website
 
-This project was exported from Figma Make and implemented as a Next.js app.
+This repository powers the public Ward Studio website at `zward.studio`.
 
-Original design file:
-https://www.figma.com/design/21pSCd2N9TKtVwZv4mwp2n/Ward-Studio-Positioning-Update
+It is a production site with portfolio presentation, product sales flow, legal pages, and contact/intake operations.
 
-## Local development
+## Site Overview
 
-1. Install dependencies:
-   `npm install`
-2. Start dev server:
-   `npm run dev`
-3. Build production bundle:
-   `npm run build`
-4. Run production server:
-   `npm run start`
+The site is structured around four public areas:
 
-## Git remote
+- Home (`/`): hero, engineering work, case studies, contact, and footer navigation.
+- Products (`/products`): product sales experience with staged drawers.
+- Projects (`/projects`): full work catalog.
+- Legal (`/terms`, `/privacy`): terms and refund context.
 
-`origin` is configured to:
+Other public behavior:
 
-`https://github.com/sakanastudio24-eng/Ward-Studio.git`
-  
+- Custom not found page: `/not-found` handler via `src/app/not-found.tsx`
+- Success route for purchase return state: `/products/success`
+- SEO endpoints: `/sitemap.xml` and `/robots.txt`
+
+## Product State
+
+- DetailFlow is the active product flow.
+- InkBot is shown as in development with request-access CTA.
+
+DetailFlow purchase experience:
+
+1. Select plan and add-ons
+2. Complete readiness gate
+3. Review pricing and pay deposit
+4. Complete post-purchase setup drawer
+
+Implementation reference: `flow.md`
+
+## Technical Architecture
+
+- Framework: Next.js App Router
+- Language: TypeScript
+- Styling: Tailwind + custom theme CSS
+- Analytics: Vercel Analytics
+- Email: Resend (server-side only)
+- Persistence: Supabase (service-role server client)
+
+Key app areas:
+
+- Pages/routes: `src/app`
+- Shared UI: `src/app/components`
+- Product flows: `src/app/components/products`
+- Business rules and pricing: `src/lib`
+- Config constants: `src/config`
+
+## API Surface (Current)
+
+Core routes used by the live product wrapper:
+
+- `POST /api/orders/create`: create order record before checkout.
+- `POST /api/checkout/create`: create checkout session state.
+- `GET /api/checkout/verify`: verify paid status and return summary.
+- `POST /api/onboarding/submit`: store safe onboarding config and asset links.
+
+Supporting routes:
+
+- `POST /api/contact`
+- `POST /api/email/order-confirmed`
+- `POST /api/cal/webhook`
+- `POST /api/orders` (legacy-compatible config submission path)
+
+## Operations and SEO
+
+Canonical site URL is sourced from `NEXT_PUBLIC_SITE_URL` with fallback `https://www.zward.studio`.
+
+Sitemap and robots are generated via App Router metadata routes:
+
+- `src/app/sitemap.ts`
+- `src/app/robots.ts`
+
+## Local Development
+
+1. Install dependencies: `npm install`
+2. Start dev server: `npm run dev`
+3. Production build: `npm run build`
+4. Production run: `npm run start`
+
+## Notes
+
+- Keep secrets server-only.
+- Do not send API keys/passwords through customer-facing forms or emails.
