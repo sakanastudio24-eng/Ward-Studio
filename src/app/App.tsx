@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "motion/react";
 import { Hero } from "./components/Hero";
 import { Capabilities } from "./components/Capabilities";
 import { Work } from "./components/Work";
@@ -11,7 +10,6 @@ import { Footer } from "./components/Footer";
 import { DinoGame } from "./components/DinoGame";
 import { FlappyBird } from "./components/FlappyBird";
 import { HoverTooltip, useHoverTooltip } from "./components/HoverTooltip";
-import { SEOHead } from "./components/SEOHead";
 import { KeyboardIndicator } from "./components/KeyboardIndicator";
 import { useKeyboardNavigation } from "./hooks/useKeyboardNavigation";
 
@@ -22,13 +20,10 @@ export default function App() {
   
   // Mobile detection state - determines which game to show (dino vs flappy bird)
   const [isMobile, setIsMobile] = useState(false);
-  
-  // Page load animation state - triggers fade-in on mount
-  const [isLoaded, setIsLoaded] = useState(false);
-  
+
   // Tooltip hook - manages orange tooltip that follows mouse cursor
   const { tooltipText, mousePosition, setTooltipText } = useHoverTooltip();
-  
+
   // Enable keyboard navigation (↑/↓ or W/S to navigate between sections)
   useKeyboardNavigation();
 
@@ -43,22 +38,13 @@ export default function App() {
     
     // Listen for window resize to update mobile state
     window.addEventListener('resize', checkMobile);
-    
-    // Trigger load animation after component mounts
-    setIsLoaded(true);
-    
+
     // Cleanup: remove resize listener on unmount
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   return (
-    <motion.div 
-      className="min-h-screen"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: isLoaded ? 1 : 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-    >
-      <SEOHead />
+    <div className="min-h-screen">
       <main>
         <Hero setTooltipText={setTooltipText} />
         <Capabilities />
@@ -80,6 +66,6 @@ export default function App() {
         mouseY={mousePosition.y}
       />
       <KeyboardIndicator />
-    </motion.div>
+    </div>
   );
 }

@@ -1,7 +1,6 @@
 import { Button } from "./ui/button";
 import { getTooltipMessage } from "./HoverTooltip";
 import { useState } from "react";
-import { motion } from "motion/react";
 
 interface HeroProps {
   setTooltipText: (text: string) => void;
@@ -51,19 +50,13 @@ export function Hero({ setTooltipText }: HeroProps) {
     >
       <div className="max-w-5xl w-full">
         <div className="mb-4 sm:mb-6">
-          <motion.p 
+          <p
             className={`text-xs md:text-sm mb-4 transition-colors duration-300 ${hoveredWord ? getSubtextClass() : 'text-muted-foreground'}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
           >
             by Zechariah Ward
-          </motion.p>
-          <motion.h1
+          </p>
+          <h1
             className={`mb-5 text-[2.15rem] leading-[0.97] tracking-tight transition-colors duration-300 sm:mb-6 sm:text-[3rem] md:text-[5rem] lg:text-[6rem] ${getTextClass()}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
           >
             <span 
               className="cursor-default"
@@ -81,21 +74,15 @@ export function Hero({ setTooltipText }: HeroProps) {
             <span className={`mt-3 block text-[0.95rem] font-medium leading-[1.2] tracking-[0.08em] sm:mt-4 sm:text-[1.35rem] md:text-[1.8rem] ${getTaglineClass()}`}>
               Systems built to ship.
             </span>
-          </motion.h1>
-          <motion.p 
+          </h1>
+          <p
             className={`max-w-2xl text-[0.98rem] leading-relaxed transition-colors duration-300 sm:text-lg md:text-xl ${hoveredWord ? getSubtextClass() : 'text-muted-foreground'}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
           >
             I design and engineer production-ready systems for clear execution and reliable delivery.
-          </motion.p>
+          </p>
         </div>
-        <motion.div
+        <div
           className="mt-8 flex flex-col gap-3 sm:mt-12 sm:flex-row sm:gap-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
         >
           <Button 
             size="lg" 
@@ -116,7 +103,7 @@ export function Hero({ setTooltipText }: HeroProps) {
           >
             View Work
           </Button>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
