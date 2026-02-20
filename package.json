@@ -7,7 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "resend:templates": "node scripts/resend-templates.mjs"
+    "resend:templates": "node scripts/resend-templates.mjs",
+    "perf:optimize-previews": "node scripts/optimize-case-study-previews.mjs"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -74,6 +75,7 @@
     "@tailwindcss/postcss": "4.1.12",
     "@types/node": "^25.2.3",
     "postcss": "8.4.40",
+    "sharp": "^0.34.5",
     "tailwindcss": "4.1.12",
     "typescript": "^5.9.3"
   }

@@ -33,6 +33,13 @@ export interface ProjectCardProps {
   link?: string;
   productLink?: string;
   image: string;
+  previewImage?: string;
+  previewSources?: Array<{
+    srcSet: string;
+    type: string;
+    media?: string;
+  }>;
+  previewLoading?: "eager" | "lazy";
   galleryImages?: string[];
   summary?: string;
   whyBuilt?: string;
@@ -70,6 +77,9 @@ export function ProjectCard({
   link,
   productLink,
   image,
+  previewImage,
+  previewSources,
+  previewLoading = "lazy",
   galleryImages,
   summary,
   whyBuilt,
@@ -95,6 +105,7 @@ export function ProjectCard({
   const [previewTheme, setPreviewTheme] = useState<PreviewTheme>("dark");
   const interactiveParts = interactiveOverlayParts ?? [];
   const gallery = galleryImages && galleryImages.length > 0 ? galleryImages : [image];
+  const previewSrc = previewImage || gallery[0];
   const isDrawerVr1 = presentationMode === "drawer-vr1";
   const hasInteractiveOverlay = interactiveParts.length > 0;
   const activeInteractivePart = hasInteractiveOverlay
@@ -331,9 +342,12 @@ export function ProjectCard({
       >
         {!hidePreviewImage && (
           <ImageWithFallback
-            src={gallery[0]}
+            src={previewSrc}
+            sources={previewSources}
             alt={`${title} preview`}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading={previewLoading}
+            decoding="async"
           />
         )}
         <div

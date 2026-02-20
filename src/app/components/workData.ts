@@ -57,6 +57,18 @@ export const allWorkProjects: WorkProject[] = [
     resultDetail:
       "The booking flow now supports reliable intake, confirmation messaging, and clear owner visibility from submission to follow-up.",
     image: "/case-studies/detailflow-1.png",
+    previewImage: "/case-studies/previews/detailflow-1-home.webp",
+    previewSources: [
+      {
+        srcSet: "/case-studies/previews/detailflow-1-home.avif",
+        type: "image/avif",
+      },
+      {
+        srcSet: "/case-studies/previews/detailflow-1-home.webp",
+        type: "image/webp",
+      },
+    ],
+    previewLoading: "lazy",
     galleryImages: [
       "/case-studies/detailflow-1.png",
       "/case-studies/detailflow-2.png",
@@ -98,6 +110,18 @@ export const allWorkProjects: WorkProject[] = [
     resultDetail:
       "Tested edge cases include case-insensitive role matching, cooldown enforcement, channel validation failures, permission hierarchy handling, thread fallback logic, and reaction-based state locking. This project strengthened asynchronous event architecture, distributed state tracking, permission-aware logic systems, lightweight storage design, and community UX thinking.",
     image: "/case-studies/inkbot-1.png",
+    previewImage: "/case-studies/previews/inkbot-1-home.webp",
+    previewSources: [
+      {
+        srcSet: "/case-studies/previews/inkbot-1-home.avif",
+        type: "image/avif",
+      },
+      {
+        srcSet: "/case-studies/previews/inkbot-1-home.webp",
+        type: "image/webp",
+      },
+    ],
+    previewLoading: "lazy",
     galleryImages: [
       "/case-studies/inkbot-1.png",
       "/case-studies/inkbot-2.png",
@@ -206,6 +230,18 @@ export const allWorkProjects: WorkProject[] = [
     resultDetail:
       "The final system supports reliable booking intake, clear confirmations, and production-ready UX behavior.",
     image: "/case-studies/detailflow-1.png",
+    previewImage: "/case-studies/previews/detailflow-1-home.webp",
+    previewSources: [
+      {
+        srcSet: "/case-studies/previews/detailflow-1-home.avif",
+        type: "image/avif",
+      },
+      {
+        srcSet: "/case-studies/previews/detailflow-1-home.webp",
+        type: "image/webp",
+      },
+    ],
+    previewLoading: "lazy",
     galleryImages: [
       "/case-studies/detailflow-1.png",
       "/case-studies/detailflow-2.png",
@@ -243,6 +279,18 @@ export const allWorkProjects: WorkProject[] = [
     resultDetail:
       "Coverage included case-insensitive role matching, cooldown controls, channel validation failures, permission hierarchy handling, thread fallback logic, and reaction-based state locking. Core skill growth came from asynchronous event architecture, distributed state tracking, permission-aware logic, lightweight storage, and community UX design.",
     image: "/case-studies/inkbot-2.png",
+    previewImage: "/case-studies/previews/inkbot-1-home.webp",
+    previewSources: [
+      {
+        srcSet: "/case-studies/previews/inkbot-1-home.avif",
+        type: "image/avif",
+      },
+      {
+        srcSet: "/case-studies/previews/inkbot-1-home.webp",
+        type: "image/webp",
+      },
+    ],
+    previewLoading: "lazy",
     galleryImages: [
       "/case-studies/inkbot-1.png",
       "/case-studies/inkbot-2.png",
