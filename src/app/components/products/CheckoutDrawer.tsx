@@ -947,7 +947,6 @@ export function CheckoutDrawer({
     }));
     trackCheckoutEvent("checkout_clicked");
     dispatchFlow({ type: "START_CHECKOUT" });
-    setIsOpen(false);
 
     try {
       let nextOrderId = createdOrderId;
@@ -969,10 +968,12 @@ export function CheckoutDrawer({
         if (checkout.liveCheckoutWarning) {
           toast.warning(checkout.liveCheckoutWarning);
         }
+        setIsOpen(false);
         window.location.assign(checkout.url);
         return;
       }
 
+      setIsOpen(false);
       setIsAfterPurchaseOpen(true);
 
       dispatchFlow({ type: "START_RETURN_CONFIRM" });
@@ -991,9 +992,15 @@ export function CheckoutDrawer({
         orderId: verification.orderId || checkout.orderId || nextOrderId || fallbackOrderId,
       });
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Verification service failed.";
+      setIsOpen(true);
+      setIsAfterPurchaseOpen(false);
+      setStep("payment");
+      setValidationErrors([message]);
+      toast.error(message);
       dispatchFlow({
         type: "VERIFICATION_ERROR",
-        errorMessage: error instanceof Error ? error.message : "Verification service failed.",
+        errorMessage: message,
       });
     }
   }
