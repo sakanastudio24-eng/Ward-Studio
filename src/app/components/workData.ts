@@ -13,12 +13,12 @@ export const allWorkProjects: WorkProject[] = [
   {
     section: "engineering",
     visibility: ["home", "all-projects"],
-    title: "DetailFlow / Cruz n Clean",
+    title: "DetailFlow",
     statusLabel: "Production Ready",
     outcome: "Booking and confirmation system for service businesses",
     stack: ["Next.js", "React", "TypeScript", "Tailwind CSS"],
     summary:
-      "DetailFlow / Cruz n Clean is a production booking and confirmation flow designed for service businesses. It combines a mobile-first front end, API-backed submission handling, and owner/client email delivery. The system focuses on clarity, speed, and operational reliability.",
+      "DetailFlow is a production booking and confirmation flow designed for service businesses. It combines a mobile-first front end, API-backed submission handling, and owner/client email delivery. The system focuses on clarity, speed, and operational reliability.",
     whatItCanDo: [
       "Structured booking intake",
       "Client confirmation messaging",
@@ -185,13 +185,13 @@ export const allWorkProjects: WorkProject[] = [
   {
     section: "case-study",
     visibility: ["home", "all-projects"],
-    title: "DetailFlow / Cruz n Clean",
+    title: "DetailFlow",
     statusLabel: "Production Ready",
     outcome:
       "Case study: booking and confirmation system with validated intake and messaging",
     stack: ["Figma", "Next.js", "Tailwind CSS"],
     summary:
-      "DetailFlow / Cruz n Clean was designed to give small service businesses a production-ready booking path without SaaS lock-in. It combines a clear booking UI, API submission flow, and owner/client confirmation messaging. The experience is optimized for mobile and desktop use.",
+      "DetailFlow was designed to give small service businesses a production-ready booking path without SaaS lock-in. It combines a clear booking UI, API submission flow, and owner/client confirmation messaging. The experience is optimized for mobile and desktop use.",
     whatItCanDo: [
       "Structured booking intake",
       "Client confirmation messaging",

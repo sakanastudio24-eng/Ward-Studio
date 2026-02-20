@@ -32,7 +32,7 @@ export default function ProductsClient() {
         <div className="space-y-16">
           <section
             id="detailflow-template"
-            className="scroll-mt-24 space-y-5 rounded-2xl border border-border p-5 sm:p-7"
+            className="scroll-mt-24 space-y-5 rounded-2xl border border-border p-5 text-center sm:p-7"
           >
             <h1 className="tracking-tight text-[1.8rem] sm:text-[2.4rem]">
               DetailFlow Template
@@ -41,7 +41,7 @@ export default function ProductsClient() {
               Structured product systems built for real-world use.
               Configure what you need. Ship with clarity.
             </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <img
                 src="/case-studies/detailflow-1.png"
                 alt="DetailFlow product image 1"
@@ -64,7 +64,7 @@ export default function ProductsClient() {
                 onMouseLeave={() => setTooltipText("")}
               />
             </div>
-            <div className="pt-1">
+            <div className="flex justify-center pt-1">
               <ProductPurchaseDrawer
                 productName="DetailFlow Template"
                 config={detailflowPricingConfig}
@@ -77,9 +77,9 @@ export default function ProductsClient() {
 
           <section
             id="inkbot-product"
-            className="scroll-mt-24 space-y-5 rounded-2xl border border-border p-5 sm:p-7"
+            className="scroll-mt-24 space-y-5 rounded-2xl border border-border p-5 text-center sm:p-7"
           >
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <h2 className="tracking-tight text-[1.8rem] sm:text-[2.4rem]">
                 InkBot Product
               </h2>
@@ -92,7 +92,7 @@ export default function ProductsClient() {
               workflows, reliable state transitions, and maintainable moderation
               controls.
             </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <img
                 src="/case-studies/inkbot-1.png"
                 alt="InkBot product image 1"
@@ -115,7 +115,7 @@ export default function ProductsClient() {
                 onMouseLeave={() => setTooltipText("")}
               />
             </div>
-            <div className="pt-1">
+            <div className="flex justify-center pt-1">
               <a
                 href={CAL_LINKS.inkbotPlanning}
                 target="_blank"

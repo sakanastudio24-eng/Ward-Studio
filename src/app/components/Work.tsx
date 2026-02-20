@@ -58,7 +58,7 @@ export function Work({ scope, setTooltipText }: WorkProps) {
         </div>
 
         <div>
-          <div className={scope === "home" ? "text-center" : ""}>
+          <div className="text-center">
             <h2 className="mb-3 text-[1.55rem] tracking-tight sm:mb-4 sm:text-[2rem] md:text-[3rem]">
               Product & UX Case Studies
             </h2>
@@ -66,7 +66,7 @@ export function Work({ scope, setTooltipText }: WorkProps) {
               Interaction systems and interface execution across active projects
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2">
             {caseStudyProjects.map((project, idx) => {
               const { section, visibility, ...cardProps } = project;
               return (

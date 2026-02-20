@@ -84,7 +84,7 @@ export const tooltipMessages: Record<string, string> = {
   "github": "Open the source repository.",
   
   // Portfolio cards
-  "detailflow / cruz n clean": "See the booking and confirmation system architecture.",
+  "detailflow": "See the booking and confirmation system architecture.",
   "inkbot discord bot": "See the modular community automation system.",
   "drawer flow": "See the staged drawer system and combined flow.",
   "terminal adventure - systems-driven cli game": "See the CLI game systems and state architecture.",
