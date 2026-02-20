@@ -39,6 +39,9 @@ Post-purchase:
   - `order_id`
   - `config_json` (safe config object)
   - `asset_links[]`
+- Booking CTA routing comes from `src/config/cal.ts`:
+  - DetailFlow setup call for primary booking
+  - Free strategy fit call for prep-call fallback
 
 State machine:
 - `/src/app/components/products/flow.ts`
@@ -127,6 +130,7 @@ Webhook endpoint:
 - `POST /src/app/api/cal/webhook/route.ts`
 - Triggered by Cal booking-created events.
 - Sends booking-confirmed emails and dedupes by `eventId + orderId`.
+- Cal subscriber URL: `https://www.zward.studio/api/cal/webhook`
 
 ## Stripe Read-Key Mode (Current)
 

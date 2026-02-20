@@ -77,6 +77,23 @@ Supporting routes:
 - `POST /api/cal/webhook`
 - `POST /api/orders` (legacy-compatible config submission path)
 
+## Cal.com Booking Routing
+
+Current Cal links are centralized in:
+
+- `src/config/cal.ts`
+
+Current routing:
+
+- DetailFlow purchase success primary CTA: Template setup/configuration call
+- DetailFlow prep-call secondary CTA: Free strategy fit call
+- InkBot product CTA: Automation bot planning session
+- Contact section CTA: Custom project consultation
+
+Webhook subscriber URL:
+
+- `https://www.zward.studio/api/cal/webhook`
+
 ## Operations and SEO
 
 Canonical site URL is sourced from `NEXT_PUBLIC_SITE_URL` with fallback `https://www.zward.studio`.

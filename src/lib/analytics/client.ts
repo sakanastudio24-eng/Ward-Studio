@@ -19,7 +19,10 @@ function analyticsEnabled(): boolean {
  * Creates a best-effort anonymous id for client analytics correlation.
  */
 function createAnonymousId(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
 
