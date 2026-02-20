@@ -6,6 +6,7 @@ import {
   isDetailflowTierId,
 } from "../../../../lib/checkout/session-store";
 import type { DetailflowAddonId } from "../../../../lib/pricing";
+import { getSupabaseServerClient } from "../../../../lib/supabase/server";
 
 type CreateCheckoutRequestBody = {
   productId?: string;
@@ -66,6 +67,19 @@ export async function POST(request: Request) {
     orderId: providedOrderId || undefined,
   });
 
+  let persistenceWarning = "";
+  if (providedOrderId) {
+    try {
+      const supabase = getSupabaseServerClient();
+      await supabase.updateOrderByOrderId(providedOrderId, {
+        stripe_session_id: record.sessionId,
+        customer_email: customerEmail || null,
+      });
+    } catch (error) {
+      persistenceWarning = error instanceof Error ? error.message : "Supabase order sync failed.";
+    }
+  }
+
   return NextResponse.json({
     url: record.checkoutUrl,
     sessionId: record.sessionId,
@@ -76,5 +90,6 @@ export async function POST(request: Request) {
     remaining: record.remaining,
     amountTotal: record.total,
     currency: record.currency,
+    ...(persistenceWarning ? { persistenceWarning } : {}),
   });
 }

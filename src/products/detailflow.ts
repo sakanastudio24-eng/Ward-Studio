@@ -195,7 +195,7 @@ export function createDetailflowConfig(): DetailflowAddonConfig {
       verify: {
         method: "GET",
         path: "/api/checkout/verify",
-        label: "Verify checkout session",
+        label: "Verify checkout session (Stripe read mode)",
         optional: true,
         responseFields: [
           { key: "paid", label: "True when checkout is captured and verified." },
@@ -209,6 +209,8 @@ export function createDetailflowConfig(): DetailflowAddonConfig {
           { key: "amountTotal", label: "Total order amount." },
           { key: "currency", label: "Currency for all amounts." },
           { key: "customerEmail", label: "Customer email tied to the checkout." },
+          { key: "emailDispatched", label: "True when confirmation emails were sent." },
+          { key: "emailDeduped", label: "True when duplicate email send was skipped." },
         ],
       },
     },
