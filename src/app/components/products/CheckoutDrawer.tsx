@@ -68,6 +68,7 @@ import {
   DEFAULT_SERVICE_EMAIL,
   DEFAULT_SUPPORT_EMAIL,
 } from "../../../config/email";
+import { CAL_LINKS } from "../../../config/cal";
 
 export type DetailflowStep = "package" | "readiness" | "payment";
 
@@ -146,6 +147,7 @@ export type DetailflowAddonConfig = {
     verify?: CheckoutEndpointContract;
   };
   strategyCallUrl?: string;
+  prepCallUrl?: string;
   secureUploadUrl?: string;
   confirmationEmail?: string;
   supportEmail?: string;
@@ -480,7 +482,7 @@ export function CheckoutDrawer({
     form.customerEmail.trim() || config.confirmationEmail || DEFAULT_SERVICE_EMAIL;
   const supportEmail = config.supportEmail || DEFAULT_SUPPORT_EMAIL;
   const secureUploadUrl = config.secureUploadUrl || "#";
-  const prepCallUrl = config.strategyCallUrl || "https://cal.com/";
+  const prepCallUrl = config.prepCallUrl || config.strategyCallUrl || CAL_LINKS.freeStrategyFit;
 
   const requiredItemsValidation = validateRequiredItems({
     readinessPath: form.readinessPath,
@@ -1396,11 +1398,18 @@ export function CheckoutDrawer({
         onRetryVerification={handleRetryVerification}
         onStartNewPurchase={handleStartNewPurchase}
         onBookingClick={() => {
-          const target = config.strategyCallUrl || `/products/success?orderId=${flow.orderId}`;
+          const fallbackUrl = `${window.location.origin}/products/success?orderId=${encodeURIComponent(flow.orderId || fallbackOrderId)}`;
+          const target = config.strategyCallUrl || fallbackUrl;
+          const targetUrl = new URL(target, window.location.origin);
+          const resolvedOrderId = flow.orderId || createdOrderId || fallbackOrderId;
+          if (resolvedOrderId) targetUrl.searchParams.set("orderId", resolvedOrderId);
+          if (form.customerEmail.trim()) targetUrl.searchParams.set("email", form.customerEmail.trim());
+          if (form.customerName.trim()) targetUrl.searchParams.set("name", form.customerName.trim());
+
           dispatchFlow({ type: "MARK_INTERACTION", interaction: "booking_clicked" });
           trackCheckoutEvent("booking_clicked");
           setAwaitingBookingReturn(true);
-          window.open(target, "_blank", "noopener,noreferrer");
+          window.open(targetUrl.toString(), "_blank", "noopener,noreferrer");
         }}
         onResendClick={() => {
           setResendNotice("Confirmation resent (demo).");

@@ -5,6 +5,7 @@ import {
   isDetailflowTierId,
 } from "../../../../lib/checkout/session-store";
 import { sendOrderConfirmedBundle } from "../../../../lib/email";
+import { CAL_LINKS } from "../../../../config/cal";
 import {
   PRICING,
   computeDepositToday,
@@ -20,7 +21,8 @@ import {
   retrieveStripeCheckoutSession,
 } from "../../../../lib/stripe/session";
 
-const STRATEGY_CALL_URL = process.env.NEXT_PUBLIC_STRATEGY_CALL_URL || "https://cal.com/";
+const STRATEGY_CALL_URL =
+  process.env.NEXT_PUBLIC_STRATEGY_CALL_URL || CAL_LINKS.detailflowSetup;
 
 const TIER_LABELS: Record<string, string> = {
   starter: "Starter",

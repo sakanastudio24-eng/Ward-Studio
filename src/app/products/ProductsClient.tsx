@@ -9,6 +9,7 @@ import {
   ProductPurchaseDrawer,
 } from "../components/products/ProductPurchaseDrawer";
 import { createDetailflowConfig } from "../../products/detailflow";
+import { CAL_LINKS } from "../../config/cal";
 
 export default function ProductsClient() {
   const { tooltipText, mousePosition, setTooltipText } = useHoverTooltip();
@@ -116,12 +117,14 @@ export default function ProductsClient() {
             </div>
             <div className="pt-1">
               <a
-                href="/#contact"
+                href={CAL_LINKS.inkbotPlanning}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                onMouseEnter={() => setTooltipText("InkBot access is currently opened by request.")}
+                onMouseEnter={() => setTooltipText("Open the InkBot planning session in Cal.")}
                 onMouseLeave={() => setTooltipText("")}
               >
-                Request access
+                Plan InkBot Session
               </a>
             </div>
           </section>

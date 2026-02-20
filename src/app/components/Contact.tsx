@@ -4,6 +4,7 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
 import { getTooltipMessage } from "./HoverTooltip";
+import { CAL_LINKS } from "../../config/cal";
 
 interface ContactProps {
   setTooltipText: (text: string) => void;
@@ -132,6 +133,16 @@ export function Contact({ setTooltipText }: ContactProps) {
           <p className="text-base sm:text-lg text-muted-foreground">
             I work with 3-5 clients at a time. If you're looking for design or engineering support, let's talk.
           </p>
+          <a
+            href={CAL_LINKS.customProjectConsultation}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center rounded-md border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
+            onMouseLeave={() => setTooltipText("")}
+          >
+            Book Custom Consultation
+          </a>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
