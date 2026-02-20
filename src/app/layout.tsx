@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "../styles/index.css";
 import { Providers } from "./providers";
 import { SITE_URL, toAbsoluteUrl } from "../config/site";
@@ -89,6 +90,7 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
