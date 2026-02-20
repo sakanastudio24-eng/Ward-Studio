@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { toAbsoluteUrl } from "../../config/site";
 
 interface SEOProps {
   title?: string;
@@ -10,8 +11,8 @@ interface SEOProps {
 const DEFAULT_TITLE = "Ward Studio — Design & Engineering Systems";
 const DEFAULT_DESCRIPTION =
   "Design systems, brand identity, and production-ready web engineering. Built by Zechariah Ward for growing businesses.";
-const DEFAULT_CANONICAL = "https://wardstudio.com/";
-const DEFAULT_IMAGE = "https://wardstudio.com/og-image.png";
+const DEFAULT_CANONICAL = toAbsoluteUrl("/");
+const DEFAULT_IMAGE = toAbsoluteUrl("/og-image.png");
 
 // upsertMetaByName: Creates or updates a meta tag selected by name.
 function upsertMetaByName(name: string, content: string) {

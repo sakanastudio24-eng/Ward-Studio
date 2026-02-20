@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "../styles/index.css";
 import { Providers } from "./providers";
+import { SITE_URL, toAbsoluteUrl } from "../config/site";
 
 export const metadata: Metadata = {
   title: {
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
     "brand identity",
     "ward studio",
   ],
-  metadataBase: new URL("https://wardstudio.com"),
+  metadataBase: new URL(SITE_URL),
   alternates: {
     canonical: "/",
   },
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
     title: "Ward Studio — Design & Engineering Systems",
     description:
       "Design systems, brand identity, and production-ready web engineering. Built by Zechariah Ward for growing businesses.",
-    url: "https://wardstudio.com/",
+    url: toAbsoluteUrl("/"),
     siteName: "Ward Studio",
     type: "website",
     images: [

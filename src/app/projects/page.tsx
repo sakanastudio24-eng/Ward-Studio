@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ProjectsClient } from "./ProjectsClient";
+import { toAbsoluteUrl } from "../../config/site";
 
 export const metadata: Metadata = {
   title: "Projects — Ward Studio",
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
     title: "Projects — Ward Studio",
     description:
       "Engineering builds and design case studies including Terminal Adventure and system-based applications.",
-    url: "https://wardstudio.com/projects",
+    url: toAbsoluteUrl("/projects"),
     siteName: "Ward Studio",
     type: "website",
     images: [

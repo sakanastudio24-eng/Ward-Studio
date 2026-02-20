@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ProductsClient from "./ProductsClient";
+import { toAbsoluteUrl } from "../../config/site";
 
 export const metadata: Metadata = {
   title: "Products — Ward Studio",
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
     title: "Products — Ward Studio",
     description:
       "Structured product packages including DetailFlow and InkBot. Configurable, production-ready systems with clear onboarding.",
-    url: "https://wardstudio.com/products",
+    url: toAbsoluteUrl("/products"),
     siteName: "Ward Studio",
     type: "website",
     images: [
