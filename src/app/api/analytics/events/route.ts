@@ -7,6 +7,17 @@ function getString(value: unknown): string {
 }
 
 export async function POST(request: Request) {
+  const analyticsStorageConfigured = Boolean(
+    process.env.SUPABASE_URL?.trim() && process.env.SUPABASE_SERVICE_ROLE_KEY?.trim(),
+  );
+  if (!analyticsStorageConfigured) {
+    return NextResponse.json({
+      ok: false,
+      skipped: true,
+      reason: "Analytics storage is not configured in this environment.",
+    }, { status: 202 });
+  }
+
   const payload = (await request.json().catch(() => null)) as AnalyticsPayload | null;
 
   if (!payload || typeof payload !== "object") {
@@ -57,9 +68,11 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Analytics insert failed.",
+        ok: false,
+        skipped: true,
+        reason: error instanceof Error ? error.message : "Analytics insert failed.",
       },
-      { status: 500 },
+      { status: 202 },
     );
   }
 }
