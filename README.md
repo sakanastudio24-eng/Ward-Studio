@@ -43,6 +43,7 @@ DetailFlow purchase experience:
 4. Complete post-purchase setup drawer
 
 Implementation reference: `flow.md`
+Stripe payment reference: `stripe-flow.md`
 
 ## Technical Architecture
 
