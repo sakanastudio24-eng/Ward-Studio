@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -109,9 +110,21 @@ export function SuccessDrawer({
   submitMessage,
   prepCallUrl,
 }: SuccessDrawerProps) {
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const loading = primaryState === "return_success_loading";
   const uploadLink = secureUploadUrl.trim();
   const hasUploadLink = uploadLink.startsWith("http://") || uploadLink.startsWith("https://");
+
+  useEffect(() => {
+    if (!open) return;
+    const raf = window.requestAnimationFrame(() => {
+      const root = contentRef.current;
+      if (!root) return;
+      const focusTarget = root.querySelector<HTMLElement>("[data-success-primary-action]") || root;
+      focusTarget.focus();
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [open, primaryState]);
 
   function patchSafeConfig<K extends keyof SafeConfigInput>(key: K, value: SafeConfigInput[K]) {
     onSafeConfigChange({
@@ -122,7 +135,7 @@ export function SuccessDrawer({
 
   return (
     <Drawer direction="right" open={open} onOpenChange={onOpenChange} dismissible={false}>
-      <DrawerContent className="h-full w-full sm:max-w-[44rem]">
+      <DrawerContent ref={contentRef} className="h-full w-full sm:max-w-[44rem]" tabIndex={-1}>
         <ConfettiTrigger shouldFire={primaryState === "payment_confirmed"} />
 
         <DrawerHeader className="pb-2">
@@ -156,6 +169,7 @@ export function SuccessDrawer({
             <>
               <section className="rounded-lg border border-border p-4">
                 <Button
+                  data-success-primary-action
                   className="h-14 w-full bg-orange-500 text-base font-semibold text-white hover:bg-orange-600"
                   onClick={onBookingClick}
                 >

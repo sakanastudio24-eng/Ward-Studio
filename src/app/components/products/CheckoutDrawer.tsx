@@ -299,6 +299,14 @@ function isHttpUrl(value: string): boolean {
   }
 }
 
+function blurActiveElement() {
+  if (typeof document === "undefined") return;
+  const current = document.activeElement;
+  if (current instanceof HTMLElement) {
+    current.blur();
+  }
+}
+
 /**
  * Main controller for the DetailFlow staged checkout:
  * package -> readiness -> payment, then post-purchase success drawer.
@@ -644,6 +652,7 @@ export function CheckoutDrawer({
   }
 
   function handleOpenChange(open: boolean) {
+    blurActiveElement();
     setIsOpen(open);
     if (open) {
       resetToDefaults();
@@ -940,6 +949,7 @@ export function CheckoutDrawer({
     setValidationErrors([]);
     setResendNotice("");
     setBookingConfirmed(false);
+    blurActiveElement();
     setSafeConfig((prev) => ({
       ...prev,
       business_name: form.customerName.trim() || prev.business_name,
@@ -969,11 +979,13 @@ export function CheckoutDrawer({
           toast.warning(checkout.liveCheckoutWarning);
         }
         setIsOpen(false);
+        blurActiveElement();
         window.location.assign(checkout.url);
         return;
       }
 
       setIsOpen(false);
+      blurActiveElement();
       setIsAfterPurchaseOpen(true);
 
       dispatchFlow({ type: "START_RETURN_CONFIRM" });
@@ -1106,6 +1118,9 @@ export function CheckoutDrawer({
         <DrawerTrigger asChild>
           <Button
             className="bg-orange-500 text-white hover:bg-orange-600"
+            onClick={(event) => {
+              event.currentTarget.blur();
+            }}
             onMouseEnter={() => setTooltipText?.(getTooltipMessage(triggerLabel))}
             onMouseLeave={() => setTooltipText?.("")}
           >
