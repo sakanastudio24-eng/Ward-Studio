@@ -53,31 +53,37 @@ const PROBES: ProbeDefinition[] = [
     id: "orders_create_route",
     method: "GET",
     path: "/api/orders/create",
+    successStatuses: [405],
   },
   {
     id: "checkout_create_route",
     method: "GET",
     path: "/api/checkout/create",
+    successStatuses: [405],
   },
   {
     id: "onboarding_submit_route",
     method: "GET",
     path: "/api/onboarding/submit",
+    successStatuses: [405],
   },
   {
     id: "stripe_webhook_route",
     method: "GET",
     path: "/api/stripe/webhook",
+    successStatuses: [405],
   },
   {
     id: "cal_webhook_route",
     method: "GET",
     path: "/api/cal/webhook",
+    successStatuses: [405],
   },
   {
     id: "contact_route",
     method: "GET",
     path: "/api/contact",
+    successStatuses: [405],
   },
 ];
 
