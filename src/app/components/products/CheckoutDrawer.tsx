@@ -1111,6 +1111,35 @@ export function CheckoutDrawer({
         setCreatedOrderUuid(nextOrderUuid);
       }
 
+      const confirmationResponse = await fetch("/api/email/order-confirmed", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: nextOrderId,
+          customerEmail: form.customerEmail.trim(),
+          customerName: form.customerName.trim() || undefined,
+          summary: {
+            tierLabel: selectedTierLabel,
+            addOnLabels: selectedAddOnLabels,
+            deposit: depositToday,
+            remaining: remainingBalance,
+          },
+          bookingUrl: config.strategyCallUrl || prepCallUrl,
+          stripeSessionId: "test-zero-dollar",
+          force: true,
+        }),
+      });
+
+      const confirmationPayload = (await confirmationResponse.json().catch(() => null)) as
+        | { error?: string; sent?: { client?: boolean; internal?: boolean } }
+        | null;
+
+      if (!confirmationResponse.ok) {
+        throw new Error(confirmationPayload?.error || "Could not send test order confirmation emails.");
+      }
+
       setActiveSessionId("");
       setIsOpen(false);
       blurActiveElement();
@@ -1120,7 +1149,18 @@ export function CheckoutDrawer({
         type: "PAYMENT_CONFIRMED",
         orderId: nextOrderId || fallbackOrderId,
       });
-      toast.success("Test $0 flow completed.");
+      const sentClient = Boolean(confirmationPayload?.sent?.client);
+      const sentInternal = Boolean(confirmationPayload?.sent?.internal);
+      const sentSummary =
+        sentClient && sentInternal
+          ? "Client and internal emails sent."
+          : sentClient
+            ? "Client email sent."
+            : sentInternal
+              ? "Internal email sent."
+              : "Email send accepted.";
+      setResendNotice(`Test $0 complete. ${sentSummary}`);
+      toast.success("Test $0 flow completed with confirmation email send.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Test $0 flow failed.";
       setIsOpen(true);
