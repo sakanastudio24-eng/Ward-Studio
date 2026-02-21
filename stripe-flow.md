@@ -48,6 +48,9 @@ On verified paid state:
   - embedded return status check
 - `GET /api/stripe/diagnostics`
   - non-secret key diagnostics for Stripe config
+- `POST /api/stripe/webhook`
+  - verifies webhook signature and handles `checkout.session.completed`
+  - marks order paid and sends confirmation emails server-side
 
 ## Checkout Origin / Subdomain
 
@@ -119,6 +122,6 @@ If checkout create fails in strict mode, API responses now include:
 
 ## Current Notes
 
-- Webhook flow is not the primary trigger yet for payment confirmation.
-- Verify route currently owns confirmation behavior in v1.
+- Set `STRIPE_PAYMENT_CONFIRMATION_SOURCE=webhook` to switch email confirmation ownership to webhook-first mode.
+- Verify route still returns payment state for UI, but can skip email sends when webhook-first mode is enabled.
 - Do not expose secret keys on client pages.

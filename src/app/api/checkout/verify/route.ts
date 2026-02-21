@@ -23,6 +23,9 @@ import {
 
 const STRATEGY_CALL_URL =
   process.env.NEXT_PUBLIC_STRATEGY_CALL_URL || CAL_LINKS.detailflowSetup;
+const PAYMENT_CONFIRMATION_SOURCE = (
+  process.env.STRIPE_PAYMENT_CONFIRMATION_SOURCE || "verify"
+).trim().toLowerCase();
 
 const TIER_LABELS: Record<string, string> = {
   starter: "Starter",
@@ -317,7 +320,8 @@ export async function GET(request: Request) {
   let emailDeduped = false;
   let emailError = "";
 
-  if (verification.paid && canonicalCustomerEmail) {
+  const webhookFirst = PAYMENT_CONFIRMATION_SOURCE === "webhook";
+  if (verification.paid && canonicalCustomerEmail && !webhookFirst) {
     if (orderRow?.email_sent_at) {
       emailDeduped = true;
     } else {
@@ -346,6 +350,8 @@ export async function GET(request: Request) {
         emailError = error instanceof Error ? error.message : "Order confirmation email failed.";
       }
     }
+  } else if (webhookFirst) {
+    emailDeduped = Boolean(orderRow?.email_sent_at);
   }
 
   return NextResponse.json({

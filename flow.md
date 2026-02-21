@@ -132,6 +132,11 @@ Webhook endpoint:
 - Sends booking-confirmed emails and dedupes by `eventId + orderId`.
 - Cal subscriber URL: `https://www.zward.studio/api/cal/webhook`
 
+Stripe webhook endpoint:
+- `POST /src/app/api/stripe/webhook/route.ts`
+- Verifies `stripe-signature` using `STRIPE_WEBHOOK_SECRET`.
+- Handles `checkout.session.completed`, marks order paid, and sends confirmation emails.
+
 ## Stripe Read-Key Mode (Current)
 
 No webhook is required for this mode.
