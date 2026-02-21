@@ -106,6 +106,11 @@ function addonLabelsFor(addonIds: DetailflowAddonId[]): string[] {
 
 /**
  * Verifies a checkout session and returns the server-trusted payment summary.
+ *
+ * Lookup order is intentionally layered for resilience:
+ * 1) Stripe API (source of truth for live sessions)
+ * 2) In-memory fallback session store (dev placeholder path)
+ * 3) Supabase lookup by stripe_session_id (durable fallback across instances)
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -168,6 +173,8 @@ export async function GET(request: Request) {
     };
   }
 
+  // Durable fallback for cases where the process-local session store is unavailable
+  // (e.g. serverless cold starts or separate runtime instances).
   let prelookupSupabaseError = "";
   if (!verification) {
     try {

@@ -147,6 +147,24 @@ Behavior:
 - Paid sessions are synced into Supabase (`orders.status`, `stripe_session_id`, optional `customer_email`).
 - Order-confirmation emails are sent server-side only after successful paid verification.
 
+## Checkout Origin / Subdomain
+
+Checkout redirect origin is resolved in:
+- `/src/config/checkout.ts`
+
+Priority order:
+1. `CHECKOUT_SITE_URL`
+2. `NEXT_PUBLIC_CHECKOUT_URL`
+3. request origin in development
+4. `SITE_URL`
+
+If you want a dedicated checkout subdomain (recommended in production), set:
+- `CHECKOUT_SITE_URL=https://checkout.zward.studio`
+
+Optional full URL overrides:
+- `STRIPE_SUCCESS_URL`
+- `STRIPE_CANCEL_URL`
+
 ## Analytics + Confetti
 
 Analytics client:

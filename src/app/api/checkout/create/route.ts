@@ -48,10 +48,12 @@ function toStripeAmountCents(amountUsd: number): number {
 function getStripeCheckoutEnabled(): boolean {
   const liveMode = (process.env.STRIPE_CHECKOUT_LIVE_MODE || "").trim().toLowerCase();
   if (liveMode === "false") return false;
+  // Default behavior: if a Stripe secret exists, assume live checkout should be used.
   return Boolean(process.env.STRIPE_SECRET_KEY?.trim());
 }
 
 function getAllowPlaceholderCheckout(): boolean {
+  // Escape hatch for dev/staging when Stripe is intentionally unavailable.
   return (process.env.STRIPE_CHECKOUT_ALLOW_PLACEHOLDER || "").trim().toLowerCase() === "true";
 }
 
@@ -143,7 +145,11 @@ async function createStripeCheckoutSession(input: {
 
 /**
  * Creates a server-side checkout session payload for DetailFlow.
- * Placeholder mode marks sessions as paid so drawer workflow can be validated end-to-end.
+ * Flow:
+ * 1) Validate payload and product/tier/add-on ids
+ * 2) Try live Stripe checkout session when enabled
+ * 3) Persist stripe_session_id on existing order row
+ * 4) Optionally fall back to placeholder checkout when explicitly allowed
  */
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as CreateCheckoutRequestBody | null;
@@ -240,6 +246,7 @@ export async function POST(request: Request) {
     }
 
     if (!allowPlaceholder) {
+      // In strict mode we fail hard so users do not continue without Stripe confirmation.
       return NextResponse.json(
         {
           error: stripeSession.error || "Stripe live checkout session creation failed.",
@@ -252,6 +259,7 @@ export async function POST(request: Request) {
   }
 
   if (!allowPlaceholder) {
+    // Guard against accidental "silent fallback" in production.
     return NextResponse.json(
       {
         error: "Stripe live checkout is required. Placeholder flow is disabled.",
