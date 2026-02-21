@@ -14,6 +14,11 @@ import {
   type DetailflowTierId,
 } from "../../../../lib/pricing";
 import { getSupabaseServerClient } from "../../../../lib/supabase/server";
+import {
+  getStripeCancelUrl,
+  getStripeSuccessUrl,
+  resolveCheckoutOrigin,
+} from "../../../../config/checkout";
 
 type CreateCheckoutRequestBody = {
   productId?: string;
@@ -57,7 +62,7 @@ const TIER_LABELS: Record<DetailflowTierId, string> = {
 };
 
 async function createStripeCheckoutSession(input: {
-  origin: string;
+  checkoutOrigin: string;
   orderId: string;
   tierId: DetailflowTierId;
   addonIds: DetailflowAddonId[];
@@ -74,8 +79,8 @@ async function createStripeCheckoutSession(input: {
     return { ok: false, error: "STRIPE_SECRET_KEY is missing." };
   }
 
-  const successUrl = `${input.origin}/products/success?session_id={CHECKOUT_SESSION_ID}&celebrate=1`;
-  const cancelUrl = `${input.origin}/products#detailflow-template`;
+  const successUrl = getStripeSuccessUrl(input.checkoutOrigin);
+  const cancelUrl = getStripeCancelUrl(input.checkoutOrigin);
   const amountCents = toStripeAmountCents(input.depositAmountUsd);
 
   const form = new URLSearchParams();
@@ -168,9 +173,7 @@ export async function POST(request: Request) {
   const typedAddonIds = addonIds.filter((id): id is DetailflowAddonId => isDetailflowAddonId(id));
 
   const requestUrl = new URL(request.url);
-  const configuredOrigin =
-    process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.NEXT_PUBLIC_APP_URL?.trim();
-  const origin = configuredOrigin || requestUrl.origin;
+  const checkoutOrigin = resolveCheckoutOrigin(requestUrl.origin);
   const orderId = providedOrderId || "";
   const stripeLiveEnabled = getStripeCheckoutEnabled();
   const allowPlaceholder = getAllowPlaceholderCheckout();
@@ -198,7 +201,7 @@ export async function POST(request: Request) {
     const totalAmountUsd = computeTotal(PRICING, tierId, typedAddonIds);
     const remainingAmountUsd = computeRemainingBalance(PRICING, tierId, typedAddonIds);
     const stripeSession = await createStripeCheckoutSession({
-      origin,
+      checkoutOrigin,
       orderId,
       tierId,
       addonIds: typedAddonIds,
@@ -258,7 +261,7 @@ export async function POST(request: Request) {
   }
 
   const record = createCheckoutSessionRecord({
-    origin,
+    origin: checkoutOrigin,
     tierId,
     addonIds: typedAddonIds,
     customerEmail,
