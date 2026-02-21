@@ -10,7 +10,7 @@ import {
   type SafeConfigInput,
 } from "../../../lib/config-generator/detailflow";
 import type { DetailflowTierId } from "../../../lib/pricing";
-import { SuccessDrawer } from "../../components/products/SuccessDrawer";
+import { PostPurchaseForm } from "../../components/products/PostPurchaseForm";
 import type { CheckoutPrimaryState } from "../../components/products/flow";
 
 type VerifyStatus = "checking" | "paid" | "failed";
@@ -91,7 +91,6 @@ export default function SuccessClient() {
   const [status, setStatus] = useState<VerifyStatus>("checking");
   const [errorMessage, setErrorMessage] = useState("");
   const [verificationNonce, setVerificationNonce] = useState(0);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(true);
   const [resendNotice, setResendNotice] = useState("");
   const [isSubmittingConfiguration, setIsSubmittingConfiguration] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
@@ -281,17 +280,8 @@ export default function SuccessClient() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
-      <SuccessDrawer
-        open={isDrawerOpen}
-        onOpenChange={(nextOpen) => {
-          if (nextOpen) {
-            setIsDrawerOpen(true);
-            return;
-          }
-          if (primaryState === "payment_confirmed") return;
-          setIsDrawerOpen(false);
-        }}
+    <main className="min-h-screen bg-background px-4 py-10 sm:px-6 md:px-10 md:py-14">
+      <PostPurchaseForm
         primaryState={primaryState}
         errorMessage={errorMessage}
         productName="DetailFlow"
@@ -311,7 +301,6 @@ export default function SuccessClient() {
         bookingTimeLabel={bookingTimeLabel}
         onRetryVerification={() => setVerificationNonce((prev) => prev + 1)}
         onDone={() => {
-          setIsDrawerOpen(false);
           window.location.assign("/products#detailflow-template");
         }}
         onStartNewPurchase={() => {
