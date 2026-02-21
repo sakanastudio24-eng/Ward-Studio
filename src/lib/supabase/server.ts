@@ -52,6 +52,19 @@ export function getSupabaseServerClient() {
     },
 
     /**
+     * Finds a single order by the internal UUID primary key.
+     */
+    async findOrderByUuid(orderUuid: string) {
+      const { data, error } = await supabaseServer
+        .from(ORDERS_TABLE)
+        .select("*")
+        .eq("id", orderUuid)
+        .limit(1);
+      if (error) fail("Supabase find order by id failed", error);
+      return data?.[0] ?? null;
+    },
+
+    /**
      * Finds a single order by stripe session id.
      */
     async findOrderBySessionId(sessionId: string) {
@@ -74,6 +87,19 @@ export function getSupabaseServerClient() {
         .eq("order_id", orderId)
         .select("*");
       if (error) fail("Supabase update order by order_id failed", error);
+      return data ?? [];
+    },
+
+    /**
+     * Applies partial updates to an order using UUID primary key lookup.
+     */
+    async updateOrderByUuid(orderUuid: string, patch: Record<string, unknown>) {
+      const { data, error } = await supabaseServer
+        .from(ORDERS_TABLE)
+        .update(patch)
+        .eq("id", orderUuid)
+        .select("*");
+      if (error) fail("Supabase update order by id failed", error);
       return data ?? [];
     },
 

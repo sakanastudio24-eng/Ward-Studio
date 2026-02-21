@@ -27,6 +27,7 @@ type CreateCheckoutRequestBody = {
   addonIds?: unknown;
   customerEmail?: string;
   orderId?: string;
+  orderUuid?: string;
 };
 
 type StripeCheckoutSessionResponse = Record<string, unknown>;
@@ -66,6 +67,7 @@ const TIER_LABELS: Record<DetailflowTierId, string> = {
 
 async function createStripeCheckoutSession(input: {
   checkoutOrigin: string;
+  orderUuid: string;
   orderId: string;
   tierId: DetailflowTierId;
   addonIds: DetailflowAddonId[];
@@ -107,6 +109,8 @@ async function createStripeCheckoutSession(input: {
     `Order ${input.orderId}: ${input.addonIds.length > 0 ? `${input.addonIds.length} add-ons selected, ` : ""}deposit ${toStripeAmountCents(input.depositAmountUsd) / 100} USD now, ${input.remainingAmountUsd} USD remaining of ${input.totalAmountUsd} USD`,
   );
 
+  form.set("metadata[order_uuid]", input.orderUuid);
+  form.set("metadata[order_id]", input.orderId);
   form.set("metadata[orderId]", input.orderId);
   form.set("metadata[tierId]", input.tierId);
   form.set("metadata[addonIds]", input.addonIds.join(","));
@@ -162,6 +166,7 @@ export async function POST(request: Request) {
   const tierId = (body.tierId || "").trim();
   const customerEmail = (body.customerEmail || "").trim();
   const providedOrderId = (body.orderId || "").trim();
+  const providedOrderUuid = (body.orderUuid || "").trim();
   const rawAddonIds = toStringArray(body.addonIds);
   const addonIds = Array.from(new Set(rawAddonIds));
 
@@ -182,6 +187,7 @@ export async function POST(request: Request) {
   const requestUrl = new URL(request.url);
   const checkoutOrigin = resolveCheckoutOrigin(requestUrl.origin);
   const orderId = providedOrderId || "";
+  const orderUuid = providedOrderUuid || "";
   const stripeLiveEnabled = getStripeCheckoutEnabled();
   const allowPlaceholder = getAllowPlaceholderCheckout();
 
@@ -197,20 +203,24 @@ export async function POST(request: Request) {
     );
   }
 
-  if (stripeLiveEnabled && !orderId && !allowPlaceholder) {
+  if (stripeLiveEnabled && (!orderId || !orderUuid) && !allowPlaceholder) {
     return NextResponse.json(
-      { error: "orderId is required before creating a live Stripe checkout session." },
+      {
+        error:
+          "orderId and orderUuid are required before creating a live Stripe checkout session.",
+      },
       { status: 400 },
     );
   }
 
   let liveCheckoutWarning = "";
-  if (stripeLiveEnabled && orderId) {
+  if (stripeLiveEnabled && orderId && orderUuid) {
     const depositAmountUsd = computeDepositToday(PRICING, tierId, typedAddonIds);
     const totalAmountUsd = computeTotal(PRICING, tierId, typedAddonIds);
     const remainingAmountUsd = computeRemainingBalance(PRICING, tierId, typedAddonIds);
     const stripeSession = await createStripeCheckoutSession({
       checkoutOrigin,
+      orderUuid,
       orderId,
       tierId,
       addonIds: typedAddonIds,
@@ -224,7 +234,7 @@ export async function POST(request: Request) {
       let persistenceWarning = "";
       try {
         const supabase = getSupabaseServerClient();
-        await supabase.updateOrderByOrderId(orderId, {
+        await supabase.updateOrderByUuid(orderUuid, {
           stripe_session_id: stripeSession.sessionId,
           customer_email: customerEmail || null,
           status: "created",
@@ -236,6 +246,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         url: stripeSession.url,
         sessionId: stripeSession.sessionId,
+        orderUuid,
         orderId,
         tierId,
         addonIds: typedAddonIds,
@@ -284,14 +295,19 @@ export async function POST(request: Request) {
   });
 
   let persistenceWarning = "";
-  if (orderId) {
+  if (orderUuid || orderId) {
     try {
       const supabase = getSupabaseServerClient();
-      await supabase.updateOrderByOrderId(orderId, {
+      const patch = {
         stripe_session_id: record.sessionId,
         customer_email: customerEmail || null,
         status: "paid",
-      });
+      };
+      if (orderUuid) {
+        await supabase.updateOrderByUuid(orderUuid, patch);
+      } else if (orderId) {
+        await supabase.updateOrderByOrderId(orderId, patch);
+      }
     } catch (error) {
       persistenceWarning = error instanceof Error ? error.message : "Supabase order sync failed.";
     }
@@ -300,6 +316,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     url: record.checkoutUrl,
     sessionId: record.sessionId,
+    orderUuid: orderUuid || undefined,
     orderId: record.orderId,
     tierId: record.tierId,
     addonIds: record.addonIds,

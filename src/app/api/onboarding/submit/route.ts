@@ -3,6 +3,7 @@ import { getSupabaseServer } from "../../../../lib/supabase-server";
 
 type OnboardingSubmitBody = {
   order_id?: unknown;
+  order_uuid?: unknown;
   config_json?: unknown;
   asset_links?: unknown;
 };
@@ -82,9 +83,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
   }
 
-  const orderId = getString(payload.order_id);
-  if (!orderId) {
-    return NextResponse.json({ error: "Missing order_id." }, { status: 400 });
+  const orderIdInput = getString(payload.order_id);
+  const orderUuidInput = getString(payload.order_uuid);
+  if (!orderIdInput && !orderUuidInput) {
+    return NextResponse.json({ error: "Missing order_id or order_uuid." }, { status: 400 });
   }
 
   const configInput = payload.config_json ?? {};
@@ -106,11 +108,10 @@ export async function POST(request: Request) {
   const safeConfig = isPlainObject(sanitizedConfig) ? sanitizedConfig : {};
 
   const supabase = getSupabaseServer();
-  const { data: order, error: orderLookupError } = await supabase
-    .from("orders")
-    .select("order_id")
-    .eq("order_id", orderId)
-    .maybeSingle();
+  const orderLookup = supabase.from("orders").select("order_id").limit(1);
+  const { data: order, error: orderLookupError } = orderIdInput
+    ? await orderLookup.eq("order_id", orderIdInput).maybeSingle()
+    : await orderLookup.eq("id", orderUuidInput).maybeSingle();
 
   if (orderLookupError) {
     return NextResponse.json(
@@ -120,11 +121,16 @@ export async function POST(request: Request) {
   }
 
   if (!order) {
-    return NextResponse.json({ error: "Unknown order_id." }, { status: 404 });
+    return NextResponse.json({ error: "Unknown order_id/order_uuid." }, { status: 404 });
+  }
+
+  const resolvedOrderId = getString(order.order_id);
+  if (!resolvedOrderId) {
+    return NextResponse.json({ error: "Resolved order is missing order_id." }, { status: 500 });
   }
 
   const { error: insertError } = await supabase.from("onboarding_submissions").insert({
-    order_id: orderId,
+    order_id: resolvedOrderId,
     config_json: safeConfig,
     asset_links: assetLinks,
   });

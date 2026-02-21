@@ -45,6 +45,7 @@ const ADDON_LABELS: Record<string, string> = {
 };
 
 type KnownOrderRow = {
+  id: string;
   order_id: string;
   status: string;
   tier_id: DetailflowTierId | "";
@@ -58,6 +59,7 @@ type NormalizedVerification = {
   paid: boolean;
   status: string;
   sessionId: string;
+  orderUuid: string;
   orderId: string;
   tierId: DetailflowTierId | "";
   addonIds: DetailflowAddonId[];
@@ -83,6 +85,7 @@ function normalizeOrderRow(value: unknown): KnownOrderRow | null {
   const tierCandidate = getString(source.tier_id);
 
   return {
+    id: getString(source.id),
     order_id: getString(source.order_id),
     status: getString(source.status),
     tier_id: isDetailflowTierId(tierCandidate) ? tierCandidate : "",
@@ -111,7 +114,7 @@ function addonLabelsFor(addonIds: DetailflowAddonId[]): string[] {
  * Verifies a checkout session and returns the server-trusted payment summary.
  *
  * Lookup order is intentionally layered for resilience:
- * 1) Stripe API (source of truth for live sessions)
+ * 1) Stripe API (source of truth for live sessions, includes metadata order_uuid)
  * 2) In-memory fallback session store (dev placeholder path)
  * 3) Supabase lookup by stripe_session_id (durable fallback across instances)
  */
@@ -144,6 +147,7 @@ export async function GET(request: Request) {
         paid: stripePaid,
         status: toStatus(stripePaid, stripeSession.status),
         sessionId: stripeSession.id,
+        orderUuid: stripeSession.orderUuid || "",
         orderId: stripeSession.orderId || localRecord?.orderId || "",
         tierId: stripeSession.tierId || localRecord?.tierId || "",
         addonIds:
@@ -167,6 +171,7 @@ export async function GET(request: Request) {
       paid: localRecord.status === "paid",
       status: localRecord.status,
       sessionId: localRecord.sessionId,
+      orderUuid: "",
       orderId: localRecord.orderId,
       tierId: localRecord.tierId,
       addonIds: localRecord.addonIds,
@@ -198,6 +203,7 @@ export async function GET(request: Request) {
           paid: prelookupOrder.status === "paid",
           status: prelookupOrder.status || "pending",
           sessionId,
+          orderUuid: prelookupOrder.id,
           orderId: prelookupOrder.order_id,
           tierId: prelookupTierId,
           addonIds: prelookupOrder.addon_ids,
@@ -234,6 +240,7 @@ export async function GET(request: Request) {
   let supabase: ReturnType<typeof getSupabaseServerClient> | null = null;
   let orderRow: KnownOrderRow | null = null;
   let supabaseError = "";
+  let canonicalOrderUuid = verification.orderUuid;
   let canonicalOrderId = verification.orderId;
   let canonicalTierId = verification.tierId;
   let canonicalAddonIds = verification.addonIds;
@@ -242,7 +249,10 @@ export async function GET(request: Request) {
 
   try {
     supabase = getSupabaseServerClient();
-    if (canonicalOrderId) {
+    if (canonicalOrderUuid) {
+      orderRow = normalizeOrderRow(await supabase.findOrderByUuid(canonicalOrderUuid));
+    }
+    if (!orderRow && canonicalOrderId) {
       orderRow = normalizeOrderRow(await supabase.findOrderByOrderId(canonicalOrderId));
     }
     if (!orderRow) {
@@ -264,6 +274,7 @@ export async function GET(request: Request) {
     }
 
     if (orderRow) {
+      canonicalOrderUuid = orderRow.id || canonicalOrderUuid;
       canonicalOrderId = orderRow.order_id || canonicalOrderId;
 
       const patch: Record<string, unknown> = {};
@@ -284,7 +295,9 @@ export async function GET(request: Request) {
       }
 
       if (Object.keys(patch).length > 0) {
-        const updatedRows = await supabase.updateOrderByOrderId(canonicalOrderId, patch);
+        const updatedRows = canonicalOrderUuid
+          ? await supabase.updateOrderByUuid(canonicalOrderUuid, patch)
+          : await supabase.updateOrderByOrderId(canonicalOrderId, patch);
         orderRow = normalizeOrderRow(updatedRows[0]) || orderRow;
       }
 
@@ -341,10 +354,16 @@ export async function GET(request: Request) {
         emailDispatched = emailResult.sent.client || emailResult.sent.internal;
         emailDeduped = emailResult.deduped;
 
-        if (emailDispatched && canonicalOrderId && supabase) {
-          await supabase.updateOrderByOrderId(canonicalOrderId, {
-            email_sent_at: new Date().toISOString(),
-          });
+        if (emailDispatched && supabase && (canonicalOrderUuid || canonicalOrderId)) {
+          if (canonicalOrderUuid) {
+            await supabase.updateOrderByUuid(canonicalOrderUuid, {
+              email_sent_at: new Date().toISOString(),
+            });
+          } else {
+            await supabase.updateOrderByOrderId(canonicalOrderId, {
+              email_sent_at: new Date().toISOString(),
+            });
+          }
         }
       } catch (error) {
         emailError = error instanceof Error ? error.message : "Order confirmation email failed.";
@@ -358,6 +377,7 @@ export async function GET(request: Request) {
     paid: verification.paid,
     status: toStatus(verification.paid, canonicalStatus),
     sessionId: verification.sessionId,
+    orderUuid: canonicalOrderUuid || undefined,
     orderId: canonicalOrderId || verification.orderId || verification.sessionId,
     tierId: canonicalTierId || undefined,
     addonIds: canonicalAddonIds,

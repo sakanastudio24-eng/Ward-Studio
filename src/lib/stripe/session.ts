@@ -32,6 +32,7 @@ export type StripeCheckoutSession = {
   customerEmail: string;
   customerId: string;
   paymentIntentId: string;
+  orderUuid: string;
   orderId: string;
   tierId: DetailflowTierId | "";
   addonIds: DetailflowAddonId[];
@@ -113,6 +114,10 @@ function getOrderIdFromMetadata(metadata: Record<string, string>, clientReferenc
   return metadata.orderId || metadata.order_id || clientReferenceId || "";
 }
 
+function getOrderUuidFromMetadata(metadata: Record<string, string>): string {
+  return metadata.order_uuid || metadata.orderUuid || "";
+}
+
 export function isStripeSessionId(sessionId: string): boolean {
   return /^cs_(test_|live_)?[A-Za-z0-9_]+$/.test(sessionId.trim());
 }
@@ -164,6 +169,7 @@ export async function retrieveStripeCheckoutSession(sessionId: string): Promise<
         customerEmail,
         customerId: getString(payload.customer),
         paymentIntentId: getString(payload.payment_intent),
+        orderUuid: getOrderUuidFromMetadata(metadata),
         orderId: getOrderIdFromMetadata(metadata, clientReferenceId),
         tierId: getTierFromMetadata(metadata),
         addonIds: getAddonIdsFromMetadata(metadata),

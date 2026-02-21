@@ -92,19 +92,26 @@ export async function POST(request: Request) {
   const supabase = getSupabaseServer();
   for (let attempt = 0; attempt < MAX_COLLISION_RETRIES; attempt += 1) {
     const orderId = buildOrderId(PRODUCTS.detailflow.order_prefix);
-    const { error } = await supabase.from("orders").insert({
-      order_id: orderId,
-      status: "created",
-      product_id: productId,
-      tier_id: tierId,
-      addon_ids: addonIds,
-      customer_email: customerEmailRaw || null,
-      stripe_session_id: null,
-      email_sent_at: null,
-    });
+    const { data, error } = await supabase
+      .from("orders")
+      .insert({
+        order_id: orderId,
+        status: "created",
+        product_id: productId,
+        tier_id: tierId,
+        addon_ids: addonIds,
+        customer_email: customerEmailRaw || null,
+        stripe_session_id: null,
+        email_sent_at: null,
+      })
+      .select("id, order_id")
+      .single();
 
     if (!error) {
-      return NextResponse.json({ order_id: orderId });
+      return NextResponse.json({
+        order_uuid: getString(data?.id),
+        order_id: getString(data?.order_id) || orderId,
+      });
     }
 
     if (!isUniqueConstraintError(error)) {

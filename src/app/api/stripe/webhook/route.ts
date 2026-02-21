@@ -35,6 +35,7 @@ const ADDON_LABELS: Record<string, string> = {
 };
 
 type KnownOrderRow = {
+  id: string;
   order_id: string;
   status: string;
   tier_id: DetailflowTierId | "";
@@ -80,6 +81,7 @@ function normalizeOrderRow(value: unknown): KnownOrderRow | null {
     : [];
 
   return {
+    id: getString(source.id),
     order_id: getString(source.order_id),
     status: getString(source.status),
     tier_id: isDetailflowTierId(tierCandidate) ? tierCandidate : "",
@@ -97,6 +99,10 @@ function tierLabelFor(tierId: DetailflowTierId | ""): string {
 
 function addonLabelsFor(addonIds: DetailflowAddonId[]): string[] {
   return addonIds.map((addonId) => ADDON_LABELS[addonId] || addonId);
+}
+
+function getOrderUuidFromSession(session: Stripe.Checkout.Session): string {
+  return getString(session.metadata?.order_uuid) || getString(session.metadata?.orderUuid);
 }
 
 function getOrderIdFromSession(session: Stripe.Checkout.Session): string {
@@ -120,6 +126,7 @@ function getAddonIdsFromSession(session: Stripe.Checkout.Session): DetailflowAdd
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const sessionId = getString(session.id);
+  const orderUuid = getOrderUuidFromSession(session);
   const orderId = getOrderIdFromSession(session);
   const tierIdFromSession = getTierIdFromSession(session);
   const addonIdsFromSession = getAddonIdsFromSession(session);
@@ -128,6 +135,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   console.log("Stripe webhook checkout.session.completed", {
     session_id: sessionId,
+    order_uuid: orderUuid,
     order_id: orderId,
   });
 
@@ -135,7 +143,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   let orderRow: KnownOrderRow | null = null;
 
   try {
-    if (orderId) {
+    if (orderUuid) {
+      orderRow = normalizeOrderRow(await supabase.findOrderByUuid(orderUuid));
+    }
+    if (!orderRow && orderId) {
       orderRow = normalizeOrderRow(await supabase.findOrderByOrderId(orderId));
     }
     if (!orderRow && sessionId) {
@@ -184,7 +195,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
 
     if (Object.keys(patch).length > 0) {
-      const updatedRows = await supabase.updateOrderByOrderId(orderRow.order_id, patch);
+      const updatedRows = orderRow.id
+        ? await supabase.updateOrderByUuid(orderRow.id, patch)
+        : await supabase.updateOrderByOrderId(orderRow.order_id, patch);
       orderRow = normalizeOrderRow(updatedRows[0]) || orderRow;
     }
 
@@ -214,13 +227,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     });
 
     if (emailResult.sent.client || emailResult.sent.internal) {
-      await supabase.updateOrderByOrderId(orderRow.order_id, {
-        email_sent_at: new Date().toISOString(),
-      });
+      if (orderRow.id) {
+        await supabase.updateOrderByUuid(orderRow.id, {
+          email_sent_at: new Date().toISOString(),
+        });
+      } else {
+        await supabase.updateOrderByOrderId(orderRow.order_id, {
+          email_sent_at: new Date().toISOString(),
+        });
+      }
     }
   } catch (error) {
     console.error("Stripe webhook handler error", {
       message: error instanceof Error ? error.message : "Unknown error",
+      order_uuid: orderUuid,
       order_id: orderId,
       session_id: sessionId,
     });

@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { sendBookingConfirmedBundle } from "../../../../lib/email";
+import { getSupabaseServerClient } from "../../../../lib/supabase/server";
 
 type CalWebhookPayload = {
   id?: string | number;
@@ -111,6 +112,25 @@ function extractOrderId(data: Record<string, unknown>, root: CalWebhookPayload):
   );
 }
 
+function extractOrderUuid(data: Record<string, unknown>, root: CalWebhookPayload): string {
+  const metadata = getObject(data.metadata);
+  const customInputs = getObject(data.customInputs);
+  const rootMetadata = getObject(root.metadata);
+
+  return (
+    getString(metadata.order_uuid) ||
+    getString(metadata.orderUuid) ||
+    getString(customInputs.order_uuid) ||
+    getString(customInputs.orderUuid) ||
+    getString(data.order_uuid) ||
+    getString(data.orderUuid) ||
+    getString(rootMetadata.order_uuid) ||
+    getString(rootMetadata.orderUuid) ||
+    getString(root.order_uuid) ||
+    getString(root.orderUuid)
+  );
+}
+
 function extractAttendee(data: Record<string, unknown>, root: CalWebhookPayload): {
   customerEmail: string;
   customerName: string;
@@ -172,7 +192,8 @@ export async function POST(request: Request) {
 
   const data = getObject(payload.data);
   const eventData = Object.keys(data).length > 0 ? data : getObject(payload.payload);
-  const orderId = extractOrderId(eventData, payload);
+  let orderId = extractOrderId(eventData, payload);
+  const orderUuid = extractOrderUuid(eventData, payload);
   const { customerEmail, customerName } = extractAttendee(eventData, payload);
   const startTime = getString(eventData.startTime) || getString(eventData.start) || getString(payload.startTime);
   const { meetingDate, meetingTime } = formatMeetingDateAndTime(startTime);
@@ -184,28 +205,44 @@ export async function POST(request: Request) {
     process.env.NEXT_PUBLIC_SECURE_UPLOAD_URL ||
     "#";
 
-  if (!orderId || !customerEmail) {
+  if (!orderId && orderUuid) {
+    try {
+      const supabase = getSupabaseServerClient();
+      const orderRow = await supabase.findOrderByUuid(orderUuid);
+      const resolvedOrderId = getString(
+        orderRow && typeof orderRow === "object" ? (orderRow as Record<string, unknown>).order_id : "",
+      );
+      if (resolvedOrderId) {
+        orderId = resolvedOrderId;
+      }
+    } catch {
+      // Non-fatal: fallback to UUID for downstream traceability.
+    }
+  }
+
+  const orderReference = orderId || orderUuid;
+  if (!orderReference || !customerEmail) {
     return NextResponse.json(
       {
-        error: "Missing required booking reference fields: orderId and customerEmail.",
+        error: "Missing required booking reference fields: order_id/order_uuid and customerEmail.",
       },
       { status: 400 },
     );
   }
 
-  const dedupeKey = `${eventId}:${orderId}`;
+  const dedupeKey = `${eventId}:${orderReference}`;
   if (processedBookingWebhookKeys.has(dedupeKey)) {
     return NextResponse.json({
       ok: true,
       deduped: true,
-      orderId,
+      orderId: orderReference,
       eventId,
     });
   }
 
   try {
     const result = await sendBookingConfirmedBundle({
-      orderId,
+      orderId: orderReference,
       customerEmail,
       customerName: customerName || undefined,
       meetingDate,
@@ -220,7 +257,8 @@ export async function POST(request: Request) {
       ok: true,
       deduped: false,
       sent: result.sent,
-      orderId,
+      orderId: orderReference,
+      orderUuid: orderUuid || undefined,
       eventId,
     });
   } catch (error) {

@@ -23,6 +23,7 @@ type CreateEmbeddedCheckoutBody = {
   addonIds?: unknown;
   customerEmail?: string;
   orderId?: string;
+  orderUuid?: string;
 };
 
 function getString(value: unknown): string {
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
   const productId = getString(body.productId);
   const tierId = getString(body.tierId);
   const orderId = getString(body.orderId);
+  const orderUuid = getString(body.orderUuid);
   const customerEmail = getString(body.customerEmail);
   const addonIds = toAddonIds(body.addonIds);
 
@@ -64,8 +66,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid or missing tierId." }, { status: 400 });
   }
 
-  if (!orderId) {
-    return NextResponse.json({ error: "orderId is required." }, { status: 400 });
+  if (!orderId || !orderUuid) {
+    return NextResponse.json({ error: "orderId and orderUuid are required." }, { status: 400 });
   }
 
   const requestUrl = new URL(request.url);
@@ -101,6 +103,8 @@ export async function POST(request: Request) {
         },
       ],
       metadata: {
+        order_uuid: orderUuid,
+        order_id: orderId,
         orderId,
         tierId,
         addonIds: addonIds.join(","),
@@ -116,7 +120,7 @@ export async function POST(request: Request) {
 
     try {
       const supabase = getSupabaseServerClient();
-      await supabase.updateOrderByOrderId(orderId, {
+      await supabase.updateOrderByUuid(orderUuid, {
         stripe_session_id: session.id,
         customer_email: customerEmail || null,
         status: "created",
@@ -128,6 +132,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       clientSecret: session.client_secret,
       sessionId: session.id,
+      orderUuid,
       orderId,
     });
   } catch (error) {
