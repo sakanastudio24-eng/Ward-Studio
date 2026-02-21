@@ -34,8 +34,9 @@ Step sequence:
    - Open policy dialogs (`Terms`, `Refund`)
 
 Post-purchase:
-- Right drawer opens via `/src/app/components/products/SuccessDrawer.tsx`
-- Shows payment status, booking CTA, order summary, onboarding inputs, and copyable config text.
+- Primary flow redirects to `/products/success`, which renders an inline post-purchase form via `/src/app/components/products/PostPurchaseForm.tsx`.
+- Fallback/simulated non-live flows can still use the right drawer via `/src/app/components/products/SuccessDrawer.tsx`.
+- Both surfaces show payment status, booking CTA, order summary, onboarding inputs, and copyable config text.
 - `Submit setup details` sends `POST /api/onboarding/submit` with:
   - `order_id`
   - `order_uuid` (optional, preferred when available)
@@ -110,6 +111,15 @@ Compatibility endpoint retained:
 
 Shared mailer module:
 - `/src/lib/email.ts`
+
+Resend sender behavior:
+- preferred sender from `EMAIL_FROM` or `ORDERS_FROM_EMAIL`
+- fallback sender `Ward Studio <onboarding@resend.dev>` when sender/domain is rejected
+
+Email bundle behavior:
+- client and internal sends are attempted independently
+- one send failing no longer cancels the other send
+- route still reports an error only when both sends fail
 
 Payment-confirmed email trigger:
 - `GET /src/app/api/checkout/verify/route.ts`

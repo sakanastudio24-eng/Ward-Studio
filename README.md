@@ -40,7 +40,7 @@ DetailFlow purchase experience:
 1. Select plan and add-ons
 2. Complete readiness gate
 3. Review pricing and pay deposit
-4. Complete post-purchase setup drawer
+4. Complete post-purchase setup form on `/products/success`
 
 Implementation reference: `flow.md`
 Stripe payment reference: `stripe-flow.md`
@@ -173,6 +173,19 @@ When configured, the server can:
 - Confirm payment state
 - Sync order payment/session state to Supabase
 - Send client/internal confirmation emails server-side
+
+## Post-Purchase UX + Email Notes
+
+- Primary post-purchase experience is now the inline form page at `/products/success` (not a drawer shell).
+- The form includes the same handoff fields previously used in post-purchase drawer mode.
+- `POST /api/onboarding/submit` remains the setup submission endpoint.
+- Resend delivery is server-side only via `src/lib/email.ts`.
+- Sender behavior:
+  - preferred sender from `EMAIL_FROM` or `ORDERS_FROM_EMAIL`
+  - fallback sender `Ward Studio <onboarding@resend.dev>` when sender/domain is rejected
+- Bundle behavior:
+  - client + internal emails are attempted independently
+  - one failure no longer blocks the other
 
 ## Notes
 

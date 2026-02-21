@@ -35,21 +35,34 @@ The `/products` page now includes a staged purchase flow with reusable component
 - Stripe checkout trigger (current demo pass flow)
 - Terms/refund policy overlay links
 
-4. Post-purchase right drawer:
-- Confirmation and order summary
-- Strategy call CTA
-- Preparation checklist
-- Email/support messaging
-- Booking-confirmed upload instructions on return focus
+4. Post-purchase success experience:
+- Primary: inline form page at `/products/success` using `src/app/components/products/PostPurchaseForm.tsx`
+- Fallback (non-live/simulated path): right drawer `src/app/components/products/SuccessDrawer.tsx`
+- Shared content across both:
+  - Confirmation and order summary
+  - Strategy call CTA
+  - Preparation checklist
+  - Email/support messaging
+  - Booking-confirmed upload instructions
 
 ### Success Verification + Celebration
 
 - Route: `src/app/products/success/SuccessClient.tsx`
-- Verify API: `src/app/api/stripe/session/route.ts`
+- Verify API: `src/app/api/checkout/verify/route.ts`
 - Confetti:
   - Fires only after verification resolves to paid
   - Requires `celebrate=1` query param
   - Limited to once per browser session via `sessionStorage`
+
+### Email Delivery (Resend)
+
+- Server-only mailer: `src/lib/email.ts`
+- Preferred sender: `EMAIL_FROM` or `ORDERS_FROM_EMAIL`
+- Fallback sender: `Ward Studio <onboarding@resend.dev>` on sender/domain rejection
+- Bundle strategy:
+  - client and internal sends are independent
+  - one failure does not block the other
+  - request fails only when both sends fail
 
 ## Table of Contents
 
