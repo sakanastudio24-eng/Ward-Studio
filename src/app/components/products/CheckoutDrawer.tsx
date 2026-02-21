@@ -203,12 +203,14 @@ type DetailflowFormState = {
 type CheckoutCreateResponse = {
   url: string;
   sessionId: string;
+  orderUuid?: string;
   orderId: string;
   liveCheckout?: boolean;
   liveCheckoutWarning?: string;
 };
 
 type OrderCreateResponse = {
+  order_uuid: string;
   order_id: string;
 };
 
@@ -216,6 +218,7 @@ type CheckoutVerifyResponse = {
   paid: boolean;
   status?: string;
   error?: string;
+  orderUuid?: string;
   orderId?: string;
   sessionId?: string;
 };
@@ -335,6 +338,7 @@ export function CheckoutDrawer({
   const [bookingTimeLabel, setBookingTimeLabel] = useState("{Time}");
   const [resendNotice, setResendNotice] = useState("");
   const [activeSessionId, setActiveSessionId] = useState("");
+  const [createdOrderUuid, setCreatedOrderUuid] = useState("");
   const [createdOrderId, setCreatedOrderId] = useState("");
   const [safeConfig, setSafeConfig] = useState<SafeConfigInput>(() => buildInitialSafeConfig("external_link"));
   const [isSubmittingConfig, setIsSubmittingConfig] = useState(false);
@@ -641,6 +645,7 @@ export function CheckoutDrawer({
     setBookingTimeLabel("{Time}");
     setResendNotice("");
     setActiveSessionId("");
+    setCreatedOrderUuid("");
     setCreatedOrderId("");
     setSafeConfig(buildInitialSafeConfig("external_link"));
     setIsSubmittingConfig(false);
@@ -830,7 +835,10 @@ export function CheckoutDrawer({
   /**
    * Creates a persistent order row before checkout so onboarding can reference a stable id.
    */
-  async function requestOrderCreation(): Promise<string> {
+  async function requestOrderCreation(): Promise<{
+    orderId: string;
+    orderUuid: string;
+  }> {
     const response = await fetch(config.checkoutEndpoints.orderCreate.path, {
       method: "POST",
       headers: {
@@ -851,16 +859,20 @@ export function CheckoutDrawer({
 
     const data = (await response.json()) as Partial<OrderCreateResponse>;
     const orderId = data.order_id?.trim();
-    if (!orderId) {
-      throw new Error("Order create response is missing order_id.");
+    const orderUuid = data.order_uuid?.trim();
+    if (!orderId || !orderUuid) {
+      throw new Error("Order create response is missing order_id or order_uuid.");
     }
-    return orderId;
+    return {
+      orderId,
+      orderUuid,
+    };
   }
 
   /**
    * Requests a checkout session and order id from the configured create endpoint.
    */
-  async function requestCheckoutSession(orderId: string): Promise<CheckoutCreateResponse> {
+  async function requestCheckoutSession(orderId: string, orderUuid: string): Promise<CheckoutCreateResponse> {
     const response = await fetch(config.checkoutEndpoints.create.path, {
       method: "POST",
       headers: {
@@ -872,6 +884,7 @@ export function CheckoutDrawer({
         addonIds: selectedAddOnIds,
         customerEmail: form.customerEmail.trim(),
         orderId,
+        orderUuid,
       }),
     });
 
@@ -888,6 +901,7 @@ export function CheckoutDrawer({
     return {
       url: data.url || "",
       sessionId: data.sessionId,
+      orderUuid: data.orderUuid,
       orderId: data.orderId,
       liveCheckout: data.liveCheckout === true,
       liveCheckoutWarning:
@@ -904,6 +918,7 @@ export function CheckoutDrawer({
       return {
         paid: true,
         status: "paid",
+        orderUuid: createdOrderUuid || undefined,
         orderId: createdOrderId || undefined,
         sessionId,
       };
@@ -961,15 +976,20 @@ export function CheckoutDrawer({
 
     try {
       let nextOrderId = createdOrderId;
-      if (!nextOrderId) {
-        nextOrderId = await requestOrderCreation();
+      let nextOrderUuid = createdOrderUuid;
+      if (!nextOrderId || !nextOrderUuid) {
+        const createdOrder = await requestOrderCreation();
+        nextOrderId = createdOrder.orderId;
+        nextOrderUuid = createdOrder.orderUuid;
         setCreatedOrderId(nextOrderId);
+        setCreatedOrderUuid(nextOrderUuid);
       }
 
       if (USE_EMBEDDED_CHECKOUT) {
         dispatchFlow({ type: "REDIRECT_TO_STRIPE" });
         const params = new URLSearchParams({
           orderId: nextOrderId,
+          orderUuid: nextOrderUuid,
           tier: form.selectedPackageId,
         });
         if (selectedAddOnIds.length > 0) {
@@ -986,8 +1006,11 @@ export function CheckoutDrawer({
       }
 
       dispatchFlow({ type: "REDIRECT_TO_STRIPE" });
-      const checkout = await requestCheckoutSession(nextOrderId);
+      const checkout = await requestCheckoutSession(nextOrderId, nextOrderUuid);
       setActiveSessionId(checkout.sessionId);
+      if (checkout.orderUuid) {
+        setCreatedOrderUuid(checkout.orderUuid);
+      }
       trackCheckoutEvent("stripe_redirected", { stripe_url_present: Boolean(checkout.url) });
 
       if (checkout.liveCheckoutWarning && !checkout.liveCheckout) {
@@ -1017,6 +1040,12 @@ export function CheckoutDrawer({
           errorMessage: verification.error || "Payment was not captured. Please retry checkout.",
         });
         return;
+      }
+      if (verification.orderUuid) {
+        setCreatedOrderUuid(verification.orderUuid);
+      }
+      if (verification.orderId) {
+        setCreatedOrderId(verification.orderId);
       }
 
       dispatchFlow({
@@ -1059,6 +1088,12 @@ export function CheckoutDrawer({
           errorMessage: verification.error || "Payment was not captured. Please retry checkout.",
         });
         return;
+      }
+      if (verification.orderUuid) {
+        setCreatedOrderUuid(verification.orderUuid);
+      }
+      if (verification.orderId) {
+        setCreatedOrderId(verification.orderId);
       }
 
       dispatchFlow({
@@ -1103,6 +1138,7 @@ export function CheckoutDrawer({
         },
         body: JSON.stringify({
           order_id: orderId,
+          order_uuid: createdOrderUuid || undefined,
           config_json: configGeneratorOutput.configObject,
           asset_links: [assetLink],
         }),
@@ -1419,6 +1455,7 @@ export function CheckoutDrawer({
           const targetUrl = new URL(target, window.location.origin);
           const resolvedOrderId = flow.orderId || createdOrderId || fallbackOrderId;
           if (resolvedOrderId) targetUrl.searchParams.set("orderId", resolvedOrderId);
+          if (createdOrderUuid) targetUrl.searchParams.set("orderUuid", createdOrderUuid);
           if (form.customerEmail.trim()) targetUrl.searchParams.set("email", form.customerEmail.trim());
           if (form.customerName.trim()) targetUrl.searchParams.set("name", form.customerName.trim());
 

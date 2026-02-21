@@ -30,6 +30,7 @@ function getAddonIds(value: string): string[] {
 
 export default function EmbeddedCheckoutPage({ searchParams }: EmbeddedCheckoutPageProps) {
   const orderId = getParam(searchParams, "orderId");
+  const orderUuid = getParam(searchParams, "orderUuid");
   const tierId = getParam(searchParams, "tier") || "starter";
   const addonIds = getAddonIds(getParam(searchParams, "addons"));
   const customerEmail = getParam(searchParams, "email");
@@ -44,6 +45,7 @@ export default function EmbeddedCheckoutPage({ searchParams }: EmbeddedCheckoutP
         <div className="overflow-hidden rounded-xl border border-border p-2 sm:p-4">
           <EmbeddedCheckoutClient
             orderId={orderId}
+            orderUuid={orderUuid}
             tierId={tierId}
             addonIds={addonIds}
             customerEmail={customerEmail}
@@ -53,4 +55,3 @@ export default function EmbeddedCheckoutPage({ searchParams }: EmbeddedCheckoutP
     </main>
   );
 }
-

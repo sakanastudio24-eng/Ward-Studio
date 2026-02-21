@@ -165,7 +165,11 @@ export function createDetailflowConfig(): DetailflowAddonConfig {
         path: "/api/orders/create",
         label: "Create order record",
         responseFields: [
-          { key: "order_id", label: "Persistent order id for payment and onboarding." },
+          {
+            key: "order_uuid",
+            label: "Internal UUID used for Stripe/webhook reconciliation.",
+          },
+          { key: "order_id", label: "Customer-facing order number for support and onboarding." },
         ],
       },
       create: {
@@ -175,6 +179,7 @@ export function createDetailflowConfig(): DetailflowAddonConfig {
         responseFields: [
           { key: "url", label: "Checkout redirect URL for Stripe/success flow." },
           { key: "sessionId", label: "Server session id used for verify calls." },
+          { key: "orderUuid", label: "Internal UUID carried through Stripe metadata." },
           { key: "orderId", label: "Order id for post-purchase state and emails." },
           { key: "tierId", label: "Tier server accepted for this order." },
           { key: "addonIds", label: "Add-ons server accepted for this order." },
@@ -202,6 +207,7 @@ export function createDetailflowConfig(): DetailflowAddonConfig {
           { key: "paid", label: "True when checkout is captured and verified." },
           { key: "status", label: "Verification/payment status for UI state." },
           { key: "sessionId", label: "Session id returned from server verification." },
+          { key: "orderUuid", label: "Internal UUID resolved during verification." },
           { key: "orderId", label: "Order id to persist in success flow." },
           { key: "tierId", label: "Paid tier id." },
           { key: "addonIds", label: "Paid add-on ids." },

@@ -6,6 +6,7 @@ import { loadStripe } from "@stripe/stripe-js";
 
 type EmbeddedCheckoutClientProps = {
   orderId: string;
+  orderUuid: string;
   tierId: string;
   addonIds: string[];
   customerEmail: string;
@@ -22,6 +23,7 @@ function createStripePromise() {
  */
 export function EmbeddedCheckoutClient({
   orderId,
+  orderUuid,
   tierId,
   addonIds,
   customerEmail,
@@ -40,6 +42,7 @@ export function EmbeddedCheckoutClient({
         addonIds,
         customerEmail,
         orderId,
+        orderUuid,
       }),
     });
 
@@ -54,10 +57,10 @@ export function EmbeddedCheckoutClient({
     return payload.clientSecret;
   };
 
-  if (!orderId) {
+  if (!orderId || !orderUuid) {
     return (
       <p className="text-sm text-destructive">
-        Missing order ID. Start checkout from the products page first.
+        Missing order reference. Start checkout from the products page first.
       </p>
     );
   }
@@ -76,4 +79,3 @@ export function EmbeddedCheckoutClient({
     </EmbeddedCheckoutProvider>
   );
 }
-
