@@ -11,6 +11,7 @@ import {
   computeRemainingBalance,
   computeTotal,
   type DetailflowAddonId,
+  type DetailflowTierId,
 } from "../../../../lib/pricing";
 import { getSupabaseServerClient } from "../../../../lib/supabase/server";
 
@@ -45,13 +46,25 @@ function getStripeCheckoutEnabled(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY?.trim());
 }
 
+function getAllowPlaceholderCheckout(): boolean {
+  return (process.env.STRIPE_CHECKOUT_ALLOW_PLACEHOLDER || "").trim().toLowerCase() === "true";
+}
+
+const TIER_LABELS: Record<DetailflowTierId, string> = {
+  starter: "Starter",
+  growth: "Growth",
+  pro_launch: "Pro Launch",
+};
+
 async function createStripeCheckoutSession(input: {
   origin: string;
   orderId: string;
-  tierId: string;
+  tierId: DetailflowTierId;
   addonIds: DetailflowAddonId[];
   customerEmail: string;
   depositAmountUsd: number;
+  totalAmountUsd: number;
+  remainingAmountUsd: number;
 }): Promise<
   | { ok: true; url: string; sessionId: string }
   | { ok: false; error: string }
@@ -79,11 +92,11 @@ async function createStripeCheckoutSession(input: {
   form.set("line_items[0][price_data][unit_amount]", String(amountCents));
   form.set(
     "line_items[0][price_data][product_data][name]",
-    "DetailFlow Deposit",
+    `DetailFlow ${TIER_LABELS[input.tierId]} Deposit`,
   );
   form.set(
     "line_items[0][price_data][product_data][description]",
-    `Order ${input.orderId} deposit for ${input.tierId} tier`,
+    `Order ${input.orderId}: ${input.addonIds.length > 0 ? `${input.addonIds.length} add-ons selected, ` : ""}deposit ${toStripeAmountCents(input.depositAmountUsd) / 100} USD now, ${input.remainingAmountUsd} USD remaining of ${input.totalAmountUsd} USD`,
   );
 
   form.set("metadata[orderId]", input.orderId);
@@ -159,9 +172,28 @@ export async function POST(request: Request) {
     process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.NEXT_PUBLIC_APP_URL?.trim();
   const origin = configuredOrigin || requestUrl.origin;
   const orderId = providedOrderId || "";
+  const stripeLiveEnabled = getStripeCheckoutEnabled();
+  const allowPlaceholder = getAllowPlaceholderCheckout();
+
+  if (!stripeLiveEnabled && !allowPlaceholder) {
+    return NextResponse.json(
+      {
+        error:
+          "Stripe live checkout is not configured. Add STRIPE_SECRET_KEY (and optional STRIPE_CHECKOUT_LIVE_MODE=true) to enable checkout.",
+      },
+      { status: 503 },
+    );
+  }
+
+  if (stripeLiveEnabled && !orderId && !allowPlaceholder) {
+    return NextResponse.json(
+      { error: "orderId is required before creating a live Stripe checkout session." },
+      { status: 400 },
+    );
+  }
 
   let liveCheckoutWarning = "";
-  if (getStripeCheckoutEnabled() && orderId) {
+  if (stripeLiveEnabled && orderId) {
     const depositAmountUsd = computeDepositToday(PRICING, tierId, typedAddonIds);
     const totalAmountUsd = computeTotal(PRICING, tierId, typedAddonIds);
     const remainingAmountUsd = computeRemainingBalance(PRICING, tierId, typedAddonIds);
@@ -172,6 +204,8 @@ export async function POST(request: Request) {
       addonIds: typedAddonIds,
       customerEmail,
       depositAmountUsd,
+      totalAmountUsd,
+      remainingAmountUsd,
     });
 
     if (stripeSession.ok) {
@@ -202,7 +236,25 @@ export async function POST(request: Request) {
       });
     }
 
-    liveCheckoutWarning = stripeSession.error;
+    if (!allowPlaceholder) {
+      return NextResponse.json(
+        {
+          error: stripeSession.error || "Stripe live checkout session creation failed.",
+        },
+        { status: 502 },
+      );
+    }
+
+    liveCheckoutWarning = stripeSession.error || "Stripe live checkout unavailable; using placeholder flow.";
+  }
+
+  if (!allowPlaceholder) {
+    return NextResponse.json(
+      {
+        error: "Stripe live checkout is required. Placeholder flow is disabled.",
+      },
+      { status: 503 },
+    );
   }
 
   const record = createCheckoutSessionRecord({
