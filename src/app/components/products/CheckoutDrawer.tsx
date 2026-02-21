@@ -1067,115 +1067,6 @@ export function CheckoutDrawer({
   }
 
   /**
-   * Runs a no-charge test path that still creates an order and opens post-purchase flow.
-   */
-  async function handleTestZeroDollar() {
-    if (transitionBusy) return;
-
-    const paymentValidationErrors: string[] = [];
-    if (!form.customerName.trim()) {
-      paymentValidationErrors.push("Customer name is required before checkout.");
-    }
-    if (!form.customerEmail.trim()) {
-      paymentValidationErrors.push("Customer email is required before checkout.");
-    } else if (!EMAIL_REGEX.test(form.customerEmail.trim())) {
-      paymentValidationErrors.push("Customer email must be a valid email address.");
-    }
-
-    if (paymentValidationErrors.length > 0) {
-      setValidationErrors(paymentValidationErrors);
-      jumpToPaymentField(paymentValidationErrors);
-      return;
-    }
-
-    setValidationErrors([]);
-    setResendNotice("");
-    setBookingConfirmed(false);
-    blurActiveElement();
-    setSafeConfig((prev) => ({
-      ...prev,
-      business_name: form.customerName.trim() || prev.business_name,
-      contact_email: form.customerEmail.trim() || prev.contact_email,
-    }));
-    trackCheckoutEvent("checkout_clicked", { checkout_mode: "test_zero" });
-    dispatchFlow({ type: "START_CHECKOUT" });
-
-    try {
-      let nextOrderId = createdOrderId;
-      let nextOrderUuid = createdOrderUuid;
-      if (!nextOrderId || !nextOrderUuid) {
-        const createdOrder = await requestOrderCreation();
-        nextOrderId = createdOrder.orderId;
-        nextOrderUuid = createdOrder.orderUuid;
-        setCreatedOrderId(nextOrderId);
-        setCreatedOrderUuid(nextOrderUuid);
-      }
-
-      const confirmationResponse = await fetch("/api/email/order-confirmed", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderId: nextOrderId,
-          customerEmail: form.customerEmail.trim(),
-          customerName: form.customerName.trim() || undefined,
-          summary: {
-            tierLabel: selectedTierLabel,
-            addOnLabels: selectedAddOnLabels,
-            deposit: depositToday,
-            remaining: remainingBalance,
-          },
-          bookingUrl: config.strategyCallUrl || prepCallUrl,
-          stripeSessionId: "test-zero-dollar",
-          force: true,
-        }),
-      });
-
-      const confirmationPayload = (await confirmationResponse.json().catch(() => null)) as
-        | { error?: string; sent?: { client?: boolean; internal?: boolean } }
-        | null;
-
-      if (!confirmationResponse.ok) {
-        throw new Error(confirmationPayload?.error || "Could not send test order confirmation emails.");
-      }
-
-      setActiveSessionId("");
-      setIsOpen(false);
-      blurActiveElement();
-      setIsAfterPurchaseOpen(true);
-      dispatchFlow({ type: "START_RETURN_CONFIRM" });
-      dispatchFlow({
-        type: "PAYMENT_CONFIRMED",
-        orderId: nextOrderId || fallbackOrderId,
-      });
-      const sentClient = Boolean(confirmationPayload?.sent?.client);
-      const sentInternal = Boolean(confirmationPayload?.sent?.internal);
-      const sentSummary =
-        sentClient && sentInternal
-          ? "Client and internal emails sent."
-          : sentClient
-            ? "Client email sent."
-            : sentInternal
-              ? "Internal email sent."
-              : "Email send accepted.";
-      setResendNotice(`Test $0 complete. ${sentSummary}`);
-      toast.success("Test $0 flow completed with confirmation email send.");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Test $0 flow failed.";
-      setIsOpen(true);
-      setIsAfterPurchaseOpen(false);
-      setStep("payment");
-      setValidationErrors([message]);
-      toast.error(message);
-      dispatchFlow({
-        type: "VERIFICATION_ERROR",
-        errorMessage: message,
-      });
-    }
-  }
-
-  /**
    * Retries verification from failure states without resetting form selections.
    */
   async function handleRetryVerification() {
@@ -1453,14 +1344,6 @@ export function CheckoutDrawer({
                     >
                       Pay deposit
                     </Button>
-                    <Button
-                      className="w-full sm:w-auto"
-                      variant="outline"
-                      disabled={transitionBusy}
-                      onClick={handleTestZeroDollar}
-                    >
-                      Test $0
-                    </Button>
                   </div>
 
                 </section>
@@ -1531,14 +1414,6 @@ export function CheckoutDrawer({
                   onClick={handlePayDeposit}
                 >
                   Pay deposit
-                </Button>
-                <Button
-                  className="w-full sm:w-auto"
-                  variant="outline"
-                  disabled={transitionBusy}
-                  onClick={handleTestZeroDollar}
-                >
-                  Test $0
                 </Button>
                 <Button variant="outline" disabled={transitionBusy} onClick={() => setStep("readiness")}>
                   Back
