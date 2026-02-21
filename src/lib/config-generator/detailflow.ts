@@ -92,6 +92,23 @@ function flattenForSentence(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
 
+function formatUsd(value: number): string {
+  return Number.isInteger(value) ? `$${value}` : `$${value.toFixed(2)}`;
+}
+
+function toSentenceList(items: string[]): string {
+  if (items.length === 0) return "";
+  if (items.length === 1) return items[0];
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+}
+
+function toLabel(value: string): string {
+  return value
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 /**
  * Builds the project alias email for internal handoff tracking.
  */
@@ -99,6 +116,12 @@ function buildProjectEmail(businessName: string, orderId?: string): string {
   const businessSlug = slugify(businessName) || "detailflow";
   const orderSlug = slugify(orderId || "pending-order");
   return `${businessSlug}.${orderSlug}@projects.wardstudio.com`;
+}
+
+function getTierLabel(tierId: DetailflowTierId): string {
+  if (tierId === "starter") return "Starter";
+  if (tierId === "growth") return "Growth";
+  return "Pro Launch";
 }
 
 /**
@@ -227,45 +250,56 @@ export function generateDetailflowConfigAndHandoff(input: {
     handoff: handoffChecklist,
   };
 
-  const addonSummary = selection.addon_ids.length > 0 ? selection.addon_ids.join(", ") : "no add-ons";
-  const sentenceParts: string[] = [
-    `Order ${selection.order_id || "pending"} for ${safe.business_name || "your business"}`,
-    `project email ${projectEmail}`,
-    `tier ${selection.tier_id}`,
-    `add-ons ${addonSummary}`,
-    `booking mode ${safe.booking_mode}`,
-    `total ${selection.price_total}`,
-    `deposit ${selection.deposit_amount}`,
-    `remaining ${selection.remaining_balance}`,
-  ];
+  const readableAddons = selection.addon_ids.map((id) => toLabel(id));
+  const addonSummary =
+    readableAddons.length > 0
+      ? toSentenceList(readableAddons)
+      : "no additional add-ons";
 
-  if (safe.contact_email) sentenceParts.push(`contact email ${safe.contact_email}`);
-  if (safe.contact_phone) sentenceParts.push(`contact phone ${safe.contact_phone}`);
-  if (safe.city_service_area) sentenceParts.push(`service area ${safe.city_service_area}`);
-  if (safe.service_list_and_prices) {
-    sentenceParts.push(`services and prices ${flattenForSentence(safe.service_list_and_prices)}`);
-  }
-  if (safe.hours) sentenceParts.push(`hours ${flattenForSentence(safe.hours)}`);
-  if (safe.social_links && safe.social_links.length > 0) {
-    sentenceParts.push(`social links ${safe.social_links.join(" | ")}`);
-  }
-  if (safe.theme_choice) sentenceParts.push(`theme ${safe.theme_choice}`);
+  const bookingDetail =
+    safe.booking_mode === "external_link" && safe.booking_link
+      ? `external booking link at ${safe.booking_link}`
+      : safe.booking_mode === "iframe" && safe.booking_embed_url
+        ? `booking embed URL ${safe.booking_embed_url}`
+        : safe.booking_mode === "contact_only"
+          ? "contact-only booking"
+          : `${toLabel(safe.booking_mode)} booking`;
+
+  const contextParts: string[] = [];
+  if (safe.city_service_area) contextParts.push(`service area is ${safe.city_service_area}`);
+  if (safe.hours) contextParts.push(`hours are ${flattenForSentence(safe.hours)}`);
+  if (safe.theme_choice) contextParts.push(`theme preference is ${safe.theme_choice}`);
   if (safe.brand_colors_hex && safe.brand_colors_hex.length > 0) {
-    sentenceParts.push(`brand colors ${safe.brand_colors_hex.join(", ")}`);
+    contextParts.push(`brand colors are ${safe.brand_colors_hex.join(", ")}`);
   }
-  if (safe.booking_mode === "external_link" && safe.booking_link) {
-    sentenceParts.push(`booking link ${safe.booking_link}`);
-  }
-  if (safe.booking_mode === "iframe" && safe.booking_embed_url) {
-    sentenceParts.push(`booking embed ${safe.booking_embed_url}`);
-  }
-  if (safe.owner_notification_email) {
-    sentenceParts.push(`owner notification email ${safe.owner_notification_email}`);
-  }
-  if (safe.legal_terms_url) sentenceParts.push(`terms URL ${safe.legal_terms_url}`);
-  if (safe.legal_privacy_url) sentenceParts.push(`privacy URL ${safe.legal_privacy_url}`);
 
-  const configSentence = `${sentenceParts.join("; ")}.`;
+  const contactParts: string[] = [];
+  if (safe.contact_email) contactParts.push(`contact email is ${safe.contact_email}`);
+  if (safe.contact_phone) contactParts.push(`phone is ${safe.contact_phone}`);
+  if (safe.owner_notification_email) {
+    contactParts.push(`owner notifications go to ${safe.owner_notification_email}`);
+  }
+
+  const legalParts: string[] = [];
+  if (safe.legal_terms_url) legalParts.push(`terms URL is ${safe.legal_terms_url}`);
+  if (safe.legal_privacy_url) legalParts.push(`privacy URL is ${safe.legal_privacy_url}`);
+
+  const configSentenceParts = [
+    `Order ${selection.order_id || "pending"} for ${safe.business_name || "your business"} is scoped for the ${getTierLabel(selection.tier_id)} tier with ${addonSummary}.`,
+    `Booking is set to ${bookingDetail}, and pricing is ${formatUsd(selection.price_total)} total with ${formatUsd(selection.deposit_amount)} paid today and ${formatUsd(selection.remaining_balance)} remaining.`,
+    safe.service_list_and_prices
+      ? `Services and pricing notes: ${flattenForSentence(safe.service_list_and_prices)}.`
+      : "",
+    contextParts.length > 0 ? `Project context: ${contextParts.join("; ")}.` : "",
+    contactParts.length > 0 ? `Contact routing: ${contactParts.join("; ")}.` : "",
+    safe.social_links && safe.social_links.length > 0
+      ? `Social links provided: ${safe.social_links.join(" | ")}.`
+      : "",
+    legalParts.length > 0 ? `Legal references: ${legalParts.join("; ")}.` : "",
+    `Project handoff email alias: ${projectEmail}.`,
+  ].filter(Boolean);
+
+  const configSentence = configSentenceParts.join(" ");
 
   return {
     configObject,
