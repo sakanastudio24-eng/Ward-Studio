@@ -4,8 +4,7 @@ import {
   isDetailflowTierId,
 } from "../checkout/session-store";
 import type { DetailflowAddonId, DetailflowTierId } from "../pricing";
-
-const STRIPE_API_BASE = "https://api.stripe.com/v1";
+import { getStripeServer } from "./server";
 
 type StripeSessionApiResponse = {
   id?: string;
@@ -126,8 +125,7 @@ export function hasStripeSecretKey(): boolean {
  * Retrieves and normalizes a Stripe Checkout Session for server-side verification.
  */
 export async function retrieveStripeCheckoutSession(sessionId: string): Promise<StripeLookupResult> {
-  const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
-  if (!secretKey) {
+  if (!hasStripeSecretKey()) {
     return {
       ok: false,
       status: 503,
@@ -144,50 +142,48 @@ export async function retrieveStripeCheckoutSession(sessionId: string): Promise<
     };
   }
 
-  const response = await fetch(
-    `${STRIPE_API_BASE}/checkout/sessions/${encodeURIComponent(targetSessionId)}`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${secretKey}`,
+  try {
+    const stripe = getStripeServer();
+    const payload = (await stripe.checkout.sessions.retrieve(
+      targetSessionId,
+    )) as unknown as StripeSessionApiResponse;
+
+    const metadata = toMetadata(payload.metadata);
+    const clientReferenceId = getString(payload.client_reference_id);
+    const customerEmail =
+      getString(payload.customer_details?.email) || getString(payload.customer_email);
+
+    return {
+      ok: true,
+      session: {
+        id: getString(payload.id) || targetSessionId,
+        status: getString(payload.status) || "unknown",
+        paymentStatus: getString(payload.payment_status) || "unpaid",
+        amountTotalCents: typeof payload.amount_total === "number" ? payload.amount_total : 0,
+        currency: getString(payload.currency) || "usd",
+        customerEmail,
+        customerId: getString(payload.customer),
+        paymentIntentId: getString(payload.payment_intent),
+        orderId: getOrderIdFromMetadata(metadata, clientReferenceId),
+        tierId: getTierFromMetadata(metadata),
+        addonIds: getAddonIdsFromMetadata(metadata),
+        metadata,
       },
-      cache: "no-store",
-    },
-  );
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Stripe session lookup failed.";
+    const status =
+      typeof error === "object" &&
+      error !== null &&
+      "statusCode" in error &&
+      typeof (error as { statusCode?: unknown }).statusCode === "number"
+        ? (error as { statusCode: number }).statusCode
+        : 500;
 
-  const payload = (await response.json().catch(() => ({}))) as {
-    error?: { message?: string };
-  } & StripeSessionApiResponse;
-
-  if (!response.ok) {
-    const message = getString(payload.error?.message) || "Stripe session lookup failed.";
     return {
       ok: false,
-      status: response.status,
+      status,
       error: message,
     };
   }
-
-  const metadata = toMetadata(payload.metadata);
-  const clientReferenceId = getString(payload.client_reference_id);
-  const customerEmail =
-    getString(payload.customer_details?.email) || getString(payload.customer_email);
-
-  return {
-    ok: true,
-    session: {
-      id: getString(payload.id) || targetSessionId,
-      status: getString(payload.status) || "unknown",
-      paymentStatus: getString(payload.payment_status) || "unpaid",
-      amountTotalCents: typeof payload.amount_total === "number" ? payload.amount_total : 0,
-      currency: getString(payload.currency) || "usd",
-      customerEmail,
-      customerId: getString(payload.customer),
-      paymentIntentId: getString(payload.payment_intent),
-      orderId: getOrderIdFromMetadata(metadata, clientReferenceId),
-      tierId: getTierFromMetadata(metadata),
-      addonIds: getAddonIdsFromMetadata(metadata),
-      metadata,
-    },
-  };
 }
