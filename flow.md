@@ -161,6 +161,10 @@ Pages:
 - `/products/embedded` mounts embedded checkout with React Stripe components.
 - `/products/embedded-return` checks session status and forwards completed payments to `/products/success`.
 
+Client toggle:
+- `NEXT_PUBLIC_STRIPE_CHECKOUT_UI_MODE=embedded`
+  - when enabled, `Pay deposit` routes to `/products/embedded` with current order/tier/add-ons.
+
 ## Checkout Origin / Subdomain
 
 Checkout redirect origin is resolved in:

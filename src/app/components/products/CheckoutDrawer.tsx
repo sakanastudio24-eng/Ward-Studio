@@ -221,6 +221,7 @@ type CheckoutVerifyResponse = {
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USE_EMBEDDED_CHECKOUT = process.env.NEXT_PUBLIC_STRIPE_CHECKOUT_UI_MODE === "embedded";
 
 /**
  * Seeds a safe config object used by the post-purchase handoff form.
@@ -963,6 +964,25 @@ export function CheckoutDrawer({
       if (!nextOrderId) {
         nextOrderId = await requestOrderCreation();
         setCreatedOrderId(nextOrderId);
+      }
+
+      if (USE_EMBEDDED_CHECKOUT) {
+        dispatchFlow({ type: "REDIRECT_TO_STRIPE" });
+        const params = new URLSearchParams({
+          orderId: nextOrderId,
+          tier: form.selectedPackageId,
+        });
+        if (selectedAddOnIds.length > 0) {
+          params.set("addons", selectedAddOnIds.join(","));
+        }
+        if (form.customerEmail.trim()) {
+          params.set("email", form.customerEmail.trim());
+        }
+
+        setIsOpen(false);
+        blurActiveElement();
+        window.location.assign(`/products/embedded?${params.toString()}`);
+        return;
       }
 
       dispatchFlow({ type: "REDIRECT_TO_STRIPE" });
