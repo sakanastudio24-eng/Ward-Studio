@@ -168,11 +168,49 @@ export async function GET(request: Request) {
     };
   }
 
+  let prelookupSupabaseError = "";
   if (!verification) {
-    const extra =
-      stripeLookupError && hasStripeSecretKey()
-        ? ` Stripe lookup: ${stripeLookupError}`
-        : "";
+    try {
+      const prelookupSupabase = getSupabaseServerClient();
+      const prelookupOrder = normalizeOrderRow(
+        await prelookupSupabase.findOrderBySessionId(sessionId),
+      );
+
+      if (prelookupOrder) {
+        const prelookupTierId = isDetailflowTierId(prelookupOrder.tier_id)
+          ? prelookupOrder.tier_id
+          : "";
+        const prelookupAmountTotal = prelookupTierId
+          ? computeTotal(PRICING, prelookupTierId, prelookupOrder.addon_ids)
+          : 0;
+
+        verification = {
+          paid: prelookupOrder.status === "paid",
+          status: prelookupOrder.status || "pending",
+          sessionId,
+          orderId: prelookupOrder.order_id,
+          tierId: prelookupTierId,
+          addonIds: prelookupOrder.addon_ids,
+          amountTotal: prelookupAmountTotal,
+          currency: "usd",
+          customerEmail: prelookupOrder.customer_email,
+        };
+      }
+    } catch (error) {
+      prelookupSupabaseError =
+        error instanceof Error ? error.message : "Supabase lookup failed.";
+    }
+  }
+
+  if (!verification) {
+    const extraParts: string[] = [];
+    if (stripeLookupError && hasStripeSecretKey()) {
+      extraParts.push(`Stripe lookup: ${stripeLookupError}`);
+    }
+    if (prelookupSupabaseError) {
+      extraParts.push(`Supabase lookup: ${prelookupSupabaseError}`);
+    }
+    const extra = extraParts.length > 0 ? ` ${extraParts.join(" ")}` : "";
     return NextResponse.json(
       {
         paid: false,

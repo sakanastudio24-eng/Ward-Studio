@@ -272,6 +272,7 @@ export async function POST(request: Request) {
       await supabase.updateOrderByOrderId(orderId, {
         stripe_session_id: record.sessionId,
         customer_email: customerEmail || null,
+        status: "paid",
       });
     } catch (error) {
       persistenceWarning = error instanceof Error ? error.message : "Supabase order sync failed.";
