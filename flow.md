@@ -139,6 +139,14 @@ Stripe webhook endpoint:
 - Verifies `stripe-signature` using `STRIPE_WEBHOOK_SECRET`.
 - Handles `checkout.session.completed`, marks order paid, and sends confirmation emails.
 
+Endpoint health test points:
+- `GET /src/app/api/health/endpoints/route.ts`
+- Probes core API/webhook routes and reports:
+  - `ok` for responsive endpoints
+  - `false` when a boolean signal (for example `paid`/`ok`) is false
+  - `error` for failure responses
+  - `not_responding` for timeout/unreachable states
+
 ## Stripe Read-Key Mode (Current)
 
 No webhook is required for this mode.

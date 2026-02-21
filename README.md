@@ -77,6 +77,22 @@ Supporting routes:
 - `POST /api/email/order-confirmed`
 - `POST /api/cal/webhook`
 - `POST /api/orders` (legacy-compatible config submission path)
+- `GET /api/health/endpoints` (API/webhook responsiveness + boolean false checks)
+
+## Endpoint Test Points
+
+Use:
+
+- `GET /api/health/endpoints`
+
+This route probes critical APIs and reports:
+
+- `state: "ok"` when endpoint responds within timeout and does not fail boolean checks.
+- `state: "false"` when a boolean signal (`ok` or `paid`) returns `false`.
+- `state: "error"` when endpoint responds with failure status.
+- `state: "not_responding"` when the endpoint times out or does not respond.
+
+Response includes `summary` counters plus per-endpoint `checks[]` for fast diagnosis.
 
 ## Cal.com Booking Routing
 
