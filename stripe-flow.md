@@ -46,6 +46,8 @@ On verified paid state:
   - embedded checkout session create (`clientSecret`)
 - `GET /api/stripe/session-status`
   - embedded return status check
+- `GET /api/stripe/diagnostics`
+  - non-secret key diagnostics for Stripe config
 
 ## Checkout Origin / Subdomain
 
@@ -80,6 +82,40 @@ Optional:
 - `NEXT_PUBLIC_CHECKOUT_URL`
 - `STRIPE_SUCCESS_URL`
 - `STRIPE_CANCEL_URL`
+
+## Diagnostic Test Cases
+
+Use:
+
+- `GET /api/stripe/diagnostics`
+
+Expected checks returned per key:
+
+1. `valid`
+- Key exists and matches expected Stripe prefix.
+
+2. `missing`
+- Key is not set or empty.
+
+3. `placeholder`
+- Key contains placeholder-like text (`xxxx`, `your_`, `replace_me`, `fake`).
+
+4. `invalid`
+- Key is set but does not match Stripe format prefix.
+
+Practical cases:
+
+- Missing server key:
+  - `STRIPE_SECRET_KEY` unset -> `STRIPE_SECRET_KEY.status = "missing"`
+- Fake server key:
+  - `STRIPE_SECRET_KEY=sk_test_xxxxxxxxx` -> `status = "placeholder"`
+- Wrong key type:
+  - `STRIPE_SECRET_KEY=pk_test_...` -> `status = "invalid"`
+- Missing publishable key:
+  - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` unset -> `status = "missing"`
+
+If checkout create fails in strict mode, API responses now include:
+- `diagnostics` object with the same key test results.
 
 ## Current Notes
 

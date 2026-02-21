@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getStripeServer } from "../../../../lib/stripe/server";
+import { getStripeDiagnostics } from "../../../../lib/stripe/diagnostics";
 
 function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -30,6 +31,9 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Stripe session status lookup failed.";
-    return NextResponse.json({ error: message }, { status: 502 });
+    return NextResponse.json(
+      { error: message, diagnostics: getStripeDiagnostics() },
+      { status: 502 },
+    );
   }
 }

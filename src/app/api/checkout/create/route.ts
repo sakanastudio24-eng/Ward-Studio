@@ -19,6 +19,7 @@ import {
   getStripeSuccessUrl,
   resolveCheckoutOrigin,
 } from "../../../../config/checkout";
+import { getStripeDiagnostics } from "../../../../lib/stripe/diagnostics";
 
 type CreateCheckoutRequestBody = {
   productId?: string;
@@ -185,10 +186,12 @@ export async function POST(request: Request) {
   const allowPlaceholder = getAllowPlaceholderCheckout();
 
   if (!stripeLiveEnabled && !allowPlaceholder) {
+    const diagnostics = getStripeDiagnostics();
     return NextResponse.json(
       {
         error:
           "Stripe live checkout is not configured. Add STRIPE_SECRET_KEY (and optional STRIPE_CHECKOUT_LIVE_MODE=true) to enable checkout.",
+        diagnostics,
       },
       { status: 503 },
     );
@@ -246,10 +249,12 @@ export async function POST(request: Request) {
     }
 
     if (!allowPlaceholder) {
+      const diagnostics = getStripeDiagnostics();
       // In strict mode we fail hard so users do not continue without Stripe confirmation.
       return NextResponse.json(
         {
           error: stripeSession.error || "Stripe live checkout session creation failed.",
+          diagnostics,
         },
         { status: 502 },
       );
@@ -259,10 +264,12 @@ export async function POST(request: Request) {
   }
 
   if (!allowPlaceholder) {
+    const diagnostics = getStripeDiagnostics();
     // Guard against accidental "silent fallback" in production.
     return NextResponse.json(
       {
         error: "Stripe live checkout is required. Placeholder flow is disabled.",
+        diagnostics,
       },
       { status: 503 },
     );

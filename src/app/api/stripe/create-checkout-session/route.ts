@@ -3,6 +3,7 @@ import { PRODUCTS } from "../../../../config/products";
 import { getStripeSuccessUrl, resolveCheckoutOrigin } from "../../../../config/checkout";
 import { getSupabaseServerClient } from "../../../../lib/supabase/server";
 import { getStripeServer } from "../../../../lib/stripe/server";
+import { getStripeDiagnostics } from "../../../../lib/stripe/diagnostics";
 import {
   PRICING,
   computeDepositToday,
@@ -131,6 +132,9 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Stripe embedded checkout session failed.";
-    return NextResponse.json({ error: message }, { status: 502 });
+    return NextResponse.json(
+      { error: message, diagnostics: getStripeDiagnostics() },
+      { status: 502 },
+    );
   }
 }
