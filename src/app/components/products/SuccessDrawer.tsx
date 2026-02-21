@@ -40,7 +40,7 @@ export interface SuccessDrawerProps {
   bookingTimeLabel: string;
   onRetryVerification: () => void;
   onStartNewPurchase: () => void;
-  onBack: () => void;
+  onDone: () => void;
   onBookingClick: () => void;
   onResendClick: () => void;
   onSupportClick: () => void;
@@ -95,7 +95,7 @@ export function SuccessDrawer({
   bookingTimeLabel,
   onRetryVerification,
   onStartNewPurchase,
-  onBack,
+  onDone,
   onBookingClick,
   onResendClick,
   onSupportClick,
@@ -496,12 +496,20 @@ export function SuccessDrawer({
         </div>
 
         <DrawerFooter>
-          <Button variant="outline" onClick={onBack}>
-            Back
-          </Button>
-          <Button variant="outline" onClick={onStartNewPurchase}>
-            Start new purchase
-          </Button>
+          {primaryState === "payment_confirmed" ? (
+            <Button className="bg-orange-500 text-white hover:bg-orange-600" onClick={onDone}>
+              Done
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" onClick={onDone}>
+                Back
+              </Button>
+              <Button variant="outline" onClick={onStartNewPurchase}>
+                Start new purchase
+              </Button>
+            </>
+          )}
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

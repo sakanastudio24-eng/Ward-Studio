@@ -1447,7 +1447,7 @@ export function CheckoutDrawer({
         bookingDateLabel={bookingDateLabel}
         bookingTimeLabel={bookingTimeLabel}
         onRetryVerification={handleRetryVerification}
-        onBack={() => setIsAfterPurchaseOpen(false)}
+        onDone={() => setIsAfterPurchaseOpen(false)}
         onStartNewPurchase={handleStartNewPurchase}
         onBookingClick={() => {
           const fallbackUrl = `${window.location.origin}/products/success?orderId=${encodeURIComponent(flow.orderId || fallbackOrderId)}`;

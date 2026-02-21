@@ -1,22 +1,108 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { launchConfetti } from "../../../lib/confetti";
 import { CAL_LINKS } from "../../../config/cal";
+import { DEFAULT_SERVICE_EMAIL, DEFAULT_SUPPORT_EMAIL } from "../../../config/email";
+import {
+  generateDetailflowConfigAndHandoff,
+  type SafeConfigInput,
+} from "../../../lib/config-generator/detailflow";
+import type { DetailflowTierId } from "../../../lib/pricing";
+import { SuccessDrawer } from "../../components/products/SuccessDrawer";
+import type { CheckoutPrimaryState } from "../../components/products/flow";
 
 type VerifyStatus = "checking" | "paid" | "failed";
 
 type VerifyResponse = {
   paid: boolean;
+  orderUuid?: string;
   orderId?: string;
-  status?: string;
-  sessionId?: string;
+  tierId?: string;
+  addonIds?: string[];
+  deposit?: number;
+  remaining?: number;
+  customerEmail?: string;
   error?: string;
 };
+
+const TIER_LABELS: Record<string, string> = {
+  starter: "Starter",
+  growth: "Growth",
+  pro_launch: "Pro Launch",
+};
+
+const ADDON_LABELS: Record<string, string> = {
+  booking_system_integration: "Booking System Integration",
+  deposit_payment_collection: "Deposit / Payment Collection",
+  advanced_email_styling: "Advanced Email Templates",
+  analytics_setup: "Analytics Setup",
+  hosting_assistance: "Hosting Assistance",
+  performance_optimization: "Performance Optimization",
+  content_structuring: "Content Structuring",
+  brand_polish: "Brand Polish",
+  photo_optimization: "Photo Optimization",
+  booking_readiness_setup: "Booking Readiness Setup",
+  launch_clarity_consultation: "Launch Clarity Consultation",
+  booking_setup_assistance: "Booking Setup Assistance",
+  hosting_help: "Hosting Help",
+  analytics_deep_setup: "Analytics Deep Setup",
+  strategy_call: "Free 20-Min Strategy Call",
+};
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function normalizeTierId(value: string): DetailflowTierId {
+  if (value === "starter" || value === "growth" || value === "pro_launch") {
+    return value;
+  }
+  return "starter";
+}
+
+function buildInitialSafeConfig(bookingMode: SafeConfigInput["booking_mode"]): SafeConfigInput {
+  return {
+    business_name: "",
+    contact_email: "",
+    contact_phone: "",
+    city_service_area: "",
+    service_list_and_prices: "",
+    hours: "",
+    social_links: [],
+    theme_choice: "",
+    brand_colors_hex: [],
+    booking_mode: bookingMode,
+    booking_link: "",
+    booking_embed_url: "",
+    owner_notification_email: "",
+    legal_terms_url: "",
+    legal_privacy_url: "",
+  };
+}
 
 export default function SuccessClient() {
   const [status, setStatus] = useState<VerifyStatus>("checking");
   const [errorMessage, setErrorMessage] = useState("");
+  const [verificationNonce, setVerificationNonce] = useState(0);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(true);
+  const [resendNotice, setResendNotice] = useState("");
+  const [isSubmittingConfiguration, setIsSubmittingConfiguration] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+  const [submitMessage, setSubmitMessage] = useState("");
+  const [orderUuid, setOrderUuid] = useState("");
+  const [orderId, setOrderId] = useState("");
+  const [tierId, setTierId] = useState<DetailflowTierId>("starter");
+  const [addonIds, setAddonIds] = useState<string[]>([]);
+  const [deposit, setDeposit] = useState(0);
+  const [remaining, setRemaining] = useState(0);
+  const [customerEmail, setCustomerEmail] = useState(DEFAULT_SERVICE_EMAIL);
 
   const search = useMemo(() => {
     if (typeof window === "undefined") return new URLSearchParams();
@@ -25,6 +111,21 @@ export default function SuccessClient() {
 
   const shouldCelebrate = search.get("celebrate") === "1";
   const sessionId = search.get("session_id") || "";
+  const fallbackOrderId = search.get("orderId") || `DF-${new Date().getFullYear()}-0000`;
+  const fallbackOrderUuid = search.get("orderUuid") || "";
+  const queryName = (search.get("name") || "").trim();
+  const queryEmail = (search.get("email") || "").trim();
+  const bookingConfirmed =
+    search.get("booking_confirmed") === "1" || (search.get("booking") || "").toLowerCase() === "confirmed";
+  const bookingDateLabel = search.get("booking_date") || "{Date}";
+  const bookingTimeLabel = search.get("booking_time") || "{Time}";
+
+  const [safeConfig, setSafeConfig] = useState<SafeConfigInput>(() => {
+    const next = buildInitialSafeConfig("external_link");
+    if (queryName) next.business_name = queryName;
+    if (queryEmail) next.contact_email = queryEmail;
+    return next;
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -36,24 +137,46 @@ export default function SuccessClient() {
         return;
       }
 
+      setStatus("checking");
+      setErrorMessage("");
+
       try {
         const response = await fetch(
           `/api/checkout/verify?session_id=${encodeURIComponent(sessionId)}`,
-          {
-            method: "GET",
-          },
+          { method: "GET" },
         );
 
-        const data = (await response.json()) as VerifyResponse;
+        const data = (await response.json().catch(() => null)) as VerifyResponse | null;
 
         if (cancelled) return;
 
-        if (!response.ok || !data.paid) {
+        if (!response.ok || !data?.paid) {
           setStatus("failed");
-          setErrorMessage(data.error || "Unable to verify payment.");
+          setErrorMessage(data?.error || "Unable to verify payment.");
           return;
         }
 
+        const nextOrderId = (data.orderId || "").trim();
+        const nextOrderUuid = (data.orderUuid || "").trim();
+        const nextTierId = normalizeTierId((data.tierId || "").trim());
+        const nextAddonIds = Array.isArray(data.addonIds)
+          ? data.addonIds.map((item) => String(item).trim()).filter(Boolean)
+          : [];
+        const nextDeposit = typeof data.deposit === "number" ? data.deposit : 0;
+        const nextRemaining = typeof data.remaining === "number" ? data.remaining : 0;
+        const nextCustomerEmail = (data.customerEmail || "").trim();
+
+        setOrderId(nextOrderId || fallbackOrderId);
+        setOrderUuid(nextOrderUuid || fallbackOrderUuid);
+        setTierId(nextTierId);
+        setAddonIds(nextAddonIds);
+        setDeposit(nextDeposit);
+        setRemaining(nextRemaining);
+        setCustomerEmail(nextCustomerEmail || queryEmail || DEFAULT_SERVICE_EMAIL);
+        setSafeConfig((prev) => ({
+          ...prev,
+          contact_email: prev.contact_email || nextCustomerEmail || queryEmail || "",
+        }));
         setStatus("paid");
       } catch {
         if (cancelled) return;
@@ -67,13 +190,12 @@ export default function SuccessClient() {
     return () => {
       cancelled = true;
     };
-  }, [sessionId]);
+  }, [fallbackOrderId, fallbackOrderUuid, queryEmail, sessionId, verificationNonce]);
 
   useEffect(() => {
     if (status !== "paid" || !shouldCelebrate) return;
 
     const key = "ward_welcome_confetti_shown";
-
     try {
       if (window.sessionStorage.getItem(key)) return;
       window.sessionStorage.setItem(key, "1");
@@ -83,98 +205,187 @@ export default function SuccessClient() {
     }
   }, [shouldCelebrate, status]);
 
-  useEffect(() => {
-    const onPageShow = () => {
-      if (status !== "paid" || !shouldCelebrate) return;
-      const key = "ward_welcome_confetti_shown";
-      try {
-        if (window.sessionStorage.getItem(key)) return;
-        window.sessionStorage.setItem(key, "1");
-        launchConfetti();
-      } catch {
-        launchConfetti();
-      }
-    };
+  const selectedTierLabel = TIER_LABELS[tierId] || "DetailFlow";
+  const selectedAddOnLabels = addonIds.map((addonId) => ADDON_LABELS[addonId] || addonId);
+  const resolvedOrderId = orderId || fallbackOrderId;
+  const resolvedOrderUuid = orderUuid || fallbackOrderUuid;
+  const secureUploadUrl = process.env.NEXT_PUBLIC_SECURE_UPLOAD_URL || "";
+  const supportEmail = DEFAULT_SUPPORT_EMAIL;
 
-    window.addEventListener("pageshow", onPageShow);
-    return () => window.removeEventListener("pageshow", onPageShow);
-  }, [shouldCelebrate, status]);
+  const configOutput = useMemo(
+    () =>
+      generateDetailflowConfigAndHandoff({
+        safe: safeConfig,
+        selection: {
+          tier_id: tierId,
+          addon_ids: addonIds,
+          price_total: deposit + remaining,
+          deposit_amount: deposit,
+          remaining_balance: remaining,
+          order_id: resolvedOrderId,
+        },
+      }),
+    [addonIds, deposit, remaining, resolvedOrderId, safeConfig, tierId],
+  );
+
+  const primaryState: CheckoutPrimaryState =
+    status === "checking" ? "return_success_loading" : status === "paid" ? "payment_confirmed" : "verification_error";
+
+  async function handleSubmitConfiguration() {
+    if (!resolvedOrderId && !resolvedOrderUuid) {
+      toast.error("Missing order reference.");
+      return;
+    }
+
+    setIsSubmittingConfiguration(true);
+    setSubmitStatus("idle");
+    setSubmitMessage("");
+
+    try {
+      const fallbackUploadUrl = "https://drive.google.com/drive/my-drive";
+      const assetLink = isHttpUrl(secureUploadUrl) ? secureUploadUrl : fallbackUploadUrl;
+
+      const response = await fetch("/api/onboarding/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          order_id: resolvedOrderId || undefined,
+          order_uuid: resolvedOrderUuid || undefined,
+          config_json: configOutput.configObject,
+          asset_links: [assetLink],
+        }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as { error?: string; warning?: string } | null;
+      if (!response.ok) {
+        const message = payload?.error || "Setup details submit failed.";
+        setSubmitStatus("error");
+        setSubmitMessage(message);
+        toast.error(message);
+        return;
+      }
+
+      const message = payload?.warning ? `Setup details submitted. ${payload.warning}` : "Setup details submitted.";
+      setSubmitStatus("success");
+      setSubmitMessage(message);
+      toast.success("Setup details submitted");
+    } catch {
+      setSubmitStatus("error");
+      setSubmitMessage("Setup details submit failed. Please try again.");
+      toast.error("Setup details submit failed");
+    } finally {
+      setIsSubmittingConfiguration(false);
+    }
+  }
 
   return (
-    <main className="min-h-screen px-4 py-16 sm:px-6 md:px-12 md:py-24">
-      <div className="mx-auto max-w-3xl space-y-8 rounded-2xl border border-border p-6 sm:p-8">
-        {status === "checking" && (
-          <>
-            <h1 className="tracking-tight text-[1.9rem] sm:text-[2.6rem]">Confirming payment...</h1>
-            <p className="leading-relaxed text-muted-foreground">
-              Verifying your Stripe session now.
-            </p>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div className="h-full w-1/2 animate-pulse bg-orange-500" />
-            </div>
-          </>
-        )}
+    <main className="min-h-screen bg-background">
+      <SuccessDrawer
+        open={isDrawerOpen}
+        onOpenChange={(nextOpen) => {
+          if (nextOpen) {
+            setIsDrawerOpen(true);
+            return;
+          }
+          if (primaryState === "payment_confirmed") return;
+          setIsDrawerOpen(false);
+        }}
+        primaryState={primaryState}
+        errorMessage={errorMessage}
+        productName="DetailFlow"
+        orderId={resolvedOrderId}
+        fallbackOrderId={fallbackOrderId}
+        selectedTierLabel={selectedTierLabel}
+        selectedAddOnLabels={selectedAddOnLabels}
+        depositToday={deposit}
+        remainingBalance={remaining}
+        confirmationEmail={customerEmail || queryEmail || DEFAULT_SERVICE_EMAIL}
+        supportEmail={supportEmail}
+        secureUploadUrl={secureUploadUrl}
+        generatedConfigText={configOutput.configSentence}
+        resendNotice={resendNotice}
+        bookingConfirmed={bookingConfirmed}
+        bookingDateLabel={bookingDateLabel}
+        bookingTimeLabel={bookingTimeLabel}
+        onRetryVerification={() => setVerificationNonce((prev) => prev + 1)}
+        onDone={() => {
+          setIsDrawerOpen(false);
+          window.location.assign("/products#detailflow-template");
+        }}
+        onStartNewPurchase={() => {
+          window.location.assign("/products#detailflow-template");
+        }}
+        onBookingClick={() => {
+          const targetUrl = new URL(CAL_LINKS.detailflowSetup);
+          if (resolvedOrderId) targetUrl.searchParams.set("orderId", resolvedOrderId);
+          if (resolvedOrderUuid) targetUrl.searchParams.set("orderUuid", resolvedOrderUuid);
+          if (customerEmail) targetUrl.searchParams.set("email", customerEmail);
+          if (queryName) targetUrl.searchParams.set("name", queryName);
+          window.open(targetUrl.toString(), "_blank", "noopener,noreferrer");
+        }}
+        onResendClick={() => {
+          if (!customerEmail) {
+            setResendNotice("Customer email is missing.");
+            toast.error("Customer email is required to resend confirmation");
+            return;
+          }
 
-        {status === "paid" && (
-          <>
-            <h1 className="tracking-tight text-[1.9rem] sm:text-[2.6rem]">Payment Confirmed</h1>
-            <p className="leading-relaxed text-muted-foreground">
-              Your deposit was verified. Next steps and onboarding details have been sent by email.
-            </p>
+          void (async () => {
+            try {
+              const response = await fetch("/api/email/order-confirmed", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  orderId: resolvedOrderId,
+                  customerEmail,
+                  customerName: queryName || undefined,
+                  summary: {
+                    tierLabel: selectedTierLabel,
+                    addOnLabels: selectedAddOnLabels,
+                    deposit,
+                    remaining,
+                  },
+                  bookingUrl: CAL_LINKS.detailflowSetup,
+                  stripeSessionId: sessionId || undefined,
+                  force: true,
+                }),
+              });
 
-            <section className="space-y-2 text-sm sm:text-base">
-              <h2 className="text-lg font-medium">Next steps</h2>
-              <ul className="space-y-1 text-muted-foreground">
-                <li>• Keep your selected package and add-ons handy for kickoff.</li>
-                <li>• Watch for an onboarding response from Ward Studio.</li>
-                <li>• Prepare required assets so production can start on schedule.</li>
-              </ul>
-            </section>
+              const payload = (await response.json().catch(() => null)) as
+                | { error?: string; sent?: { client?: boolean; internal?: boolean } }
+                | null;
 
-            <section className="space-y-2 text-sm sm:text-base">
-              <h2 className="text-lg font-medium">Response window</h2>
-              <p className="text-muted-foreground">
-                You will receive a confirmation and next-step response within 24-48 hours.
-              </p>
-            </section>
+              if (!response.ok) {
+                throw new Error(payload?.error || "Resend failed.");
+              }
 
-            <div className="pt-2">
-              <a
-                href={CAL_LINKS.detailflowSetup}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600"
-              >
-                Book Your Strategy Call
-              </a>
-            </div>
-          </>
-        )}
-
-        {status === "failed" && (
-          <>
-            <h1 className="tracking-tight text-[1.9rem] sm:text-[2.6rem]">Payment Verification Needed</h1>
-            <p className="leading-relaxed text-muted-foreground">
-              {errorMessage || "We could not verify payment from this link."}
-            </p>
-          </>
-        )}
-
-        <div className="flex flex-wrap gap-3">
-          <a
-            href="/products#detailflow-template"
-            className="inline-flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600"
-          >
-            Back to DetailFlow
-          </a>
-          <a
-            href="/"
-            className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
-            Back to Home
-          </a>
-        </div>
-      </div>
+              const wasSent = Boolean(payload?.sent?.client || payload?.sent?.internal);
+              const message = wasSent ? "Confirmation email resent." : "Confirmation request received.";
+              setResendNotice(message);
+              toast.success(message);
+            } catch (error) {
+              const message = error instanceof Error ? error.message : "Resend failed.";
+              setResendNotice(message);
+              toast.error(message);
+            }
+          })();
+        }}
+        onSupportClick={() => undefined}
+        onConfigCopied={() => toast.success("Configuration copied")}
+        onConfigCopyFailed={() => toast.error("Copy failed")}
+        safeConfig={safeConfig}
+        onSafeConfigChange={setSafeConfig}
+        handoffChecklist={configOutput.handoffChecklist}
+        onSubmitConfiguration={handleSubmitConfiguration}
+        isSubmittingConfiguration={isSubmittingConfiguration}
+        submitStatus={submitStatus}
+        submitMessage={submitMessage}
+        prepCallUrl={CAL_LINKS.freeStrategyFit}
+      />
     </main>
   );
 }
