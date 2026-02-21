@@ -40,7 +40,9 @@ function toStripeAmountCents(amountUsd: number): number {
 }
 
 function getStripeCheckoutEnabled(): boolean {
-  return process.env.STRIPE_CHECKOUT_LIVE_MODE === "true";
+  const liveMode = (process.env.STRIPE_CHECKOUT_LIVE_MODE || "").trim().toLowerCase();
+  if (liveMode === "false") return false;
+  return Boolean(process.env.STRIPE_SECRET_KEY?.trim());
 }
 
 async function createStripeCheckoutSession(input: {
