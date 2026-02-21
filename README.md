@@ -78,6 +78,11 @@ Supporting routes:
 - `POST /api/cal/webhook`
 - `POST /api/orders` (legacy-compatible config submission path)
 - `GET /api/health/endpoints` (API/webhook responsiveness + boolean false checks)
+- `GET /api/health/endpoints?format=human` (plain-text readable report)
+
+Readable dashboard:
+
+- `/health`
 
 ## Endpoint Test Points
 
