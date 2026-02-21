@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendOrderConfirmedBundle, type OrderSummary } from "../../../../lib/email";
+import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
 
 type OrderConfirmedRequestBody = {
   orderId?: string;
@@ -76,6 +77,15 @@ function parseSummary(input: unknown): OrderSummary | null {
  * Sends payment-confirmed buyer and internal owner emails from a server-only route.
  */
 export async function POST(request: Request) {
+  const rateLimit = enforceRateLimit(request, {
+    keyPrefix: "email-order-confirmed",
+    limit: 12,
+    windowMs: 60_000,
+  });
+  if (rateLimit.limited) {
+    return rateLimitedResponse(rateLimit.retryAfterSeconds);
+  }
+
   const payload = (await request.json().catch(() => null)) as OrderConfirmedRequestBody | null;
   if (!payload) {
     return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
@@ -123,6 +133,7 @@ export async function POST(request: Request) {
       sent: result.sent,
     });
   } catch (error) {
+    console.error("Order confirmation email error:", error instanceof Error ? error.message : "Unknown error");
     return NextResponse.json(
       {
         error: `Email provider rejected order-confirmed send: ${

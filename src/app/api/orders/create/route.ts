@@ -3,6 +3,8 @@ import { PRODUCTS } from "../../../../config/products";
 import type { DetailflowAddonId, DetailflowTierId } from "../../../../lib/pricing";
 import { PRICING } from "../../../../lib/pricing";
 import { getSupabaseServer } from "../../../../lib/supabase-server";
+import { getAddonAvailability } from "../../../../lib/rules";
+import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
 
 type CreateOrderBody = {
   product_id?: unknown;
@@ -55,6 +57,15 @@ function buildOrderId(prefix: string): string {
  * Creates a new DetailFlow order row in Supabase before checkout starts.
  */
 export async function POST(request: Request) {
+  const rateLimit = enforceRateLimit(request, {
+    keyPrefix: "orders-create",
+    limit: 20,
+    windowMs: 60_000,
+  });
+  if (rateLimit.limited) {
+    return rateLimitedResponse(rateLimit.retryAfterSeconds);
+  }
+
   const payload = (await request.json().catch(() => null)) as CreateOrderBody | null;
   if (!payload) {
     return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
@@ -85,6 +96,14 @@ export async function POST(request: Request) {
     );
   }
 
+  const unavailable = addonIds.find((addonId) => !getAddonAvailability(tierId as DetailflowTierId, addonId).enabled);
+  if (unavailable) {
+    return NextResponse.json(
+      { error: `Add-on ${unavailable} is not available for tier ${tierId}.` },
+      { status: 400 },
+    );
+  }
+
   if (customerEmailRaw && !EMAIL_REGEX.test(customerEmailRaw)) {
     return NextResponse.json({ error: "customer_email must be a valid email address." }, { status: 400 });
   }
@@ -108,6 +127,7 @@ export async function POST(request: Request) {
       .single();
 
     if (!error) {
+      console.log("Order created:", getString(data?.order_id) || orderId);
       return NextResponse.json({
         order_uuid: getString(data?.id),
         order_id: getString(data?.order_id) || orderId,
@@ -115,6 +135,7 @@ export async function POST(request: Request) {
     }
 
     if (!isUniqueConstraintError(error)) {
+      console.error("Order create error:", error.message);
       return NextResponse.json(
         { error: `Unable to create order: ${error.message}` },
         { status: 500 },

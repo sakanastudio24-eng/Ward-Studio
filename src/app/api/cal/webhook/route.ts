@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { sendBookingConfirmedBundle } from "../../../../lib/email";
 import { getSupabaseServerClient } from "../../../../lib/supabase/server";
+import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
 
 type CalWebhookPayload = {
   id?: string | number;
@@ -175,6 +176,15 @@ function extractEventId(data: Record<string, unknown>, root: CalWebhookPayload, 
  * Sends booking reminder + upload instructions to client and internal booking notification.
  */
 export async function POST(request: Request) {
+  const rateLimit = enforceRateLimit(request, {
+    keyPrefix: "cal-webhook",
+    limit: 180,
+    windowMs: 60_000,
+  });
+  if (rateLimit.limited) {
+    return rateLimitedResponse(rateLimit.retryAfterSeconds);
+  }
+
   const rawBody = await request.text();
   const signatureSecret = process.env.CAL_WEBHOOK_SECRET?.trim() || "";
   const signature = getWebhookSignature(request);

@@ -20,6 +20,8 @@ import {
   resolveCheckoutOrigin,
 } from "../../../../config/checkout";
 import { getStripeDiagnostics } from "../../../../lib/stripe/diagnostics";
+import { getAddonAvailability } from "../../../../lib/rules";
+import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
 
 type CreateCheckoutRequestBody = {
   productId?: string;
@@ -31,6 +33,7 @@ type CreateCheckoutRequestBody = {
 };
 
 type StripeCheckoutSessionResponse = Record<string, unknown>;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -135,6 +138,7 @@ async function createStripeCheckoutSession(input: {
         message = errorMessage.trim();
       }
     }
+    console.error("Stripe error:", message);
     return { ok: false, error: message };
   }
 
@@ -142,6 +146,7 @@ async function createStripeCheckoutSession(input: {
   const checkoutUrl = getString(payload.url);
 
   if (!sessionId || !checkoutUrl) {
+    console.error("Stripe error:", "Stripe response missing checkout url or session id.");
     return { ok: false, error: "Stripe response missing checkout url or session id." };
   }
 
@@ -157,6 +162,15 @@ async function createStripeCheckoutSession(input: {
  * 4) Optionally fall back to placeholder checkout when explicitly allowed
  */
 export async function POST(request: Request) {
+  const rateLimit = enforceRateLimit(request, {
+    keyPrefix: "checkout-create",
+    limit: 25,
+    windowMs: 60_000,
+  });
+  if (rateLimit.limited) {
+    return rateLimitedResponse(rateLimit.retryAfterSeconds);
+  }
+
   const body = (await request.json().catch(() => null)) as CreateCheckoutRequestBody | null;
   if (!body) {
     return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
@@ -183,6 +197,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Invalid add-on id: ${invalidAddon}` }, { status: 400 });
   }
   const typedAddonIds = addonIds.filter((id): id is DetailflowAddonId => isDetailflowAddonId(id));
+  const unavailableAddon = typedAddonIds.find((addonId) => !getAddonAvailability(tierId, addonId).enabled);
+  if (unavailableAddon) {
+    return NextResponse.json(
+      { error: `Add-on ${unavailableAddon} is not available for tier ${tierId}.` },
+      { status: 400 },
+    );
+  }
+
+  if (!customerEmail) {
+    return NextResponse.json({ error: "customerEmail is required." }, { status: 400 });
+  }
+  if (!EMAIL_REGEX.test(customerEmail)) {
+    return NextResponse.json({ error: "customerEmail must be a valid email address." }, { status: 400 });
+  }
 
   const requestUrl = new URL(request.url);
   const checkoutOrigin = resolveCheckoutOrigin(requestUrl.origin);
@@ -260,6 +288,7 @@ export async function POST(request: Request) {
     }
 
     if (!allowPlaceholder) {
+      console.error("Stripe error:", stripeSession.error || "Stripe live checkout session creation failed.");
       const diagnostics = getStripeDiagnostics();
       // In strict mode we fail hard so users do not continue without Stripe confirmation.
       return NextResponse.json(
@@ -309,6 +338,10 @@ export async function POST(request: Request) {
         await supabase.updateOrderByOrderId(orderId, patch);
       }
     } catch (error) {
+      console.error(
+        "Checkout persistence error:",
+        error instanceof Error ? error.message : "Supabase order sync failed.",
+      );
       persistenceWarning = error instanceof Error ? error.message : "Supabase order sync failed.";
     }
   }

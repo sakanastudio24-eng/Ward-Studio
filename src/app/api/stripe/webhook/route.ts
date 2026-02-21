@@ -12,6 +12,7 @@ import {
 import { getSupabaseServerClient } from "../../../../lib/supabase/server";
 import { isDetailflowAddonId, isDetailflowTierId } from "../../../../lib/checkout/session-store";
 import { getStripeServer } from "../../../../lib/stripe/server";
+import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
 
 export const runtime = "nodejs";
 
@@ -252,6 +253,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
  * Stripe webhook receiver with signature verification.
  */
 export async function POST(request: Request) {
+  const rateLimit = enforceRateLimit(request, {
+    keyPrefix: "stripe-webhook",
+    limit: 180,
+    windowMs: 60_000,
+  });
+  if (rateLimit.limited) {
+    return rateLimitedResponse(rateLimit.retryAfterSeconds);
+  }
+
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim() || "";
   if (!webhookSecret) {
     return NextResponse.json(

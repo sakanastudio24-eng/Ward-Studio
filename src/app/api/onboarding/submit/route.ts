@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServer } from "../../../../lib/supabase-server";
+import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
 
 type OnboardingSubmitBody = {
   order_id?: unknown;
@@ -9,6 +10,8 @@ type OnboardingSubmitBody = {
 };
 
 const SENSITIVE_KEY_REGEX = /(api[_-]?key|token|password|secret|webhook)/i;
+const MAX_CONFIG_BYTES = 120_000;
+const MAX_ASSET_LINKS = 20;
 
 function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -30,6 +33,9 @@ function isValidHttpUrl(value: string): boolean {
 function parseAssetLinks(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   const links = value.map((item) => getString(item)).filter(Boolean);
+  if (links.length > MAX_ASSET_LINKS) {
+    throw new Error(`Too many asset links. Maximum allowed is ${MAX_ASSET_LINKS}.`);
+  }
   const invalid = links.find((link) => !isValidHttpUrl(link));
   if (invalid) {
     throw new Error(`Invalid asset link: ${invalid}`);
@@ -78,6 +84,15 @@ function sanitizeConfigNode(node: unknown): {
  * Stores a safe onboarding payload for an existing order.
  */
 export async function POST(request: Request) {
+  const rateLimit = enforceRateLimit(request, {
+    keyPrefix: "onboarding-submit",
+    limit: 20,
+    windowMs: 60_000,
+  });
+  if (rateLimit.limited) {
+    return rateLimitedResponse(rateLimit.retryAfterSeconds);
+  }
+
   const payload = (await request.json().catch(() => null)) as OnboardingSubmitBody | null;
   if (!payload) {
     return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
@@ -92,6 +107,14 @@ export async function POST(request: Request) {
   const configInput = payload.config_json ?? {};
   if (!isPlainObject(configInput)) {
     return NextResponse.json({ error: "config_json must be an object." }, { status: 400 });
+  }
+
+  const configBytes = Buffer.byteLength(JSON.stringify(configInput), "utf8");
+  if (configBytes > MAX_CONFIG_BYTES) {
+    return NextResponse.json(
+      { error: `config_json is too large. Maximum size is ${MAX_CONFIG_BYTES} bytes.` },
+      { status: 400 },
+    );
   }
 
   let assetLinks: string[];
@@ -136,6 +159,7 @@ export async function POST(request: Request) {
   });
 
   if (insertError) {
+    console.error("Onboarding submit error:", insertError.message);
     return NextResponse.json(
       { error: `Unable to submit onboarding details: ${insertError.message}` },
       { status: 500 },

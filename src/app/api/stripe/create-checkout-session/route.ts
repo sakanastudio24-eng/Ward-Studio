@@ -16,6 +16,8 @@ import {
   isDetailflowAddonId,
   isDetailflowTierId,
 } from "../../../../lib/checkout/session-store";
+import { getAddonAvailability } from "../../../../lib/rules";
+import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
 
 type CreateEmbeddedCheckoutBody = {
   productId?: string;
@@ -32,17 +34,34 @@ function getString(value: unknown): string {
 
 function toAddonIds(value: unknown): DetailflowAddonId[] {
   if (!Array.isArray(value)) return [];
-  return Array.from(new Set(value.map((item) => getString(item)).filter(isDetailflowAddonId)));
+  const raw = value.map((item) => getString(item)).filter(Boolean);
+  const unique = Array.from(new Set(raw));
+  const invalid = unique.find((item) => !isDetailflowAddonId(item));
+  if (invalid) {
+    throw new Error(`Invalid add-on id: ${invalid}`);
+  }
+  return unique as DetailflowAddonId[];
 }
 
 function toStripeAmountCents(amountUsd: number): number {
   return Math.max(0, Math.round(amountUsd * 100));
 }
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 /**
  * Creates an embedded Stripe Checkout session and returns clientSecret for mounting.
  */
 export async function POST(request: Request) {
+  const rateLimit = enforceRateLimit(request, {
+    keyPrefix: "stripe-create-checkout-session",
+    limit: 25,
+    windowMs: 60_000,
+  });
+  if (rateLimit.limited) {
+    return rateLimitedResponse(rateLimit.retryAfterSeconds);
+  }
+
   const body = (await request.json().catch(() => null)) as CreateEmbeddedCheckoutBody | null;
   if (!body) {
     return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
@@ -53,7 +72,15 @@ export async function POST(request: Request) {
   const orderId = getString(body.orderId);
   const orderUuid = getString(body.orderUuid);
   const customerEmail = getString(body.customerEmail);
-  const addonIds = toAddonIds(body.addonIds);
+  let addonIds: DetailflowAddonId[] = [];
+  try {
+    addonIds = toAddonIds(body.addonIds);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Invalid add-on ids." },
+      { status: 400 },
+    );
+  }
 
   if (productId !== PRODUCTS.detailflow.product_id) {
     return NextResponse.json(
@@ -65,9 +92,19 @@ export async function POST(request: Request) {
   if (!isDetailflowTierId(tierId)) {
     return NextResponse.json({ error: "Invalid or missing tierId." }, { status: 400 });
   }
+  const unavailableAddon = addonIds.find((addonId) => !getAddonAvailability(tierId, addonId).enabled);
+  if (unavailableAddon) {
+    return NextResponse.json(
+      { error: `Add-on ${unavailableAddon} is not available for tier ${tierId}.` },
+      { status: 400 },
+    );
+  }
 
   if (!orderId || !orderUuid) {
     return NextResponse.json({ error: "orderId and orderUuid are required." }, { status: 400 });
+  }
+  if (!customerEmail || !EMAIL_REGEX.test(customerEmail)) {
+    return NextResponse.json({ error: "customerEmail must be a valid email address." }, { status: 400 });
   }
 
   const requestUrl = new URL(request.url);
@@ -137,6 +174,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Stripe embedded checkout session failed.";
+    console.error("Stripe error:", message);
     return NextResponse.json(
       { error: message, diagnostics: getStripeDiagnostics() },
       { status: 502 },

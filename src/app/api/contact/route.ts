@@ -4,6 +4,7 @@ import {
   DEFAULT_EMAIL_FROM,
   DEFAULT_SERVICE_EMAIL,
 } from "../../../config/email";
+import { enforceRateLimit, rateLimitedResponse } from "../../../lib/rate-limit/server";
 
 interface ContactRequestBody {
   name?: string;
@@ -32,6 +33,15 @@ function escapeHtml(value: string): string {
 }
 
 export async function POST(request: Request) {
+  const rateLimit = enforceRateLimit(request, {
+    keyPrefix: "contact",
+    limit: 8,
+    windowMs: 60_000,
+  });
+  if (rateLimit.limited) {
+    return rateLimitedResponse(rateLimit.retryAfterSeconds);
+  }
+
   const resendApiKey = process.env.RESEND_API_KEY;
   const ownerEmail = process.env.CONTACT_OWNER_EMAIL || DEFAULT_SERVICE_EMAIL;
   const templateId = process.env.RESEND_CONTACT_TEMPLATE_ID;
@@ -116,6 +126,7 @@ export async function POST(request: Request) {
 
   if (!resendResponse.ok) {
     const details = await resendResponse.text();
+    console.error("Contact email send error:", details || resendResponse.statusText);
     return NextResponse.json(
       { error: `Email provider rejected the request: ${details || resendResponse.statusText}` },
       { status: 502 }
