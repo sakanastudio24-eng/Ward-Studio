@@ -9,6 +9,8 @@ type ProbeDefinition = {
   method: "GET" | "POST";
   path: string;
   booleanField?: "ok" | "paid";
+  successStatuses?: number[];
+  allowErrorMessageIncludes?: string[];
   timeoutMs?: number;
 };
 
@@ -32,17 +34,20 @@ const PROBES: ProbeDefinition[] = [
     method: "GET",
     path: "/api/stripe/diagnostics",
     booleanField: "ok",
+    successStatuses: [200],
   },
   {
     id: "checkout_verify",
     method: "GET",
     path: "/api/checkout/verify?session_id=healthcheck",
-    booleanField: "paid",
+    successStatuses: [200, 400, 404],
   },
   {
     id: "stripe_session_status",
     method: "GET",
     path: "/api/stripe/session-status?session_id=healthcheck",
+    successStatuses: [200, 400, 404],
+    allowErrorMessageIncludes: ["no such checkout.session", "missing session_id"],
   },
   {
     id: "orders_create_route",
@@ -92,6 +97,19 @@ function safeMessage(status: number, data: unknown): string {
   return error || message || `HTTP ${status}`;
 }
 
+function messageMatchesAllowList(message: string, allowList: string[] | undefined): boolean {
+  if (!allowList || allowList.length === 0) return false;
+  const lowered = message.toLowerCase();
+  return allowList.some((entry) => lowered.includes(entry.toLowerCase()));
+}
+
+function isSuccessfulStatus(status: number, probe: ProbeDefinition): boolean {
+  if (probe.successStatuses && probe.successStatuses.length > 0) {
+    return probe.successStatuses.includes(status);
+  }
+  return status >= 200 && status < 300;
+}
+
 async function probeEndpoint(origin: string, probe: ProbeDefinition): Promise<ProbeResult> {
   const timeoutMs = probe.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const controller = new AbortController();
@@ -113,6 +131,7 @@ async function probeEndpoint(origin: string, probe: ProbeDefinition): Promise<Pr
 
     const boolValue =
       probe.booleanField && parsedBody ? getBooleanFieldValue(parsedBody, probe.booleanField) : undefined;
+    const responseMessage = safeMessage(response.status, parsedBody);
 
     if (typeof boolValue === "boolean" && boolValue === false) {
       return {
@@ -128,7 +147,13 @@ async function probeEndpoint(origin: string, probe: ProbeDefinition): Promise<Pr
       };
     }
 
-    if (!response.ok && response.status !== 400 && response.status !== 401 && response.status !== 404 && response.status !== 405) {
+    const successByStatus = isSuccessfulStatus(response.status, probe);
+    const successByMessage = messageMatchesAllowList(
+      responseMessage,
+      probe.allowErrorMessageIncludes,
+    );
+
+    if (!successByStatus && !successByMessage) {
       return {
         id: probe.id,
         method: probe.method,
@@ -138,7 +163,7 @@ async function probeEndpoint(origin: string, probe: ProbeDefinition): Promise<Pr
         httpStatus: response.status,
         booleanField: probe.booleanField,
         booleanValue: boolValue,
-        message: safeMessage(response.status, parsedBody),
+        message: responseMessage,
       };
     }
 
@@ -151,7 +176,7 @@ async function probeEndpoint(origin: string, probe: ProbeDefinition): Promise<Pr
       httpStatus: response.status,
       booleanField: probe.booleanField,
       booleanValue: boolValue,
-      message: safeMessage(response.status, parsedBody),
+      message: responseMessage,
     };
   } catch (error) {
     const isAbort = error instanceof Error && error.name === "AbortError";
@@ -170,12 +195,35 @@ async function probeEndpoint(origin: string, probe: ProbeDefinition): Promise<Pr
   }
 }
 
+function buildHumanSummary(input: {
+  ok: boolean;
+  summary: { total: number; ok: number; false: number; error: number; notResponding: number };
+  checks: ProbeResult[];
+  checkedAt: string;
+}): string {
+  const lines: string[] = [];
+  lines.push(`Health Check: ${input.ok ? "PASS" : "ATTENTION NEEDED"}`);
+  lines.push(
+    `Summary -> total: ${input.summary.total}, ok: ${input.summary.ok}, false: ${input.summary.false}, error: ${input.summary.error}, not responding: ${input.summary.notResponding}`,
+  );
+  lines.push(`Checked at: ${input.checkedAt}`);
+  lines.push("");
+  lines.push("Checks:");
+  for (const check of input.checks) {
+    lines.push(
+      `- [${check.state.toUpperCase()}] ${check.id} (${check.method} ${check.path}) status=${check.httpStatus ?? "none"} message="${check.message}"`,
+    );
+  }
+  return lines.join("\n");
+}
+
 /**
  * Health test points for critical API/webhook routes.
  * Reports whether routes are responding and whether boolean signals are false.
  */
 export async function GET(request: Request) {
-  const origin = new URL(request.url).origin;
+  const url = new URL(request.url);
+  const origin = url.origin;
   const results = await Promise.all(PROBES.map((probe) => probeEndpoint(origin, probe)));
 
   const summary = {
@@ -186,10 +234,22 @@ export async function GET(request: Request) {
     notResponding: results.filter((item) => item.state === "not_responding").length,
   };
 
-  return NextResponse.json({
+  const payload = {
     ok: summary.error === 0 && summary.notResponding === 0,
     summary,
     checks: results,
     checkedAt: new Date().toISOString(),
-  });
+  };
+
+  const format = (url.searchParams.get("format") || "").trim().toLowerCase();
+  if (format === "human") {
+    return new NextResponse(buildHumanSummary(payload), {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+    });
+  }
+
+  return NextResponse.json(payload);
 }
