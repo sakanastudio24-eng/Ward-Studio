@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { DEFAULT_EMAIL_FROM, DEFAULT_OWNER_EMAIL } from "../config/email";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
+const RESEND_FALLBACK_FROM = "Ward Studio <onboarding@resend.dev>";
 
 const sentOrderConfirmationIds = new Set<string>();
 
@@ -112,27 +113,50 @@ async function sendEmail(input: {
 }) {
   const { apiKey, from } = getMailConfig();
   const recipients = Array.isArray(input.to) ? input.to : [input.to];
+  const preferredFrom = from.trim() || RESEND_FALLBACK_FROM;
+  const fallbackFrom = (process.env.RESEND_FALLBACK_FROM || RESEND_FALLBACK_FROM).trim();
 
-  const response = await fetch(RESEND_ENDPOINT, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "Idempotency-Key": randomUUID(),
-    },
-    body: JSON.stringify({
-      from,
-      to: recipients,
-      subject: input.subject,
-      html: input.html,
-      text: input.text,
-    }),
-  });
+  const requestBody = {
+    to: recipients,
+    subject: input.subject,
+    html: input.html,
+    text: input.text,
+  };
 
-  if (!response.ok) {
-    const details = await response.text();
-    throw new Error(details || response.statusText);
+  const sendWithFrom = async (fromAddress: string) =>
+    fetch(RESEND_ENDPOINT, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": randomUUID(),
+      },
+      body: JSON.stringify({
+        from: fromAddress,
+        ...requestBody,
+      }),
+    });
+
+  let response = await sendWithFrom(preferredFrom);
+  if (response.ok) return;
+
+  const initialDetails = await response.text();
+  const senderRejected =
+    /from|sender|domain|verify/i.test(initialDetails) ||
+    /onboarding@resend\.dev/i.test(initialDetails);
+  const shouldRetryWithFallback =
+    senderRejected && preferredFrom.toLowerCase() !== fallbackFrom.toLowerCase();
+
+  if (shouldRetryWithFallback) {
+    response = await sendWithFrom(fallbackFrom);
+    if (response.ok) return;
+    const retryDetails = await response.text();
+    throw new Error(
+      `Preferred sender failed (${preferredFrom}): ${initialDetails || "unknown error"}. Fallback sender failed (${fallbackFrom}): ${retryDetails || response.statusText}`,
+    );
   }
+
+  throw new Error(initialDetails || response.statusText);
 }
 
 function buildEmailContainer(title: string, sectionsHtml: string): string {
@@ -169,6 +193,10 @@ export function markOrSkipOrderConfirmation(orderId: string): boolean {
   if (sentOrderConfirmationIds.has(orderId)) return true;
   sentOrderConfirmationIds.add(orderId);
   return false;
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unknown email error";
 }
 
 /**
@@ -288,14 +316,37 @@ export async function sendOrderConfirmedBundle(
     };
   }
 
-  await sendClientOrderConfirmation(input);
-  await sendInternalNewOrder(input);
+  let clientSent = false;
+  let internalSent = false;
+  const failures: string[] = [];
+
+  try {
+    await sendClientOrderConfirmation(input);
+    clientSent = true;
+  } catch (error) {
+    failures.push(`client: ${getErrorMessage(error)}`);
+  }
+
+  try {
+    await sendInternalNewOrder(input);
+    internalSent = true;
+  } catch (error) {
+    failures.push(`internal: ${getErrorMessage(error)}`);
+  }
+
+  if (failures.length > 0) {
+    console.error(`Order confirmation email issue (${input.orderId}): ${failures.join(" | ")}`);
+  }
+
+  if (!clientSent && !internalSent) {
+    throw new Error(failures.join(" | ") || "Both order confirmation emails failed.");
+  }
 
   return {
     deduped: false,
     sent: {
-      client: true,
-      internal: true,
+      client: clientSent,
+      internal: internalSent,
     },
   };
 }
@@ -381,14 +432,37 @@ export async function sendInternalBookingConfirmed(input: BookingConfirmedInput)
  * Sends buyer and internal booking-confirmed emails.
  */
 export async function sendBookingConfirmedBundle(input: BookingConfirmedInput): Promise<EmailBundleResult> {
-  await sendBookingReminder(input);
-  await sendInternalBookingConfirmed(input);
+  let clientSent = false;
+  let internalSent = false;
+  const failures: string[] = [];
+
+  try {
+    await sendBookingReminder(input);
+    clientSent = true;
+  } catch (error) {
+    failures.push(`client: ${getErrorMessage(error)}`);
+  }
+
+  try {
+    await sendInternalBookingConfirmed(input);
+    internalSent = true;
+  } catch (error) {
+    failures.push(`internal: ${getErrorMessage(error)}`);
+  }
+
+  if (failures.length > 0) {
+    console.error(`Booking confirmation email issue (${input.orderId}): ${failures.join(" | ")}`);
+  }
+
+  if (!clientSent && !internalSent) {
+    throw new Error(failures.join(" | ") || "Both booking confirmation emails failed.");
+  }
 
   return {
     deduped: false,
     sent: {
-      client: true,
-      internal: true,
+      client: clientSent,
+      internal: internalSent,
     },
   };
 }
