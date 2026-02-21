@@ -28,6 +28,7 @@ Step sequence:
    - View `Total`, `Deposit Today`, `Remaining`
    - Collect buyer name + email
    - Create order first with `POST /api/orders/create`
+     - Returns both `order_uuid` (internal) and `order_id` (client-facing label)
    - Trigger checkout create + verify sequence
    - `GET /api/checkout/verify` checks Stripe by `session_id` when `STRIPE_SECRET_KEY` is set
    - Open policy dialogs (`Terms`, `Refund`)
@@ -37,6 +38,7 @@ Post-purchase:
 - Shows payment status, booking CTA, order summary, onboarding inputs, and copyable config text.
 - `Submit setup details` sends `POST /api/onboarding/submit` with:
   - `order_id`
+  - `order_uuid` (optional, preferred when available)
   - `config_json` (safe config object)
   - `asset_links[]`
 - Booking CTA routing comes from `src/config/cal.ts`:
@@ -149,6 +151,9 @@ No webhook is required for this mode.
 
 Behavior:
 - `/api/checkout/verify` retrieves checkout sessions directly from Stripe using `session_id`.
+- Stripe metadata is UUID-first:
+  - `order_uuid` for reconciliation
+  - `order_id` for client-readable references
 - Paid sessions are synced into Supabase (`orders.status`, `stripe_session_id`, optional `customer_email`).
 - Order-confirmation emails are sent server-side only after successful paid verification.
 
