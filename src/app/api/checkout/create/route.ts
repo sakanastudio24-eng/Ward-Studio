@@ -93,6 +93,7 @@ async function createStripeCheckoutSession(input: {
 
   const form = new URLSearchParams();
   form.set("mode", "payment");
+  form.set("allow_promotion_codes", "true");
   form.set("success_url", successUrl);
   form.set("cancel_url", cancelUrl);
   form.set("client_reference_id", input.orderId);

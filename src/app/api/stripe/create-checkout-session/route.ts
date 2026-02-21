@@ -123,6 +123,7 @@ export async function POST(request: Request) {
     const session = await stripe.checkout.sessions.create({
       ui_mode: "embedded",
       mode: "payment",
+      allow_promotion_codes: true,
       return_url: returnUrl,
       customer_email: customerEmail || undefined,
       client_reference_id: orderId,
