@@ -34,9 +34,14 @@ export default function ProductsClient() {
             id="detailflow-template"
             className="scroll-mt-24 space-y-5 rounded-2xl border border-border p-5 text-center sm:p-7"
           >
-            <h1 className="tracking-tight text-[1.8rem] sm:text-[2.4rem]">
-              DetailFlow Template
-            </h1>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <h1 className="tracking-tight text-[1.8rem] sm:text-[2.4rem]">
+                DetailFlow Template
+              </h1>
+              <span className="inline-flex items-center rounded-full border border-orange-300/40 bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-600">
+                Under production
+              </span>
+            </div>
             <p className="leading-relaxed text-muted-foreground">
               Structured product systems built for real-world use.
               Configure what you need. Ship with clarity.
@@ -84,7 +89,7 @@ export default function ProductsClient() {
                 InkBot Product
               </h2>
               <span className="inline-flex items-center rounded-full border border-orange-300/40 bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-600">
-                In development
+                Under production
               </span>
             </div>
             <p className="leading-relaxed text-muted-foreground">
