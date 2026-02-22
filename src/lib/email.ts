@@ -10,6 +10,8 @@ import { SITE_URL } from "../config/site";
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 const RESEND_FALLBACK_FROM = "Ward Studio <onboarding@resend.dev>";
 const EMAIL_LOGO_URL = `${SITE_URL}/email-logo.svg`;
+const RESEND_RATE_LIMIT_RETRIES = 3;
+const RESEND_RETRY_BASE_MS = 450;
 
 const sentOrderConfirmationIds = new Set<string>();
 
@@ -126,6 +128,29 @@ function getMailConfig() {
   };
 }
 
+function getRetryAfterMs(value: string | null): number | null {
+  if (!value) return null;
+  const asNumber = Number(value);
+  if (Number.isFinite(asNumber) && asNumber >= 0) {
+    return Math.ceil(asNumber * 1000);
+  }
+  const asDate = Date.parse(value);
+  if (Number.isFinite(asDate)) {
+    return Math.max(0, asDate - Date.now());
+  }
+  return null;
+}
+
+function getBackoffMs(attempt: number): number {
+  return RESEND_RETRY_BASE_MS * (attempt + 1);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 async function sendEmail(input: {
   to: string | string[];
   subject: string;
@@ -144,18 +169,42 @@ async function sendEmail(input: {
     text: input.text,
   };
 
+  const sendWithPayload = async (payload: Record<string, unknown>) => {
+    let response: Response | null = null;
+    for (let attempt = 0; attempt <= RESEND_RATE_LIMIT_RETRIES; attempt += 1) {
+      response = await fetch(RESEND_ENDPOINT, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "Idempotency-Key": randomUUID(),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.status !== 429) {
+        return response;
+      }
+
+      if (attempt >= RESEND_RATE_LIMIT_RETRIES) {
+        return response;
+      }
+
+      const retryAfterMs =
+        getRetryAfterMs(response.headers.get("retry-after")) || getBackoffMs(attempt);
+      await sleep(Math.max(retryAfterMs, 200));
+    }
+
+    if (!response) {
+      throw new Error("Resend request failed before receiving a response.");
+    }
+    return response;
+  };
+
   const sendWithFrom = async (fromAddress: string) =>
-    fetch(RESEND_ENDPOINT, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "Idempotency-Key": randomUUID(),
-      },
-      body: JSON.stringify({
-        from: fromAddress,
-        ...requestBody,
-      }),
+    sendWithPayload({
+      from: fromAddress,
+      ...requestBody,
     });
 
   let response = await sendWithFrom(preferredFrom);
@@ -190,20 +239,12 @@ async function sendEmail(input: {
       input.text,
     ].join("\n");
 
-    const redirected = await fetch(RESEND_ENDPOINT, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "Idempotency-Key": randomUUID(),
-      },
-      body: JSON.stringify({
-        from: currentFrom,
-        to: [allowedTestRecipient],
-        subject: `[TEST MODE REDIRECT] ${input.subject}`,
-        html: redirectedHtml,
-        text: redirectedText,
-      }),
+    const redirected = await sendWithPayload({
+      from: currentFrom,
+      to: [allowedTestRecipient],
+      subject: `[TEST MODE REDIRECT] ${input.subject}`,
+      html: redirectedHtml,
+      text: redirectedText,
     });
 
     if (redirected.ok) {
