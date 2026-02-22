@@ -534,6 +534,11 @@ export function CheckoutDrawer({
     flow.primaryState === "redirecting_to_stripe" ||
     flow.primaryState === "return_success_loading" ||
     flow.transitionLocked;
+  const allAgreementsAccepted =
+    form.paymentConsents.termsAccepted &&
+    form.paymentConsents.privacyAccepted &&
+    form.paymentConsents.emailOptIn;
+  const payDepositDisabled = transitionBusy || !allAgreementsAccepted;
 
   const analyticsSharedProps = useMemo(
     () => ({
@@ -1375,7 +1380,7 @@ export function CheckoutDrawer({
                   <div className="mb-4 flex flex-wrap gap-2">
                     <Button
                       className="w-full bg-orange-500 text-white hover:bg-orange-600 sm:w-auto"
-                      disabled={transitionBusy}
+                      disabled={payDepositDisabled}
                       onClick={handlePayDeposit}
                     >
                       Pay deposit
@@ -1470,6 +1475,11 @@ export function CheckoutDrawer({
                       </Label>
                     </div>
                   </div>
+                  {!allAgreementsAccepted && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Check all agreement boxes to enable Pay deposit.
+                    </p>
+                  )}
                 </section>
 
                 <section className="rounded-lg border border-border p-4">
@@ -1534,7 +1544,7 @@ export function CheckoutDrawer({
               <>
                 <Button
                   className="w-full bg-orange-500 text-white hover:bg-orange-600 sm:w-auto"
-                  disabled={transitionBusy}
+                  disabled={payDepositDisabled}
                   onClick={handlePayDeposit}
                 >
                   Pay deposit
