@@ -1139,6 +1139,9 @@ export function CheckoutDrawer({
         body: JSON.stringify({
           order_id: orderId,
           order_uuid: createdOrderUuid || undefined,
+          customer_name: form.customerName.trim() || undefined,
+          customer_email: form.customerEmail.trim() || undefined,
+          generated_config_summary: generatedConfigText,
           config_json: configGeneratorOutput.configObject,
           asset_links: [assetLink],
         }),

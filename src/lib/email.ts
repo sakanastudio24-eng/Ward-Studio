@@ -613,6 +613,8 @@ export async function sendBuyerConfigSubmissionAck(input: ConfigSubmissionInput)
       <p style="margin:0 0 6px 0;font-size:13px;"><strong>Order ID:</strong> ${escapeHtml(input.orderId)}</p>
       <p style="margin:0 0 6px 0;font-size:13px;"><strong>Package:</strong> ${escapeHtml(input.packageLabel)}</p>
       <p style="margin:0 0 12px 0;font-size:13px;"><strong>Add-ons:</strong> ${escapeHtml(input.addOnSummaryText)}</p>
+      <h2 style="margin:0 0 8px 0;font-size:15px;">Generated Configuration Summary</h2>
+      <p style="margin:0 0 12px 0;font-size:13px;line-height:1.6;">${escapeHtml(input.generatedConfigSummary)}</p>
       <p style="margin:0;font-size:12px;color:#555555;">For security, do not send passwords or API keys by email.</p>
     `,
   );
@@ -621,6 +623,9 @@ export async function sendBuyerConfigSubmissionAck(input: ConfigSubmissionInput)
     `Configuration received (${input.orderId})`,
     `Package: ${input.packageLabel}`,
     `Add-ons: ${input.addOnSummaryText}`,
+    "",
+    "Generated Configuration Summary:",
+    input.generatedConfigSummary,
     "For security, do not send passwords or API keys by email.",
   ].join("\n");
 

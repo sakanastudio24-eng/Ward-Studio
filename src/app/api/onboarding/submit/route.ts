@@ -12,6 +12,9 @@ type OnboardingSubmitBody = {
   order_uuid?: unknown;
   config_json?: unknown;
   asset_links?: unknown;
+  customer_email?: unknown;
+  customer_name?: unknown;
+  generated_config_summary?: unknown;
 };
 
 const SENSITIVE_KEY_REGEX = /(api[_-]?key|token|password|secret|webhook)/i;
@@ -147,7 +150,7 @@ export async function POST(request: Request) {
   const safeConfig = isPlainObject(sanitizedConfig) ? sanitizedConfig : {};
 
   const supabase = getSupabaseServer();
-  const orderLookup = supabase.from("orders").select("order_id").limit(1);
+  const orderLookup = supabase.from("orders").select("order_id, customer_email").limit(1);
   const { data: order, error: orderLookupError } = orderIdInput
     ? await orderLookup.eq("order_id", orderIdInput).maybeSingle()
     : await orderLookup.eq("id", orderUuidInput).maybeSingle();
@@ -202,8 +205,15 @@ export async function POST(request: Request) {
       ? (safeConfig.handoff as Record<string, unknown>)
       : {};
 
-  const customerName = getString(configBusiness.name) || "DetailFlow Customer";
-  const customerEmail = getString(configBusiness.contact_email) || "pending@example.com";
+  const customerName =
+    getString(payload.customer_name) ||
+    getString(configBusiness.name) ||
+    "DetailFlow Customer";
+  const customerEmail =
+    getString(payload.customer_email) ||
+    getString(configBusiness.contact_email) ||
+    getString(order.customer_email) ||
+    "pending@example.com";
   const tierId = getString(configPackage.tier_id);
   const addonIds = toStringList(configPackage.addon_ids);
   const packageLabel = TIER_LABELS[tierId] || (tierId ? tierId : "DetailFlow");
@@ -214,7 +224,9 @@ export async function POST(request: Request) {
   const safeConfigWarning = warning || "No sensitive fields detected.";
   const secretsNotice = "Do not send passwords or API keys by email.";
   const generatedConfigJson = JSON.stringify(safeConfig, null, 2);
-  const generatedConfigSummary = buildConfigSummaryFromSubmittedConfig(safeConfig);
+  const generatedConfigSummary =
+    getString(payload.generated_config_summary) || buildConfigSummaryFromSubmittedConfig(safeConfig);
+  const shouldSendBuyerAck = process.env.ORDERS_SEND_BUYER_ACK !== "false";
 
   try {
     await sendInternalConfigSubmission({
@@ -232,7 +244,7 @@ export async function POST(request: Request) {
       submittedAt,
     });
 
-    if (process.env.ORDERS_SEND_BUYER_ACK === "true" && EMAIL_REGEX.test(customerEmail)) {
+    if (shouldSendBuyerAck && EMAIL_REGEX.test(customerEmail)) {
       await sendBuyerConfigSubmissionAck({
         orderId: resolvedOrderId,
         customerName,

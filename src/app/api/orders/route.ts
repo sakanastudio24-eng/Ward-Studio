@@ -155,7 +155,7 @@ export async function POST(request: Request) {
     .filter(Boolean)
     .join("\n");
   const submittedAt = new Date().toISOString();
-  const buyerAckEnabled = process.env.ORDERS_SEND_BUYER_ACK === "true";
+  const buyerAckEnabled = process.env.ORDERS_SEND_BUYER_ACK !== "false";
   let buyerAckSent = false;
   let generatedConfigSummary = "Configuration summary unavailable.";
   try {
