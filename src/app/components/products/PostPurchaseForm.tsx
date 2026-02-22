@@ -4,6 +4,7 @@ import { Label } from "../ui/label";
 import { Skeleton } from "../ui/skeleton";
 import { toast } from "sonner";
 import type { HandoffChecklist, SafeConfigInput } from "../../../lib/config-generator/detailflow";
+import { HANDOFF_CHECKLIST_EMAIL } from "../../../config/email";
 import { CopyBlock } from "./CopyBlock";
 import { formatPrice } from "./utils";
 import type { CheckoutPrimaryState } from "./flow";
@@ -52,6 +53,28 @@ function parseLineList(value: string): string[] {
     .split(/\n|,/)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function renderChecklistItem(item: string) {
+  if (!item.includes(HANDOFF_CHECKLIST_EMAIL)) {
+    return <>• {item}</>;
+  }
+
+  const [before, ...rest] = item.split(HANDOFF_CHECKLIST_EMAIL);
+  const after = rest.join(HANDOFF_CHECKLIST_EMAIL);
+
+  return (
+    <>
+      • {before}
+      <a
+        href={`mailto:${HANDOFF_CHECKLIST_EMAIL}`}
+        className="text-orange-500 underline-offset-2 hover:underline"
+      >
+        {HANDOFF_CHECKLIST_EMAIL}
+      </a>
+      {after}
+    </>
+  );
 }
 
 /**
@@ -371,8 +394,8 @@ export function PostPurchaseForm({
                 <div>
                   <p className="font-medium text-foreground">Send now (copy/paste)</p>
                   <ul className="mt-1 space-y-1">
-                    {handoffChecklist.send_now.map((item) => (
-                      <li key={item}>• {item}</li>
+                    {handoffChecklist.send_now.map((item, index) => (
+                      <li key={`send-${index}-${item}`}>{renderChecklistItem(item)}</li>
                     ))}
                   </ul>
                 </div>
@@ -380,8 +403,8 @@ export function PostPurchaseForm({
                 <div>
                   <p className="font-medium text-foreground">Upload (files)</p>
                   <ul className="mt-1 space-y-1">
-                    {handoffChecklist.upload_files.map((item) => (
-                      <li key={item}>• {item}</li>
+                    {handoffChecklist.upload_files.map((item, index) => (
+                      <li key={`upload-${index}-${item}`}>{renderChecklistItem(item)}</li>
                     ))}
                   </ul>
                 </div>
@@ -390,8 +413,8 @@ export function PostPurchaseForm({
                   <div>
                     <p className="font-medium text-foreground">During call (secure setup)</p>
                     <ul className="mt-1 space-y-1">
-                      {handoffChecklist.during_call.map((item) => (
-                        <li key={item}>• {item}</li>
+                      {handoffChecklist.during_call.map((item, index) => (
+                        <li key={`call-${index}-${item}`}>{renderChecklistItem(item)}</li>
                       ))}
                     </ul>
                   </div>
