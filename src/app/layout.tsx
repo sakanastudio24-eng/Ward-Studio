@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -80,6 +80,11 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: "#000000",
+  colorScheme: "dark light",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -87,6 +92,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="color-scheme" content="dark light" />
+      </head>
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
         <Analytics />

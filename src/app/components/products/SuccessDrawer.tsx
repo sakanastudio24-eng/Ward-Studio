@@ -129,8 +129,6 @@ export function SuccessDrawer({
   handoffChecklist,
   onSubmitConfiguration,
   isSubmittingConfiguration,
-  submitStatus,
-  submitMessage,
   prepCallUrl,
 }: SuccessDrawerProps) {
   const contentRef = useRef<HTMLDivElement | null>(null);
@@ -405,11 +403,6 @@ export function SuccessDrawer({
                 >
                   {isSubmittingConfiguration ? "Sending..." : "Send setup email"}
                 </Button>
-                {submitStatus !== "idle" && (
-                  <p className={`mt-2 text-xs ${submitStatus === "error" ? "text-destructive" : "text-muted-foreground"}`}>
-                    {submitMessage}
-                  </p>
-                )}
                 <p className="mt-2 text-xs text-muted-foreground">
                   Not ready right now? This handoff is also in your email.
                 </p>

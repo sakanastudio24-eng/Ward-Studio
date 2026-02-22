@@ -28,11 +28,21 @@ export function HoverTooltip({ text, mouseX, mouseY }: HoverTooltipProps) {
 export function useHoverTooltip() {
   // Current tooltip text being displayed
   const [tooltipText, setTooltipText] = useState("");
+  const [tooltipEnabled, setTooltipEnabled] = useState(true);
   
   // Current mouse position for tooltip positioning
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia("(pointer: coarse), (max-width: 768px)");
+    const updateEnabled = () => {
+      setTooltipEnabled(!mediaQuery.matches);
+      if (mediaQuery.matches) setTooltipText("");
+    };
+
+    updateEnabled();
+    mediaQuery.addEventListener("change", updateEnabled);
+
     // handleMouseMove: Updates tooltip coordinates as the pointer moves.
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
@@ -42,13 +52,22 @@ export function useHoverTooltip() {
     window.addEventListener("mousemove", handleMouseMove);
     
     // Cleanup: remove listener on unmount
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      mediaQuery.removeEventListener("change", updateEnabled);
+    };
   }, []);
 
   return {
     tooltipText,
     mousePosition,
-    setTooltipText,
+    setTooltipText: (text: string) => {
+      if (!tooltipEnabled) {
+        setTooltipText("");
+        return;
+      }
+      setTooltipText(text);
+    },
   };
 }
 
