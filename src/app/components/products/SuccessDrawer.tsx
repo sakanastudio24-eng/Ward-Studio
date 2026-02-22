@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import {
@@ -50,7 +51,7 @@ export interface SuccessDrawerProps {
   safeConfig: SafeConfigInput;
   onSafeConfigChange: (next: SafeConfigInput) => void;
   handoffChecklist: HandoffChecklist;
-  onSubmitConfiguration: () => void;
+  onSubmitConfiguration: (options?: { sendBuyerCopy: boolean }) => void;
   isSubmittingConfiguration: boolean;
   submitStatus: "idle" | "success" | "error";
   submitMessage: string;
@@ -133,6 +134,7 @@ export function SuccessDrawer({
   submitMessage,
   prepCallUrl,
 }: SuccessDrawerProps) {
+  const [sendBuyerCopy, setSendBuyerCopy] = useState(true);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const loading = primaryState === "return_success_loading";
   const uploadLink = secureUploadUrl.trim();
@@ -398,10 +400,20 @@ export function SuccessDrawer({
               />
 
               <section className="rounded-lg border border-border p-4">
+                <div className="mb-3 flex items-start gap-2">
+                  <Checkbox
+                    id="send-copy-email-drawer"
+                    checked={sendBuyerCopy}
+                    onCheckedChange={(checked) => setSendBuyerCopy(checked === true)}
+                  />
+                  <Label htmlFor="send-copy-email-drawer" className="leading-5">
+                    Send me a copy
+                  </Label>
+                </div>
                 <Button
                   className="w-full bg-orange-500 text-white hover:bg-orange-600"
                   disabled={isSubmittingConfiguration}
-                  onClick={onSubmitConfiguration}
+                  onClick={() => onSubmitConfiguration({ sendBuyerCopy })}
                 >
                   {isSubmittingConfiguration ? "Sending..." : "Send setup email"}
                 </Button>

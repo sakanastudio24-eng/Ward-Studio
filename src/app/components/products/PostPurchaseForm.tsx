@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Skeleton } from "../ui/skeleton";
@@ -38,7 +40,7 @@ export interface PostPurchaseFormProps {
   safeConfig: SafeConfigInput;
   onSafeConfigChange: (next: SafeConfigInput) => void;
   handoffChecklist: HandoffChecklist;
-  onSubmitConfiguration: () => void;
+  onSubmitConfiguration: (options?: { sendBuyerCopy: boolean }) => void;
   isSubmittingConfiguration: boolean;
   submitStatus: "idle" | "success" | "error";
   submitMessage: string;
@@ -115,6 +117,7 @@ export function PostPurchaseForm({
   submitMessage,
   prepCallUrl,
 }: PostPurchaseFormProps) {
+  const [sendBuyerCopy, setSendBuyerCopy] = useState(true);
   const loading = primaryState === "return_success_loading";
   const uploadLink = secureUploadUrl.trim();
   const hasUploadLink = uploadLink.startsWith("http://") || uploadLink.startsWith("https://");
@@ -367,10 +370,20 @@ export function PostPurchaseForm({
             />
 
             <section className="rounded-lg border border-border p-4">
+              <div className="mb-3 flex items-start gap-2">
+                <Checkbox
+                  id="send-copy-email-inline"
+                  checked={sendBuyerCopy}
+                  onCheckedChange={(checked) => setSendBuyerCopy(checked === true)}
+                />
+                <Label htmlFor="send-copy-email-inline" className="leading-5">
+                  Send me a copy
+                </Label>
+              </div>
               <Button
                 className="w-full bg-orange-500 text-white hover:bg-orange-600"
                 disabled={isSubmittingConfiguration}
-                onClick={onSubmitConfiguration}
+                onClick={() => onSubmitConfiguration({ sendBuyerCopy })}
               >
                 {isSubmittingConfiguration ? "Sending..." : "Send setup email"}
               </Button>

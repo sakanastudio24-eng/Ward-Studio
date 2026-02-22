@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { getTooltipMessage } from "../HoverTooltip";
 import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import {
@@ -198,6 +199,11 @@ type DetailflowFormState = {
     photos: boolean;
     bookingMethod: boolean;
   };
+  paymentConsents: {
+    termsAccepted: boolean;
+    privacyAccepted: boolean;
+    emailOptIn: boolean;
+  };
 };
 
 type CheckoutCreateResponse = {
@@ -275,6 +281,11 @@ function buildDetailflowPresetState(
       identity: false,
       photos: false,
       bookingMethod: false,
+    },
+    paymentConsents: previous?.paymentConsents || {
+      termsAccepted: false,
+      privacyAccepted: false,
+      emailOptIn: false,
     },
   };
 
@@ -597,6 +608,18 @@ export function CheckoutDrawer({
     }
     if (errors.some((error) => error.includes("Customer email"))) {
       scrollAndFocusById("customer-email");
+      return;
+    }
+    if (errors.some((error) => error.includes("Terms"))) {
+      scrollAndFocusById("consent-terms");
+      return;
+    }
+    if (errors.some((error) => error.includes("Privacy"))) {
+      scrollAndFocusById("consent-privacy");
+      return;
+    }
+    if (errors.some((error) => error.includes("email opt-in"))) {
+      scrollAndFocusById("consent-email-opt-in");
     }
   }
 
@@ -955,6 +978,15 @@ export function CheckoutDrawer({
     } else if (!EMAIL_REGEX.test(form.customerEmail.trim())) {
       paymentValidationErrors.push("Customer email must be a valid email address.");
     }
+    if (!form.paymentConsents.termsAccepted) {
+      paymentValidationErrors.push("Terms & Conditions consent is required before checkout.");
+    }
+    if (!form.paymentConsents.privacyAccepted) {
+      paymentValidationErrors.push("Privacy Policy consent is required before checkout.");
+    }
+    if (!form.paymentConsents.emailOptIn) {
+      paymentValidationErrors.push("Email opt-in consent is required before checkout.");
+    }
 
     if (paymentValidationErrors.length > 0) {
       setValidationErrors(paymentValidationErrors);
@@ -1121,7 +1153,7 @@ export function CheckoutDrawer({
   /**
    * Submits post-purchase safe configuration details to the orders endpoint.
    */
-  async function handleSubmitConfiguration() {
+  async function handleSubmitConfiguration(options?: { sendBuyerCopy: boolean }) {
     setIsSubmittingConfig(true);
     setSubmitStatus("idle");
     setSubmitMessage("");
@@ -1141,6 +1173,7 @@ export function CheckoutDrawer({
           order_uuid: createdOrderUuid || undefined,
           customer_name: form.customerName.trim() || undefined,
           customer_email: form.customerEmail.trim() || undefined,
+          send_buyer_copy: options?.sendBuyerCopy !== false,
           generated_config_summary: generatedConfigText,
           config_json: configGeneratorOutput.configObject,
           asset_links: [assetLink],
@@ -1349,6 +1382,94 @@ export function CheckoutDrawer({
                     </Button>
                   </div>
 
+                  <div className="space-y-3 rounded-md border border-border/70 bg-muted/20 p-3 text-sm">
+                    <div className="flex items-start gap-2">
+                      <Checkbox
+                        id="consent-terms"
+                        checked={form.paymentConsents.termsAccepted}
+                        onCheckedChange={(checked) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            paymentConsents: {
+                              ...prev.paymentConsents,
+                              termsAccepted: checked === true,
+                            },
+                          }))
+                        }
+                      />
+                      <Label htmlFor="consent-terms" className="flex-wrap leading-5">
+                        I agree to the{" "}
+                        <a
+                          href="/terms#terms-agreement"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-orange-500 underline-offset-2 hover:underline"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          Terms & Conditions
+                        </a>
+                        .
+                      </Label>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <Checkbox
+                        id="consent-privacy"
+                        checked={form.paymentConsents.privacyAccepted}
+                        onCheckedChange={(checked) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            paymentConsents: {
+                              ...prev.paymentConsents,
+                              privacyAccepted: checked === true,
+                            },
+                          }))
+                        }
+                      />
+                      <Label htmlFor="consent-privacy" className="flex-wrap leading-5">
+                        I agree to the{" "}
+                        <a
+                          href="/privacy"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-orange-500 underline-offset-2 hover:underline"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          Privacy Policy
+                        </a>
+                        .
+                      </Label>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <Checkbox
+                        id="consent-email-opt-in"
+                        checked={form.paymentConsents.emailOptIn}
+                        onCheckedChange={(checked) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            paymentConsents: {
+                              ...prev.paymentConsents,
+                              emailOptIn: checked === true,
+                            },
+                          }))
+                        }
+                      />
+                      <Label htmlFor="consent-email-opt-in" className="leading-5">
+                        I agree to{" "}
+                        <a
+                          href="/privacy"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-orange-500 underline-offset-2 hover:underline"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          email opt-in updates
+                        </a>{" "}
+                        for onboarding and project delivery.
+                      </Label>
+                    </div>
+                  </div>
                 </section>
 
                 <section className="rounded-lg border border-border p-4">
