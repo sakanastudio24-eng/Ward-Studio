@@ -38,9 +38,6 @@ export default function ProductsClient() {
               <h1 className="tracking-tight text-[1.8rem] sm:text-[2.4rem]">
                 DetailFlow Template
               </h1>
-              <span className="inline-flex items-center rounded-full border border-orange-300/40 bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-600">
-                Under production
-              </span>
             </div>
             <p className="leading-relaxed text-muted-foreground">
               Structured product systems built for real-world use.
