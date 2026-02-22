@@ -192,7 +192,7 @@ export function createDetailflowConfig(): DetailflowAddonConfig {
       onboardingSubmit: {
         method: "POST",
         path: "/api/onboarding/submit",
-        label: "Submit setup details",
+        label: "Send setup email",
         responseFields: [
           { key: "ok", label: "True when onboarding details are stored." },
           { key: "warning", label: "Optional notice when sensitive keys are removed." },
