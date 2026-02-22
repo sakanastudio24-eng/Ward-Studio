@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServer } from "../../../../lib/supabase-server";
 import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
+import {
+  sendBuyerConfigSubmissionAck,
+  sendInternalConfigSubmission,
+} from "../../../../lib/email";
 
 type OnboardingSubmitBody = {
   order_id?: unknown;
@@ -12,6 +16,12 @@ type OnboardingSubmitBody = {
 const SENSITIVE_KEY_REGEX = /(api[_-]?key|token|password|secret|webhook)/i;
 const MAX_CONFIG_BYTES = 120_000;
 const MAX_ASSET_LINKS = 20;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const TIER_LABELS: Record<string, string> = {
+  starter: "Starter",
+  growth: "Growth",
+  pro_launch: "Pro Launch",
+};
 
 function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -28,6 +38,11 @@ function isValidHttpUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+function toStringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => getString(item)).filter(Boolean);
 }
 
 function parseAssetLinks(value: unknown): string[] {
@@ -170,6 +185,73 @@ export async function POST(request: Request) {
     strippedKeys.length > 0
       ? `Sensitive keys removed from config_json: ${Array.from(new Set(strippedKeys)).join(", ")}.`
       : undefined;
+  const warningParts: string[] = [];
+  if (warning) warningParts.push(warning);
 
-  return NextResponse.json({ ok: true, ...(warning ? { warning } : {}) });
+  const configBusiness =
+    safeConfig.business && typeof safeConfig.business === "object"
+      ? (safeConfig.business as Record<string, unknown>)
+      : {};
+  const configPackage =
+    safeConfig.package && typeof safeConfig.package === "object"
+      ? (safeConfig.package as Record<string, unknown>)
+      : {};
+  const configHandoff =
+    safeConfig.handoff && typeof safeConfig.handoff === "object"
+      ? (safeConfig.handoff as Record<string, unknown>)
+      : {};
+
+  const customerName = getString(configBusiness.name) || "DetailFlow Customer";
+  const customerEmail = getString(configBusiness.contact_email) || "pending@example.com";
+  const tierId = getString(configPackage.tier_id);
+  const addonIds = toStringList(configPackage.addon_ids);
+  const packageLabel = TIER_LABELS[tierId] || (tierId ? tierId : "DetailFlow");
+  const addOnSummaryText = addonIds.length > 0 ? addonIds.join(", ") : "None";
+  const handoffSummary = getString(configHandoff.rules_text) || "Handoff checklist captured in config.";
+  const assetLinksText = assetLinks.length > 0 ? assetLinks.join("\n") : "None provided";
+  const submittedAt = new Date().toISOString();
+  const safeConfigWarning = warning || "No sensitive fields detected.";
+  const secretsNotice = "Do not send passwords or API keys by email.";
+  const generatedConfigJson = JSON.stringify(safeConfig, null, 2);
+
+  try {
+    await sendInternalConfigSubmission({
+      orderId: resolvedOrderId,
+      customerName,
+      customerEmail,
+      packageLabel,
+      addOnSummaryText,
+      generatedConfigJson,
+      handoffSummary,
+      assetLinksText,
+      safeConfigWarning,
+      secretsNotice,
+      submittedAt,
+    });
+
+    if (process.env.ORDERS_SEND_BUYER_ACK === "true" && EMAIL_REGEX.test(customerEmail)) {
+      await sendBuyerConfigSubmissionAck({
+        orderId: resolvedOrderId,
+        customerName,
+        customerEmail,
+        packageLabel,
+        addOnSummaryText,
+        generatedConfigJson,
+        handoffSummary,
+        assetLinksText,
+        safeConfigWarning,
+        secretsNotice,
+        submittedAt,
+      });
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown email error";
+    console.error("Onboarding setup email error:", message);
+    warningParts.push(`Setup saved, but email send failed: ${message}`);
+  }
+
+  return NextResponse.json({
+    ok: true,
+    ...(warningParts.length > 0 ? { warning: warningParts.join(" ") } : {}),
+  });
 }

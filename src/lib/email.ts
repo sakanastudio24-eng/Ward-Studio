@@ -82,6 +82,19 @@ function splitCsv(value: string): string[] {
     .filter(Boolean);
 }
 
+function normalizeAddressList(values: string[]): string[] {
+  return values.map((value) => value.trim().toLowerCase()).filter(Boolean);
+}
+
+function isResendTestRecipientRestriction(details: string): boolean {
+  return /you can only send testing emails to your own email address/i.test(details);
+}
+
+function extractAllowedTestRecipient(details: string): string {
+  const match = details.match(/\(([^\s()]+@[^\s()]+)\)/);
+  return match?.[1]?.trim() || "";
+}
+
 function getMailConfig() {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM || process.env.ORDERS_FROM_EMAIL || DEFAULT_EMAIL_FROM;
@@ -147,14 +160,69 @@ async function sendEmail(input: {
   const shouldRetryWithFallback =
     senderRejected && preferredFrom.toLowerCase() !== fallbackFrom.toLowerCase();
 
+  const tryTestModeRedirect = async (details: string, currentFrom: string) => {
+    if (!isResendTestRecipientRestriction(details)) return null;
+
+    const allowedTestRecipient = extractAllowedTestRecipient(details);
+    if (!allowedTestRecipient) return null;
+
+    const currentRecipients = normalizeAddressList(recipients);
+    const alreadyAllowedOnly =
+      currentRecipients.length === 1 &&
+      currentRecipients[0] === allowedTestRecipient.toLowerCase();
+    if (alreadyAllowedOnly) return null;
+
+    const redirectedHtml = `
+      <p><strong>Resend test-mode redirect:</strong> intended recipient(s): ${escapeHtml(recipients.join(", "))}</p>
+      ${input.html}
+    `;
+    const redirectedText = [
+      `Resend test-mode redirect. Intended recipient(s): ${recipients.join(", ")}`,
+      "",
+      input.text,
+    ].join("\n");
+
+    const redirected = await fetch(RESEND_ENDPOINT, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": randomUUID(),
+      },
+      body: JSON.stringify({
+        from: currentFrom,
+        to: [allowedTestRecipient],
+        subject: `[TEST MODE REDIRECT] ${input.subject}`,
+        html: redirectedHtml,
+        text: redirectedText,
+      }),
+    });
+
+    if (redirected.ok) {
+      console.warn(
+        `Resend test mode redirected email. intended=${recipients.join(", ")} allowed=${allowedTestRecipient}`,
+      );
+      return redirected;
+    }
+
+    return redirected;
+  };
+
   if (shouldRetryWithFallback) {
     response = await sendWithFrom(fallbackFrom);
     if (response.ok) return;
     const retryDetails = await response.text();
+
+    const redirected = await tryTestModeRedirect(retryDetails, fallbackFrom);
+    if (redirected?.ok) return;
+
     throw new Error(
       `Preferred sender failed (${preferredFrom}): ${initialDetails || "unknown error"}. Fallback sender failed (${fallbackFrom}): ${retryDetails || response.statusText}`,
     );
   }
+
+  const redirected = await tryTestModeRedirect(initialDetails, preferredFrom);
+  if (redirected?.ok) return;
 
   throw new Error(initialDetails || response.statusText);
 }
