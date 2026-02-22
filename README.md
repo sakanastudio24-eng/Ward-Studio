@@ -130,6 +130,20 @@ Notes:
 - `NEXT_PUBLIC_SITE_URL` may be set as either a full URL or bare domain.
 - Site config normalizes bare domains (for example, `zward.studio` -> `https://zward.studio`).
 - `/products/success` is intentionally excluded from sitemap indexing strategy.
+- Full SEO guardrails/checklist reference: `SEO_NOTES.md`.
+
+## Responsive UI Notes
+
+Responsive guardrails are centralized in:
+
+- `src/styles/theme.css`
+
+Current hardening focuses on:
+
+- Drawer content density and footer action width on small screens.
+- Product page section spacing/scroll offsets.
+- Payment consent checkbox readability under `Pay deposit`.
+- Post-purchase form input density and overflow handling on narrow widths.
 
 ## Home Route Performance
 

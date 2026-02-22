@@ -27,6 +27,10 @@ Step sequence:
 3. `payment`
    - View `Total`, `Deposit Today`, `Remaining`
    - Collect buyer name + email
+   - Collect required payment consents:
+     - Terms & Conditions
+     - Privacy Policy
+     - Email opt-in
    - Create order first with `POST /api/orders/create`
      - Returns both `order_uuid` (internal) and `order_id` (client-facing label)
    - Trigger checkout create + verify sequence
@@ -38,8 +42,12 @@ Post-purchase:
 - Fallback/simulated non-live flows can still use the right drawer via `/src/app/components/products/SuccessDrawer.tsx`.
 - Both surfaces show payment status, booking CTA, order summary, onboarding inputs, and copyable config text.
 - `Submit setup details` sends `POST /api/onboarding/submit` with:
+- `Send setup email` sends `POST /api/onboarding/submit` with:
   - `order_id`
   - `order_uuid` (optional, preferred when available)
+  - `customer_name` and `customer_email` (when available from UI state)
+  - `send_buyer_copy` (from "Send me a copy" checkbox)
+  - `generated_config_summary` (same sentence shown to user)
   - `config_json` (safe config object)
   - `asset_links[]`
 - Booking CTA routing comes from `src/config/cal.ts`:
@@ -155,7 +163,17 @@ Endpoint health test points:
   - `ok` for responsive endpoints
   - `false` when a boolean signal (for example `paid`/`ok`) is false
   - `error` for failure responses
-  - `not_responding` for timeout/unreachable states
+- `not_responding` for timeout/unreachable states
+
+## SEO and Metadata Notes
+
+- Root metadata source: `/src/app/layout.tsx`
+- Products metadata source: `/src/app/products/page.tsx`
+- Projects metadata source: `/src/app/projects/page.tsx`
+- Success page is intentionally noindex:
+  - `/src/app/products/success/page.tsx`
+- SEO checklist and release notes:
+  - `/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/SEO_NOTES.md`
 
 ## Stripe Read-Key Mode (Current)
 
