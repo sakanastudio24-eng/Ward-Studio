@@ -1,4 +1,4 @@
-import { useState, type MouseEvent } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { ProjectCard } from "./ProjectCard";
 import { getTooltipMessage } from "./HoverTooltip";
 import { allWorkProjects, type WorkScope } from "./workData";
@@ -11,12 +11,27 @@ interface WorkProps {
 // Work: Displays engineering and case-study project cards with scope-aware visibility.
 export function Work({ scope, setTooltipText }: WorkProps) {
   const [isRoutingToProducts, setIsRoutingToProducts] = useState(false);
+  const [isMobileNavigation, setIsMobileNavigation] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(pointer: coarse), (max-width: 768px)");
+    const syncMobileNavigation = () => setIsMobileNavigation(mediaQuery.matches);
+    syncMobileNavigation();
+    mediaQuery.addEventListener("change", syncMobileNavigation);
+    return () => mediaQuery.removeEventListener("change", syncMobileNavigation);
+  }, []);
 
   const handleViewProductsClick = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
     if (isRoutingToProducts) return;
 
     setTooltipText("");
+
+    if (isMobileNavigation) {
+      window.location.href = "/products";
+      return;
+    }
+
     setIsRoutingToProducts(true);
 
     window.setTimeout(() => {
@@ -30,11 +45,13 @@ export function Work({ scope, setTooltipText }: WorkProps) {
 
   return (
     <section id="work" className="bg-muted/30 px-4 py-16 sm:px-6 sm:py-20 md:px-12 md:py-28">
-      <div
-        className={`pointer-events-none fixed inset-0 z-40 bg-background transition-opacity duration-200 ${
-          isRoutingToProducts ? "opacity-100" : "opacity-0"
-        }`}
-      />
+      {!isMobileNavigation && (
+        <div
+          className={`pointer-events-none fixed inset-0 z-40 bg-background transition-opacity duration-200 ${
+            isRoutingToProducts ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      )}
       <div className="mx-auto max-w-6xl">
         <div className="mb-14 sm:mb-16 md:mb-20">
           <h2 className="mb-3 text-[1.55rem] tracking-tight sm:mb-4 sm:text-[2rem] md:text-[3rem]">

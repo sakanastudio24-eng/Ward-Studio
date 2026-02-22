@@ -65,9 +65,9 @@ export function Footer({ onGameOpen, setTooltipText }: FooterProps) {
       ref={footerRef} 
       className={`flex min-h-[78vh] flex-col items-center justify-center border-t border-border px-4 py-10 transition-colors duration-300 sm:min-h-screen sm:px-6 sm:py-12 md:px-12 ${isHoveringWard ? 'bg-orange-500' : ''}`}
     >
-      <div className="flex-1 flex items-center justify-center w-full overflow-hidden">
+      <div className="flex-1 flex w-full items-center justify-center overflow-hidden">
         <h2 
-          className={`cursor-default whitespace-nowrap text-[3rem] leading-none tracking-tighter transition-all duration-300 ease-out sm:text-[8rem] md:text-[12rem] lg:text-[16rem] xl:text-[20rem] ${isHoveringWard ? 'text-white' : ''}`}
+          className={`w-full px-2 text-center cursor-default whitespace-nowrap text-[26vw] leading-none tracking-tighter transition-all duration-300 ease-out sm:w-auto sm:px-0 sm:text-[8rem] md:text-[12rem] lg:text-[16rem] xl:text-[20rem] ${isHoveringWard ? 'text-white' : ''}`}
           style={{ transform: `scale(${scale})` }}
           onMouseEnter={() => setIsHoveringWard(true)}
           onMouseLeave={() => setIsHoveringWard(false)}
@@ -75,7 +75,7 @@ export function Footer({ onGameOpen, setTooltipText }: FooterProps) {
           WARD
         </h2>
       </div>
-      <nav className={`flex max-w-[21rem] flex-wrap items-center justify-center gap-x-4 gap-y-3 text-sm sm:max-w-none sm:gap-6 md:gap-12 ${isHoveringWard ? 'text-white' : ''}`}>
+      <nav className={`flex w-full max-w-[21rem] flex-col items-center justify-center gap-3 text-sm sm:max-w-none sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-3 md:gap-x-12 ${isHoveringWard ? 'text-white' : ''}`}>
         <button 
           onClick={scrollToTop} 
           className={navItemClass}
