@@ -1146,7 +1146,7 @@ export function CheckoutDrawer({
 
       const data = (await response.json().catch(() => null)) as { error?: string; warning?: string } | null;
       if (!response.ok) {
-        const message = data?.error || "Configuration submit failed.";
+        const message = data?.error || "Setup email send failed.";
         setSubmitStatus("error");
         setSubmitMessage(message);
         toast.error(message);
@@ -1154,15 +1154,15 @@ export function CheckoutDrawer({
       }
 
       const message = data?.warning
-        ? `Setup details submitted. ${data.warning}`
-        : "Setup details submitted successfully.";
+        ? `Setup email sent. ${data.warning}`
+        : "Setup email sent.";
       setSubmitStatus("success");
       setSubmitMessage(message);
-      toast.success("Setup details submitted");
+      toast.success("Setup email sent");
     } catch {
       setSubmitStatus("error");
-      setSubmitMessage("Setup details submit failed. Please try again.");
-      toast.error("Setup details submit failed");
+      setSubmitMessage("Setup email send failed. Please try again.");
+      toast.error("Setup email send failed");
     } finally {
       setIsSubmittingConfig(false);
     }

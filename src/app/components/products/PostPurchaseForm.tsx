@@ -349,7 +349,7 @@ export function PostPurchaseForm({
                 disabled={isSubmittingConfiguration}
                 onClick={onSubmitConfiguration}
               >
-                {isSubmittingConfiguration ? "Submitting..." : "Submit setup details"}
+                {isSubmittingConfiguration ? "Sending..." : "Send setup email"}
               </Button>
               {submitStatus !== "idle" && (
                 <p className={`mt-2 text-xs ${submitStatus === "error" ? "text-destructive" : "text-muted-foreground"}`}>

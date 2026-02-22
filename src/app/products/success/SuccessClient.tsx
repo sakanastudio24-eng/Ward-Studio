@@ -259,21 +259,21 @@ export default function SuccessClient() {
 
       const payload = (await response.json().catch(() => null)) as { error?: string; warning?: string } | null;
       if (!response.ok) {
-        const message = payload?.error || "Setup details submit failed.";
+        const message = payload?.error || "Setup email send failed.";
         setSubmitStatus("error");
         setSubmitMessage(message);
         toast.error(message);
         return;
       }
 
-      const message = payload?.warning ? `Setup details submitted. ${payload.warning}` : "Setup details submitted.";
+      const message = payload?.warning ? `Setup email sent. ${payload.warning}` : "Setup email sent.";
       setSubmitStatus("success");
       setSubmitMessage(message);
-      toast.success("Setup details submitted");
+      toast.success("Setup email sent");
     } catch {
       setSubmitStatus("error");
-      setSubmitMessage("Setup details submit failed. Please try again.");
-      toast.error("Setup details submit failed");
+      setSubmitMessage("Setup email send failed. Please try again.");
+      toast.error("Setup email send failed");
     } finally {
       setIsSubmittingConfiguration(false);
     }
