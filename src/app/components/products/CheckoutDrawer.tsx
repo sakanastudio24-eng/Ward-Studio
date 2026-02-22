@@ -1158,7 +1158,7 @@ export function CheckoutDrawer({
   /**
    * Submits post-purchase safe configuration details to the orders endpoint.
    */
-  async function handleSubmitConfiguration(options?: { sendBuyerCopy: boolean }) {
+  async function handleSubmitConfiguration() {
     setIsSubmittingConfig(true);
     setSubmitStatus("idle");
     setSubmitMessage("");
@@ -1178,7 +1178,7 @@ export function CheckoutDrawer({
           order_uuid: createdOrderUuid || undefined,
           customer_name: form.customerName.trim() || undefined,
           customer_email: form.customerEmail.trim() || undefined,
-          send_buyer_copy: options?.sendBuyerCopy !== false,
+          send_buyer_copy: true,
           generated_config_summary: generatedConfigText,
           config_json: configGeneratorOutput.configObject,
           asset_links: [assetLink],

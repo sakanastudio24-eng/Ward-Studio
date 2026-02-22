@@ -12,8 +12,11 @@ const RESEND_FALLBACK_FROM = "Ward Studio <onboarding@resend.dev>";
 const EMAIL_LOGO_URL = `${SITE_URL}/email-logo.svg`;
 const RESEND_RATE_LIMIT_RETRIES = 3;
 const RESEND_RETRY_BASE_MS = 450;
+const RESEND_MIN_INTERVAL_MS = 600;
 
 const sentOrderConfirmationIds = new Set<string>();
+let resendRequestQueue: Promise<void> = Promise.resolve();
+let lastResendRequestAt = 0;
 
 export type OrderSummary = {
   tierLabel: string;
@@ -151,6 +154,26 @@ function sleep(ms: number): Promise<void> {
   });
 }
 
+function queueResendRequest<T>(request: () => Promise<T>): Promise<T> {
+  const run = async () => {
+    const elapsed = Date.now() - lastResendRequestAt;
+    const waitMs = RESEND_MIN_INTERVAL_MS - elapsed;
+    if (waitMs > 0) {
+      await sleep(waitMs);
+    }
+    const result = await request();
+    lastResendRequestAt = Date.now();
+    return result;
+  };
+
+  const queued = resendRequestQueue.then(run, run);
+  resendRequestQueue = queued.then(
+    () => undefined,
+    () => undefined,
+  );
+  return queued;
+}
+
 async function sendEmail(input: {
   to: string | string[];
   subject: string;
@@ -172,15 +195,17 @@ async function sendEmail(input: {
   const sendWithPayload = async (payload: Record<string, unknown>) => {
     let response: Response | null = null;
     for (let attempt = 0; attempt <= RESEND_RATE_LIMIT_RETRIES; attempt += 1) {
-      response = await fetch(RESEND_ENDPOINT, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          "Idempotency-Key": randomUUID(),
-        },
-        body: JSON.stringify(payload),
-      });
+      response = await queueResendRequest(() =>
+        fetch(RESEND_ENDPOINT, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+            "Idempotency-Key": randomUUID(),
+          },
+          body: JSON.stringify(payload),
+        }),
+      );
 
       if (response.status !== 429) {
         return response;

@@ -230,7 +230,7 @@ export default function SuccessClient() {
   const primaryState: CheckoutPrimaryState =
     status === "checking" ? "return_success_loading" : status === "paid" ? "payment_confirmed" : "verification_error";
 
-  async function handleSubmitConfiguration(options?: { sendBuyerCopy: boolean }) {
+  async function handleSubmitConfiguration() {
     if (!resolvedOrderId && !resolvedOrderUuid) {
       toast.error("Missing order reference.");
       return;
@@ -254,7 +254,7 @@ export default function SuccessClient() {
           order_uuid: resolvedOrderUuid || undefined,
           customer_name: queryName || undefined,
           customer_email: customerEmail || undefined,
-          send_buyer_copy: options?.sendBuyerCopy !== false,
+          send_buyer_copy: true,
           generated_config_summary: configOutput.configSentence,
           config_json: configOutput.configObject,
           asset_links: [assetLink],
