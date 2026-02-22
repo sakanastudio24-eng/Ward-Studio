@@ -5,6 +5,7 @@ import {
   sendBuyerConfigSubmissionAck,
   sendInternalConfigSubmission,
 } from "../../../../lib/email";
+import { buildConfigSummaryFromSubmittedConfig } from "../../../../lib/config-generator/detailflow";
 
 type OnboardingSubmitBody = {
   order_id?: unknown;
@@ -213,6 +214,7 @@ export async function POST(request: Request) {
   const safeConfigWarning = warning || "No sensitive fields detected.";
   const secretsNotice = "Do not send passwords or API keys by email.";
   const generatedConfigJson = JSON.stringify(safeConfig, null, 2);
+  const generatedConfigSummary = buildConfigSummaryFromSubmittedConfig(safeConfig);
 
   try {
     await sendInternalConfigSubmission({
@@ -221,6 +223,7 @@ export async function POST(request: Request) {
       customerEmail,
       packageLabel,
       addOnSummaryText,
+      generatedConfigSummary,
       generatedConfigJson,
       handoffSummary,
       assetLinksText,
@@ -236,6 +239,7 @@ export async function POST(request: Request) {
         customerEmail,
         packageLabel,
         addOnSummaryText,
+        generatedConfigSummary,
         generatedConfigJson,
         handoffSummary,
         assetLinksText,

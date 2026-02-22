@@ -39,6 +39,7 @@ export type ConfigSubmissionInput = {
   customerEmail: string;
   packageLabel: string;
   addOnSummaryText: string;
+  generatedConfigSummary: string;
   generatedConfigJson: string;
   handoffSummary: string;
   assetLinksText: string;
@@ -560,7 +561,9 @@ export async function sendInternalConfigSubmission(input: ConfigSubmissionInput)
         )}</p>
         <p style="margin:0;font-size:13px;"><strong>Secrets notice:</strong> ${escapeHtml(input.secretsNotice)}</p>
       </div>
-      <h2 style="margin:16px 0 8px 0;font-size:15px;">Generated Config</h2>
+      <h2 style="margin:16px 0 8px 0;font-size:15px;">Generated Configuration Summary</h2>
+      <p style="margin:0 0 12px 0;font-size:13px;line-height:1.6;">${escapeHtml(input.generatedConfigSummary)}</p>
+      <h2 style="margin:0 0 8px 0;font-size:15px;">Generated Config JSON</h2>
       <pre style="margin:0 0 12px 0;background:#111111;color:#f8f8f8;padding:10px;border-radius:8px;overflow:auto;font-size:12px;">${escapeHtml(
         input.generatedConfigJson,
       )}</pre>
@@ -581,7 +584,10 @@ export async function sendInternalConfigSubmission(input: ConfigSubmissionInput)
     `Safe config warning: ${input.safeConfigWarning}`,
     `Secrets notice: ${input.secretsNotice}`,
     "",
-    "Generated Config:",
+    "Generated Configuration Summary:",
+    input.generatedConfigSummary,
+    "",
+    "Generated Config JSON:",
     input.generatedConfigJson,
     "",
     "Handoff Summary:",

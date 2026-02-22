@@ -4,6 +4,7 @@ import {
   sendBuyerConfigSubmissionAck,
   sendInternalConfigSubmission,
 } from "../../../lib/email";
+import { buildConfigSummaryFromSubmittedConfig } from "../../../lib/config-generator/detailflow";
 
 interface OrderRequestBody {
   orderId?: string;
@@ -156,6 +157,17 @@ export async function POST(request: Request) {
   const submittedAt = new Date().toISOString();
   const buyerAckEnabled = process.env.ORDERS_SEND_BUYER_ACK === "true";
   let buyerAckSent = false;
+  let generatedConfigSummary = "Configuration summary unavailable.";
+  try {
+    const parsedConfig = JSON.parse(generatedConfigJson) as unknown;
+    if (parsedConfig && typeof parsedConfig === "object" && !Array.isArray(parsedConfig)) {
+      generatedConfigSummary = buildConfigSummaryFromSubmittedConfig(
+        parsedConfig as Record<string, unknown>,
+      );
+    }
+  } catch {
+    generatedConfigSummary = "Configuration summary unavailable.";
+  }
 
   try {
     await sendInternalConfigSubmission({
@@ -164,6 +176,7 @@ export async function POST(request: Request) {
       customerEmail,
       packageLabel,
       addOnSummaryText,
+      generatedConfigSummary,
       generatedConfigJson,
       handoffSummary,
       assetLinksText,
@@ -179,6 +192,7 @@ export async function POST(request: Request) {
         customerEmail,
         packageLabel,
         addOnSummaryText,
+        generatedConfigSummary,
         generatedConfigJson,
         handoffSummary,
         assetLinksText,
