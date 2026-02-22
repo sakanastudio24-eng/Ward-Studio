@@ -24,6 +24,7 @@ interface OrderRequestBody {
   addOnSummary?: string[];
   generatedConfig?: unknown;
   generatedConfigJson?: string;
+  sendBuyerCopy?: boolean;
   assetLinks?: string[];
   secretsNotice?: string;
   safeConfig?: Record<string, unknown>;
@@ -155,7 +156,8 @@ export async function POST(request: Request) {
     .filter(Boolean)
     .join("\n");
   const submittedAt = new Date().toISOString();
-  const buyerAckEnabled = process.env.ORDERS_SEND_BUYER_ACK !== "false";
+  const buyerAckEnabled =
+    process.env.ORDERS_SEND_BUYER_ACK !== "false" && payload.sendBuyerCopy !== false;
   let buyerAckSent = false;
   let generatedConfigSummary = "Configuration summary unavailable.";
   try {

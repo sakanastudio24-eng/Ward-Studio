@@ -14,6 +14,7 @@ type OnboardingSubmitBody = {
   asset_links?: unknown;
   customer_email?: unknown;
   customer_name?: unknown;
+  send_buyer_copy?: unknown;
   generated_config_summary?: unknown;
 };
 
@@ -29,6 +30,16 @@ const TIER_LABELS: Record<string, string> = {
 
 function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function getBoolean(value: unknown, defaultValue: boolean): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "true") return true;
+    if (normalized === "false") return false;
+  }
+  return defaultValue;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -226,7 +237,8 @@ export async function POST(request: Request) {
   const generatedConfigJson = JSON.stringify(safeConfig, null, 2);
   const generatedConfigSummary =
     getString(payload.generated_config_summary) || buildConfigSummaryFromSubmittedConfig(safeConfig);
-  const shouldSendBuyerAck = process.env.ORDERS_SEND_BUYER_ACK !== "false";
+  const buyerCopyRequested = getBoolean(payload.send_buyer_copy, true);
+  const shouldSendBuyerAck = process.env.ORDERS_SEND_BUYER_ACK !== "false" && buyerCopyRequested;
 
   try {
     await sendInternalConfigSubmission({
