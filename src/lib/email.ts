@@ -8,7 +8,7 @@ import {
 import { SITE_URL } from "../config/site";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
-const RESEND_FALLBACK_FROM = "Ward Studio <onboarding@resend.dev>";
+const RESEND_FALLBACK_FROM = "Ward Studio <noreply@zward.studio>";
 const EMAIL_LOGO_URL = `${SITE_URL}/email-logo.svg`;
 const RESEND_RATE_LIMIT_RETRIES = 3;
 const RESEND_RETRY_BASE_MS = 450;
@@ -110,7 +110,7 @@ function extractAllowedTestRecipient(details: string): string {
 
 function getMailConfig() {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || process.env.ORDERS_FROM_EMAIL || DEFAULT_EMAIL_FROM;
+  const from = DEFAULT_EMAIL_FROM;
   const internalTo =
     process.env.EMAIL_INTERNAL_TO ||
     process.env.ORDERS_OWNER_EMAIL ||
@@ -183,7 +183,7 @@ async function sendEmail(input: {
   const { apiKey, from } = getMailConfig();
   const recipients = Array.isArray(input.to) ? input.to : [input.to];
   const preferredFrom = from.trim() || RESEND_FALLBACK_FROM;
-  const fallbackFrom = (process.env.RESEND_FALLBACK_FROM || RESEND_FALLBACK_FROM).trim();
+  const fallbackFrom = RESEND_FALLBACK_FROM.trim();
 
   const requestBody = {
     to: recipients,
