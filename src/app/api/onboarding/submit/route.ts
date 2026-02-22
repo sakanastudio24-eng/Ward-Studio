@@ -238,7 +238,9 @@ export async function POST(request: Request) {
   const generatedConfigSummary =
     getString(payload.generated_config_summary) || buildConfigSummaryFromSubmittedConfig(safeConfig);
   const buyerCopyRequested = getBoolean(payload.send_buyer_copy, true);
-  const shouldSendBuyerAck = process.env.ORDERS_SEND_BUYER_ACK !== "false" && buyerCopyRequested;
+  const shouldSendBuyerAck = buyerCopyRequested;
+  let internalSent = false;
+  let buyerAckSent = false;
 
   try {
     await sendInternalConfigSubmission({
@@ -255,8 +257,18 @@ export async function POST(request: Request) {
       secretsNotice,
       submittedAt,
     });
+    internalSent = true;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown internal email error";
+    console.error("Onboarding internal setup email error:", message);
+    warningParts.push(`Setup saved, but internal email send failed: ${message}`);
+  }
 
-    if (shouldSendBuyerAck && EMAIL_REGEX.test(customerEmail)) {
+  if (shouldSendBuyerAck) {
+    if (!EMAIL_REGEX.test(customerEmail)) {
+      warningParts.push("Buyer copy not sent: customer email is missing or invalid.");
+    } else {
+      try {
       await sendBuyerConfigSubmissionAck({
         orderId: resolvedOrderId,
         customerName,
@@ -271,15 +283,21 @@ export async function POST(request: Request) {
         secretsNotice,
         submittedAt,
       });
+        buyerAckSent = true;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown buyer email error";
+        console.error("Onboarding buyer copy email error:", message);
+        warningParts.push(`Buyer copy not sent: ${message}`);
+      }
     }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown email error";
-    console.error("Onboarding setup email error:", message);
-    warningParts.push(`Setup saved, but email send failed: ${message}`);
   }
 
   return NextResponse.json({
     ok: true,
+    internalSent,
+    buyerAckSent,
+    buyerCopyRequested,
+    customerEmail,
     ...(warningParts.length > 0 ? { warning: warningParts.join(" ") } : {}),
   });
 }

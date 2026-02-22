@@ -1185,7 +1185,13 @@ export function CheckoutDrawer({
         }),
       });
 
-      const data = (await response.json().catch(() => null)) as { error?: string; warning?: string } | null;
+      const data = (await response.json().catch(() => null)) as {
+        error?: string;
+        warning?: string;
+        internalSent?: boolean;
+        buyerAckSent?: boolean;
+        buyerCopyRequested?: boolean;
+      } | null;
       if (!response.ok) {
         const message = data?.error || "Setup email send failed.";
         setSubmitStatus("error");
@@ -1194,9 +1200,14 @@ export function CheckoutDrawer({
         return;
       }
 
-      const message = data?.warning
-        ? `Setup email sent. ${data.warning}`
-        : "Setup email sent.";
+      const ownerText = data?.internalSent ? "owner" : "owner failed";
+      const buyerText = data?.buyerCopyRequested
+        ? data?.buyerAckSent
+          ? "buyer copy sent"
+          : "buyer copy not sent"
+        : "buyer copy skipped";
+      const baseMessage = `Setup email sent (${ownerText}; ${buyerText}).`;
+      const message = data?.warning ? `${baseMessage} ${data.warning}` : baseMessage;
       setSubmitStatus("success");
       setSubmitMessage(message);
       toast.success("Setup email sent");
