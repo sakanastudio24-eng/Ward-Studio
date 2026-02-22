@@ -1,8 +1,15 @@
 import { randomUUID } from "node:crypto";
-import { DEFAULT_EMAIL_FROM, DEFAULT_OWNER_EMAIL } from "../config/email";
+import {
+  DEFAULT_EMAIL_FROM,
+  DEFAULT_OWNER_EMAIL,
+  DEFAULT_SERVICE_EMAIL,
+  DEFAULT_SUPPORT_EMAIL,
+} from "../config/email";
+import { SITE_URL } from "../config/site";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 const RESEND_FALLBACK_FROM = "Ward Studio <onboarding@resend.dev>";
+const EMAIL_LOGO_URL = `${SITE_URL}/email-logo.svg`;
 
 const sentOrderConfirmationIds = new Set<string>();
 
@@ -231,20 +238,52 @@ async function sendEmail(input: {
 function buildEmailContainer(title: string, sectionsHtml: string): string {
   return `<!doctype html>
 <html>
-  <body style="margin:0;padding:0;background:#f8f8f8;font-family:Arial,sans-serif;color:#111111;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:24px 12px;">
+  <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;color:#111111;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:24px 12px;background:#f3f4f6;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#ffffff;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
             <tr>
-              <td style="padding:18px 20px;background:#111111;color:#ffffff;">
-                <div style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#f97316;">Ward Studio</div>
-                <h1 style="margin:6px 0 0 0;font-size:22px;line-height:1.25;">${escapeHtml(title)}</h1>
+              <td style="height:4px;background:#f97316;font-size:0;line-height:0;">&nbsp;</td>
+            </tr>
+            <tr>
+              <td style="padding:18px 22px 16px 22px;background:#0f1115;color:#ffffff;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                  <tr>
+                    <td style="vertical-align:middle;">
+                      <img
+                        src="${escapeHtml(EMAIL_LOGO_URL)}"
+                        alt="Ward Studio logo"
+                        width="136"
+                        style="display:block;width:136px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;"
+                      />
+                    </td>
+                    <td align="right" style="vertical-align:middle;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#f97316;font-weight:600;">
+                      Ward Studio
+                    </td>
+                  </tr>
+                </table>
+                <h1 style="margin:12px 0 0 0;font-size:23px;line-height:1.25;color:#ffffff;font-weight:700;">${escapeHtml(title)}</h1>
               </td>
             </tr>
             <tr>
-              <td style="padding:18px 20px;">
+              <td style="padding:20px 22px 16px 22px;">
                 ${sectionsHtml}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 22px 20px 22px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-top:1px solid #e5e7eb;padding-top:12px;">
+                  <tr>
+                    <td style="font-size:12px;line-height:1.5;color:#6b7280;">
+                      Support: <a href="mailto:${escapeHtml(DEFAULT_SUPPORT_EMAIL)}" style="color:#f97316;text-decoration:none;">${escapeHtml(DEFAULT_SUPPORT_EMAIL)}</a><br />
+                      Services: <a href="mailto:${escapeHtml(DEFAULT_SERVICE_EMAIL)}" style="color:#f97316;text-decoration:none;">${escapeHtml(DEFAULT_SERVICE_EMAIL)}</a>
+                    </td>
+                    <td align="right" style="font-size:12px;line-height:1.5;color:#9ca3af;">
+                      <a href="${escapeHtml(SITE_URL)}" style="color:#9ca3af;text-decoration:none;">${escapeHtml(SITE_URL.replace(/^https?:\/\//, ""))}</a>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
           </table>
