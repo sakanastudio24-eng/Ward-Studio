@@ -130,7 +130,7 @@ export function PostPurchaseForm({
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-5xl flex-col rounded-xl border border-border bg-background shadow-sm">
+    <section data-ui="post-purchase-form" className="mx-auto flex w-full max-w-5xl flex-col rounded-xl border border-border bg-background shadow-sm">
       <header className="space-y-1 border-b border-border p-5">
         <h1 className="text-2xl font-semibold">Post-Purchase</h1>
         <p className="text-sm text-muted-foreground">{productName} onboarding and next steps.</p>

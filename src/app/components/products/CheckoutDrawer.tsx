@@ -1382,7 +1382,7 @@ export function CheckoutDrawer({
                     </Button>
                   </div>
 
-                  <div className="space-y-3 rounded-md border border-border/70 bg-muted/20 p-3 text-sm">
+                  <div data-ui="payment-consents" className="space-y-3 rounded-md border border-border/70 bg-muted/20 p-3 text-sm">
                     <div className="flex items-start gap-2">
                       <Checkbox
                         id="consent-terms"

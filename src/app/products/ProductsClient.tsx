@@ -16,7 +16,7 @@ export default function ProductsClient() {
   const detailflowPricingConfig = createDetailflowConfig();
 
   return (
-    <main className="min-h-screen px-4 py-16 sm:px-6 md:px-12 md:py-24">
+    <main data-page="products" className="min-h-screen px-4 py-16 sm:px-6 md:px-12 md:py-24">
       <div className="mx-auto max-w-5xl">
         <div className="mb-10">
           <a

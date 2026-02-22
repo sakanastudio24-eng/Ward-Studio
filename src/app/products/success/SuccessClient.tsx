@@ -284,7 +284,7 @@ export default function SuccessClient() {
   }
 
   return (
-    <main className="min-h-screen bg-background px-4 py-10 sm:px-6 md:px-10 md:py-14">
+    <main data-page="product-success" className="min-h-screen bg-background px-4 py-10 sm:px-6 md:px-10 md:py-14">
       <PostPurchaseForm
         primaryState={primaryState}
         errorMessage={errorMessage}
