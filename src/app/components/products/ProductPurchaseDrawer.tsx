@@ -151,6 +151,7 @@ function ProductPurchaseDrawerSimple({
   const managementSelection = managementOptionMap.get(managementMode);
   const managementPrice = managementSelection?.price ?? 0;
   const total = config.basePrice + optionsSubtotal + managementPrice;
+  // Checkout payload uses selected options plus management mode so pricing and provisioning stay aligned.
   const checkoutAddonIds = useMemo(() => {
     const base = [...effectiveSelectedOptionIds];
     if (managementMode === "ward-managed") {
@@ -189,6 +190,7 @@ function ProductPurchaseDrawerSimple({
 
     setIsSubmittingCheckout(true);
     try {
+      // 1) Create canonical order row first so Stripe metadata can reference stable ids.
       const orderResponse = await fetch("/api/orders/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -215,6 +217,7 @@ function ProductPurchaseDrawerSimple({
         return;
       }
 
+      // 2) Request checkout session from server-side pricing logic.
       const checkoutResponse = await fetch("/api/checkout/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -238,11 +241,12 @@ function ProductPurchaseDrawerSimple({
       };
       const checkoutUrl = typeof checkoutPayload.url === "string" ? checkoutPayload.url : "";
       if (checkoutUrl) {
+        // 3) Live path: hand off to Stripe-hosted checkout.
         window.location.assign(checkoutUrl);
         return;
       }
 
-      // Fallback path: keep existing post-purchase drawer behavior when no redirect URL is available.
+      // Fallback path used only when checkout route intentionally returns no URL.
       setIsOpen(false);
       setIsAfterPurchaseOpen(true);
     } catch (error) {

@@ -93,6 +93,7 @@ export async function POST(request: Request) {
   let addonIds: Array<DetailflowAddonId | InkbotAddonId> = [];
   let orderPrefix = "";
 
+  // Product-specific validation keeps malformed product/tier/add-on combinations out of storage.
   if (productId === PRODUCTS.detailflow.product_id) {
     orderPrefix = PRODUCTS.detailflow.order_prefix;
 

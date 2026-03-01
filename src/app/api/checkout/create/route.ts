@@ -219,6 +219,7 @@ export async function POST(request: Request) {
   const stripeLiveEnabled = getStripeCheckoutEnabled();
   const allowPlaceholder = getAllowPlaceholderCheckout();
 
+  // Product-agnostic response fields, populated by product-specific validation branches below.
   let typedAddonIds: string[] = [];
   let depositAmountUsd = 0;
   let totalAmountUsd = 0;
@@ -262,6 +263,7 @@ export async function POST(request: Request) {
     }
     const inkbotAddonIds = addonIds.filter((id): id is InkbotAddonId => isInkbotAddonId(id));
     typedAddonIds = inkbotAddonIds;
+    // InkBot currently uses single-charge checkout (no split deposit).
     totalAmountUsd = computeInkbotTotal(inkbotAddonIds);
     depositAmountUsd = totalAmountUsd;
     remainingAmountUsd = 0;
@@ -390,6 +392,7 @@ export async function POST(request: Request) {
     );
   }
 
+  // Placeholder flow is intentionally limited to DetailFlow only.
   if (productId !== PRODUCTS.detailflow.product_id) {
     return NextResponse.json(
       {

@@ -187,12 +187,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       return;
     }
 
+    // Canonical values are sourced from persisted order first, then Stripe metadata fallback.
     const canonicalProductId = orderRow.product_id || productIdFromSession;
     const canonicalTierId = orderRow.tier_id || tierIdFromSession;
     const canonicalAddonIds =
       orderRow.addon_ids.length > 0 ? orderRow.addon_ids : addonIdsFromSession;
     const canonicalCustomerEmail = orderRow.customer_email || customerEmail;
 
+    // Persist any missing order fields captured from Stripe so retries remain idempotent.
     const patch: Record<string, unknown> = {
       status: "paid",
       stripe_session_id: sessionId,
