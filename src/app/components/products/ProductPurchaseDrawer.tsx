@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { getTooltipMessage } from "../HoverTooltip";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -46,6 +47,7 @@ export type PricedOption = {
 export type ProductPricingConfig = {
   productKey: "inkbot" | "detailflow";
   subtitle: string;
+  checkoutTierId?: string;
   basePrice: number;
   baseLabel?: string;
   optionsHeading: string;
@@ -62,6 +64,18 @@ export interface ProductPurchaseDrawerProps {
   variant?: ProductDrawerVariant;
   setTooltipText?: (text: string) => void;
   onGenerateConfig?: (config: GeneratedDetailflowConfig) => void;
+}
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+async function parseApiError(response: Response, fallback: string): Promise<string> {
+  try {
+    const data = (await response.json()) as Record<string, unknown>;
+    const message = typeof data.error === "string" ? data.error.trim() : "";
+    return message || fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 function isManagementMode(value: string): value is ManagementMode {
@@ -95,6 +109,11 @@ function ProductPurchaseDrawerSimple({
   const [isAfterPurchaseOpen, setIsAfterPurchaseOpen] = useState(false);
   const [selectedOptionIds, setSelectedOptionIds] = useState<string[]>([]);
   const [managementMode, setManagementMode] = useState<ManagementMode>("self-managed");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreePrivacy, setAgreePrivacy] = useState(false);
+  const [agreeEmailOptIn, setAgreeEmailOptIn] = useState(false);
+  const [isSubmittingCheckout, setIsSubmittingCheckout] = useState(false);
 
   const optionMap = useMemo(
     () => new Map(config.options.map((option) => [option.id, option])),
@@ -132,11 +151,23 @@ function ProductPurchaseDrawerSimple({
   const managementSelection = managementOptionMap.get(managementMode);
   const managementPrice = managementSelection?.price ?? 0;
   const total = config.basePrice + optionsSubtotal + managementPrice;
+  const checkoutAddonIds = useMemo(() => {
+    const base = [...effectiveSelectedOptionIds];
+    if (managementMode === "ward-managed") {
+      base.push("ward-managed");
+    }
+    return Array.from(new Set(base));
+  }, [effectiveSelectedOptionIds, managementMode]);
 
   function resetToDefaults() {
     setIsAfterPurchaseOpen(false);
     setSelectedOptionIds([]);
     setManagementMode("self-managed");
+    setCustomerEmail("");
+    setAgreeTerms(false);
+    setAgreePrivacy(false);
+    setAgreeEmailOptIn(false);
+    setIsSubmittingCheckout(false);
   }
 
   function handleOpenChange(open: boolean) {
@@ -146,9 +177,80 @@ function ProductPurchaseDrawerSimple({
     }
   }
 
-  function handlePurchaseClick() {
-    setIsOpen(false);
-    setIsAfterPurchaseOpen(true);
+  async function handlePurchaseClick() {
+    if (!customerEmail || !EMAIL_REGEX.test(customerEmail)) {
+      toast.error("Enter a valid email before continuing.");
+      return;
+    }
+    if (!agreeTerms || !agreePrivacy || !agreeEmailOptIn) {
+      toast.error("You must accept Terms, Privacy, and Email opt-in before checkout.");
+      return;
+    }
+
+    setIsSubmittingCheckout(true);
+    try {
+      const orderResponse = await fetch("/api/orders/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          product_id: config.productKey,
+          tier_id: config.checkoutTierId || "base",
+          addon_ids: checkoutAddonIds,
+          customer_email: customerEmail.trim().toLowerCase(),
+        }),
+      });
+      if (!orderResponse.ok) {
+        const message = await parseApiError(orderResponse, "Could not create order.");
+        toast.error(message);
+        return;
+      }
+      const orderPayload = (await orderResponse.json()) as {
+        order_id?: string;
+        order_uuid?: string;
+      };
+      const orderId = typeof orderPayload.order_id === "string" ? orderPayload.order_id : "";
+      const orderUuid = typeof orderPayload.order_uuid === "string" ? orderPayload.order_uuid : "";
+      if (!orderId || !orderUuid) {
+        toast.error("Order response is missing identifiers.");
+        return;
+      }
+
+      const checkoutResponse = await fetch("/api/checkout/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: config.productKey,
+          tierId: config.checkoutTierId || "base",
+          addonIds: checkoutAddonIds,
+          customerEmail: customerEmail.trim().toLowerCase(),
+          orderId,
+          orderUuid,
+        }),
+      });
+      if (!checkoutResponse.ok) {
+        const message = await parseApiError(checkoutResponse, "Could not create checkout session.");
+        toast.error(message);
+        return;
+      }
+      const checkoutPayload = (await checkoutResponse.json()) as {
+        url?: string;
+        liveCheckout?: boolean;
+      };
+      const checkoutUrl = typeof checkoutPayload.url === "string" ? checkoutPayload.url : "";
+      if (checkoutUrl) {
+        window.location.assign(checkoutUrl);
+        return;
+      }
+
+      // Fallback path: keep existing post-purchase drawer behavior when no redirect URL is available.
+      setIsOpen(false);
+      setIsAfterPurchaseOpen(true);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Checkout request failed.";
+      toast.error(message);
+    } finally {
+      setIsSubmittingCheckout(false);
+    }
   }
 
   function handleOptionToggle(optionId: string, checked: boolean) {
@@ -287,14 +389,59 @@ function ProductPurchaseDrawerSimple({
                   </div>
                 </div>
               </section>
+
+              <section className="rounded-lg border border-border p-4">
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  Checkout
+                </h3>
+                <label className="mb-3 block text-sm">
+                  <span className="mb-1 block text-muted-foreground">Customer email</span>
+                  <input
+                    value={customerEmail}
+                    onChange={(event) => setCustomerEmail(event.target.value)}
+                    placeholder="name@company.com"
+                    type="email"
+                    className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-orange-400"
+                  />
+                </label>
+                <label className="mb-2 flex items-start gap-2 text-sm">
+                  <Checkbox
+                    checked={agreeTerms}
+                    onCheckedChange={(checked) => setAgreeTerms(checked === true)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    I agree to the <a className="underline" href="/terms" target="_blank" rel="noreferrer">Terms & Conditions</a>.
+                  </span>
+                </label>
+                <label className="mb-2 flex items-start gap-2 text-sm">
+                  <Checkbox
+                    checked={agreePrivacy}
+                    onCheckedChange={(checked) => setAgreePrivacy(checked === true)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    I agree to the <a className="underline" href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>.
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm">
+                  <Checkbox
+                    checked={agreeEmailOptIn}
+                    onCheckedChange={(checked) => setAgreeEmailOptIn(checked === true)}
+                    className="mt-0.5"
+                  />
+                  <span>I agree to receive project emails and setup updates.</span>
+                </label>
+              </section>
             </div>
 
             <DrawerFooter>
               <Button
                 className="bg-orange-500 text-white hover:bg-orange-600"
+                disabled={isSubmittingCheckout}
                 onClick={handlePurchaseClick}
               >
-                {triggerLabel}
+                {isSubmittingCheckout ? "Starting checkout..." : triggerLabel}
               </Button>
               <DrawerClose asChild>
                 <Button variant="outline">Cancel</Button>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { sendOrderConfirmedBundle } from "../../../../lib/email";
 import { CAL_LINKS } from "../../../../config/cal";
+import { PRODUCTS } from "../../../../config/products";
 import {
   PRICING,
   computeDepositToday,
@@ -39,8 +40,9 @@ type KnownOrderRow = {
   id: string;
   order_id: string;
   status: string;
-  tier_id: DetailflowTierId | "";
-  addon_ids: DetailflowAddonId[];
+  product_id: string;
+  tier_id: string;
+  addon_ids: string[];
   customer_email: string;
   stripe_session_id: string;
   email_sent_at: string;
@@ -50,42 +52,35 @@ function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function parseAddonIds(raw: string): DetailflowAddonId[] {
+function parseAddonIds(raw: string): string[] {
   if (!raw) return [];
   const maybeJson = raw.trim();
   if (maybeJson.startsWith("[") && maybeJson.endsWith("]")) {
     try {
       const parsed = JSON.parse(maybeJson) as unknown;
       if (Array.isArray(parsed)) {
-        return parsed
-          .map((item) => getString(item))
-          .filter((id): id is DetailflowAddonId => isDetailflowAddonId(id));
+        return parsed.map((item) => getString(item)).filter(Boolean);
       }
     } catch {
       // fallback CSV parse below
     }
   }
-  return raw
-    .split(",")
-    .map((item) => item.trim())
-    .filter((id): id is DetailflowAddonId => isDetailflowAddonId(id));
+  return raw.split(",").map((item) => item.trim()).filter(Boolean);
 }
 
 function normalizeOrderRow(value: unknown): KnownOrderRow | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const source = value as Record<string, unknown>;
-  const tierCandidate = getString(source.tier_id);
   const addonIds = Array.isArray(source.addon_ids)
-    ? source.addon_ids
-        .map((item) => getString(item))
-        .filter((id): id is DetailflowAddonId => isDetailflowAddonId(id))
+    ? source.addon_ids.map((item) => getString(item)).filter(Boolean)
     : [];
 
   return {
     id: getString(source.id),
     order_id: getString(source.order_id),
     status: getString(source.status),
-    tier_id: isDetailflowTierId(tierCandidate) ? tierCandidate : "",
+    product_id: getString(source.product_id),
+    tier_id: getString(source.tier_id),
     addon_ids: addonIds,
     customer_email: getString(source.customer_email),
     stripe_session_id: getString(source.stripe_session_id),
@@ -93,13 +88,30 @@ function normalizeOrderRow(value: unknown): KnownOrderRow | null {
   };
 }
 
-function tierLabelFor(tierId: DetailflowTierId | ""): string {
-  if (!tierId) return "DetailFlow";
-  return TIER_LABELS[tierId] || tierId;
+function tierLabelFor(productId: string, tierId: string): string {
+  if (productId === PRODUCTS.inkbot.product_id) {
+    return "InkBot Base";
+  }
+  if (isDetailflowTierId(tierId)) return TIER_LABELS[tierId];
+  return "DetailFlow";
 }
 
-function addonLabelsFor(addonIds: DetailflowAddonId[]): string[] {
-  return addonIds.map((addonId) => ADDON_LABELS[addonId] || addonId);
+function addonLabelsFor(addonIds: string[]): string[] {
+  const inkbotAddonLabels: Record<string, string> = {
+    welcome_message: "Welcome Message",
+    auto_role_assign: "Auto-Role Assign",
+    digest_schedule: "Digest Schedule",
+    anti_spam_cooldown: "Anti-Spam Cooldown",
+    moderation_logging: "Moderation Logging",
+    "ward-managed": "Ward.studio Managed",
+  };
+  return addonIds.map((addonId) => ADDON_LABELS[addonId] || inkbotAddonLabels[addonId] || addonId);
+}
+
+function getProductIdFromSession(session: Stripe.Checkout.Session): string {
+  const fromMetadata = getString(session.metadata?.productId) || getString(session.metadata?.product_id);
+  if (fromMetadata === PRODUCTS.inkbot.product_id) return PRODUCTS.inkbot.product_id;
+  return PRODUCTS.detailflow.product_id;
 }
 
 function getOrderUuidFromSession(session: Stripe.Checkout.Session): string {
@@ -114,19 +126,18 @@ function getOrderIdFromSession(session: Stripe.Checkout.Session): string {
   );
 }
 
-function getTierIdFromSession(session: Stripe.Checkout.Session): DetailflowTierId | "" {
-  const tierRaw = getString(session.metadata?.tierId) || getString(session.metadata?.tier_id);
-  if (isDetailflowTierId(tierRaw)) return tierRaw;
-  return "";
+function getTierIdFromSession(session: Stripe.Checkout.Session): string {
+  return getString(session.metadata?.tierId) || getString(session.metadata?.tier_id);
 }
 
-function getAddonIdsFromSession(session: Stripe.Checkout.Session): DetailflowAddonId[] {
+function getAddonIdsFromSession(session: Stripe.Checkout.Session): string[] {
   const raw = getString(session.metadata?.addonIds) || getString(session.metadata?.addon_ids);
   return parseAddonIds(raw);
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const sessionId = getString(session.id);
+  const productIdFromSession = getProductIdFromSession(session);
   const orderUuid = getOrderUuidFromSession(session);
   const orderId = getOrderIdFromSession(session);
   const tierIdFromSession = getTierIdFromSession(session);
@@ -158,8 +169,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       const insertedRows = await supabase.insertOrder({
         order_id: orderId,
         status: "paid",
-        product_id: "detailflow",
-        tier_id: tierIdFromSession || "starter",
+        product_id: productIdFromSession,
+        tier_id: tierIdFromSession || (productIdFromSession === PRODUCTS.inkbot.product_id ? "base" : "starter"),
         addon_ids: addonIdsFromSession,
         customer_email: customerEmail || null,
         stripe_session_id: sessionId,
@@ -176,6 +187,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       return;
     }
 
+    const canonicalProductId = orderRow.product_id || productIdFromSession;
     const canonicalTierId = orderRow.tier_id || tierIdFromSession;
     const canonicalAddonIds =
       orderRow.addon_ids.length > 0 ? orderRow.addon_ids : addonIdsFromSession;
@@ -187,6 +199,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     };
     if (!orderRow.customer_email && canonicalCustomerEmail) {
       patch.customer_email = canonicalCustomerEmail;
+    }
+    if (!orderRow.product_id && canonicalProductId) {
+      patch.product_id = canonicalProductId;
     }
     if (!orderRow.tier_id && canonicalTierId) {
       patch.tier_id = canonicalTierId;
@@ -206,24 +221,33 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       return;
     }
 
-    const pricedTierId = isDetailflowTierId(canonicalTierId) ? canonicalTierId : null;
+    const pricedTierId =
+      canonicalProductId === PRODUCTS.detailflow.product_id && isDetailflowTierId(canonicalTierId)
+        ? canonicalTierId
+        : null;
+    const canonicalDetailflowAddonIds = canonicalAddonIds.filter(
+      (addonId): addonId is DetailflowAddonId => isDetailflowAddonId(addonId),
+    );
     const deposit = pricedTierId
-      ? computeDepositToday(PRICING, pricedTierId, canonicalAddonIds)
+      ? computeDepositToday(PRICING, pricedTierId, canonicalDetailflowAddonIds)
       : (session.amount_total || 0) / 100;
     const remaining = pricedTierId
-      ? computeRemainingBalance(PRICING, pricedTierId, canonicalAddonIds)
+      ? computeRemainingBalance(PRICING, pricedTierId, canonicalDetailflowAddonIds)
       : 0;
 
     const emailResult = await sendOrderConfirmedBundle({
       orderId: orderRow.order_id,
       customerEmail: canonicalCustomerEmail,
       summary: {
-        tierLabel: tierLabelFor(canonicalTierId),
+        tierLabel: tierLabelFor(canonicalProductId, canonicalTierId),
         addOnLabels: addonLabelsFor(canonicalAddonIds),
         deposit,
         remaining,
       },
-      bookingUrl: process.env.NEXT_PUBLIC_STRATEGY_CALL_URL || CAL_LINKS.detailflowSetup,
+      bookingUrl:
+        canonicalProductId === PRODUCTS.inkbot.product_id
+          ? CAL_LINKS.inkbotPlanning
+          : process.env.NEXT_PUBLIC_STRATEGY_CALL_URL || CAL_LINKS.detailflowSetup,
       stripeSessionId: sessionId,
     });
 

@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { PRODUCTS } from "../../../../config/products";
 import {
+  INKBOT_PRICING,
+  computeInkbotTotal,
+  isInkbotAddonId,
+  isInkbotTierId,
+  type InkbotAddonId,
+} from "../../../../lib/inkbot-pricing";
+import {
   createCheckoutSessionRecord,
   isDetailflowAddonId,
   isDetailflowTierId,
@@ -68,12 +75,15 @@ const TIER_LABELS: Record<DetailflowTierId, string> = {
   pro_launch: "Pro Launch",
 };
 
+const INKBOT_TIER_LABEL = "Base";
+
 async function createStripeCheckoutSession(input: {
+  productId: string;
   checkoutOrigin: string;
   orderUuid: string;
   orderId: string;
-  tierId: DetailflowTierId;
-  addonIds: DetailflowAddonId[];
+  tierId: string;
+  addonIds: string[];
   customerEmail: string;
   depositAmountUsd: number;
   totalAmountUsd: number;
@@ -87,8 +97,14 @@ async function createStripeCheckoutSession(input: {
     return { ok: false, error: "STRIPE_SECRET_KEY is missing." };
   }
 
-  const successUrl = getStripeSuccessUrl(input.checkoutOrigin);
-  const cancelUrl = getStripeCancelUrl(input.checkoutOrigin);
+  const successUrl =
+    input.productId === PRODUCTS.inkbot.product_id
+      ? `${input.checkoutOrigin}/products?product=inkbot&session_id={CHECKOUT_SESSION_ID}&paid=1#inkbot-product`
+      : getStripeSuccessUrl(input.checkoutOrigin);
+  const cancelUrl =
+    input.productId === PRODUCTS.inkbot.product_id
+      ? `${input.checkoutOrigin}/products?product=inkbot&canceled=1#inkbot-product`
+      : getStripeCancelUrl(input.checkoutOrigin);
   const amountCents = toStripeAmountCents(input.depositAmountUsd);
 
   const form = new URLSearchParams();
@@ -104,15 +120,31 @@ async function createStripeCheckoutSession(input: {
   form.set("line_items[0][quantity]", "1");
   form.set("line_items[0][price_data][currency]", "usd");
   form.set("line_items[0][price_data][unit_amount]", String(amountCents));
+  const tierLabel =
+    input.productId === PRODUCTS.detailflow.product_id && isDetailflowTierId(input.tierId)
+      ? TIER_LABELS[input.tierId]
+      : input.productId === PRODUCTS.inkbot.product_id
+        ? INKBOT_TIER_LABEL
+        : input.tierId;
+  const productTitle =
+    input.productId === PRODUCTS.inkbot.product_id
+      ? `InkBot ${tierLabel} Checkout`
+      : `DetailFlow ${tierLabel} Deposit`;
+  const pricingLabel =
+    input.productId === PRODUCTS.inkbot.product_id
+      ? `full payment ${input.totalAmountUsd} USD`
+      : `deposit ${toStripeAmountCents(input.depositAmountUsd) / 100} USD now, ${input.remainingAmountUsd} USD remaining of ${input.totalAmountUsd} USD`;
+
   form.set(
     "line_items[0][price_data][product_data][name]",
-    `DetailFlow ${TIER_LABELS[input.tierId]} Deposit`,
+    productTitle,
   );
   form.set(
     "line_items[0][price_data][product_data][description]",
-    `Order ${input.orderId}: ${input.addonIds.length > 0 ? `${input.addonIds.length} add-ons selected, ` : ""}deposit ${toStripeAmountCents(input.depositAmountUsd) / 100} USD now, ${input.remainingAmountUsd} USD remaining of ${input.totalAmountUsd} USD`,
+    `Order ${input.orderId}: ${input.addonIds.length > 0 ? `${input.addonIds.length} add-ons selected, ` : ""}${pricingLabel}`,
   );
 
+  form.set("metadata[productId]", input.productId);
   form.set("metadata[order_uuid]", input.orderUuid);
   form.set("metadata[order_id]", input.orderId);
   form.set("metadata[orderId]", input.orderId);
@@ -155,12 +187,12 @@ async function createStripeCheckoutSession(input: {
 }
 
 /**
- * Creates a server-side checkout session payload for DetailFlow.
+ * Creates a server-side checkout session payload for supported products.
  * Flow:
  * 1) Validate payload and product/tier/add-on ids
  * 2) Try live Stripe checkout session when enabled
  * 3) Persist stripe_session_id on existing order row
- * 4) Optionally fall back to placeholder checkout when explicitly allowed
+ * 4) Optionally fall back to placeholder checkout for DetailFlow only
  */
 export async function POST(request: Request) {
   const rateLimit = enforceRateLimit(request, {
@@ -184,24 +216,70 @@ export async function POST(request: Request) {
   const providedOrderUuid = (body.orderUuid || "").trim();
   const rawAddonIds = toStringArray(body.addonIds);
   const addonIds = Array.from(new Set(rawAddonIds));
+  const stripeLiveEnabled = getStripeCheckoutEnabled();
+  const allowPlaceholder = getAllowPlaceholderCheckout();
 
-  if (productId !== PRODUCTS.detailflow.product_id) {
-    return NextResponse.json({ error: "Only detailflow checkout is supported in this route." }, { status: 400 });
-  }
+  let typedAddonIds: string[] = [];
+  let depositAmountUsd = 0;
+  let totalAmountUsd = 0;
+  let remainingAmountUsd = 0;
 
-  if (!isDetailflowTierId(tierId)) {
-    return NextResponse.json({ error: "Invalid or missing tierId." }, { status: 400 });
-  }
+  if (productId === PRODUCTS.detailflow.product_id) {
+    if (!isDetailflowTierId(tierId)) {
+      return NextResponse.json({ error: "Invalid or missing tierId." }, { status: 400 });
+    }
 
-  const invalidAddon = addonIds.find((id) => !isDetailflowAddonId(id));
-  if (invalidAddon) {
-    return NextResponse.json({ error: `Invalid add-on id: ${invalidAddon}` }, { status: 400 });
-  }
-  const typedAddonIds = addonIds.filter((id): id is DetailflowAddonId => isDetailflowAddonId(id));
-  const unavailableAddon = typedAddonIds.find((addonId) => !getAddonAvailability(tierId, addonId).enabled);
-  if (unavailableAddon) {
+    const invalidAddon = addonIds.find((id) => !isDetailflowAddonId(id));
+    if (invalidAddon) {
+      return NextResponse.json({ error: `Invalid add-on id: ${invalidAddon}` }, { status: 400 });
+    }
+    const detailflowAddonIds = addonIds.filter(
+      (id): id is DetailflowAddonId => isDetailflowAddonId(id),
+    );
+    const unavailableAddon = detailflowAddonIds.find(
+      (addonId) => !getAddonAvailability(tierId, addonId).enabled,
+    );
+    if (unavailableAddon) {
+      return NextResponse.json(
+        { error: `Add-on ${unavailableAddon} is not available for tier ${tierId}.` },
+        { status: 400 },
+      );
+    }
+    typedAddonIds = detailflowAddonIds;
+    depositAmountUsd = computeDepositToday(PRICING, tierId, detailflowAddonIds);
+    totalAmountUsd = computeTotal(PRICING, tierId, detailflowAddonIds);
+    remainingAmountUsd = computeRemainingBalance(PRICING, tierId, detailflowAddonIds);
+  } else if (productId === PRODUCTS.inkbot.product_id) {
+    if (!isInkbotTierId(tierId)) {
+      return NextResponse.json(
+        { error: "Invalid or missing tierId. InkBot requires tierId=base." },
+        { status: 400 },
+      );
+    }
+    const invalidAddon = addonIds.find((id) => !isInkbotAddonId(id));
+    if (invalidAddon) {
+      return NextResponse.json({ error: `Invalid InkBot add-on id: ${invalidAddon}` }, { status: 400 });
+    }
+    const inkbotAddonIds = addonIds.filter((id): id is InkbotAddonId => isInkbotAddonId(id));
+    typedAddonIds = inkbotAddonIds;
+    totalAmountUsd = computeInkbotTotal(inkbotAddonIds);
+    depositAmountUsd = totalAmountUsd;
+    remainingAmountUsd = 0;
+
+    if (!stripeLiveEnabled) {
+      const diagnostics = getStripeDiagnostics();
+      return NextResponse.json(
+        {
+          error:
+            "InkBot checkout requires live Stripe checkout. Add STRIPE_SECRET_KEY and set STRIPE_CHECKOUT_LIVE_MODE=true.",
+          diagnostics,
+        },
+        { status: 503 },
+      );
+    }
+  } else {
     return NextResponse.json(
-      { error: `Add-on ${unavailableAddon} is not available for tier ${tierId}.` },
+      { error: "Unsupported product. Allowed values: detailflow, inkbot." },
       { status: 400 },
     );
   }
@@ -217,8 +295,6 @@ export async function POST(request: Request) {
   const checkoutOrigin = resolveCheckoutOrigin(requestUrl.origin);
   const orderId = providedOrderId || "";
   const orderUuid = providedOrderUuid || "";
-  const stripeLiveEnabled = getStripeCheckoutEnabled();
-  const allowPlaceholder = getAllowPlaceholderCheckout();
 
   if (!stripeLiveEnabled && !allowPlaceholder) {
     const diagnostics = getStripeDiagnostics();
@@ -244,10 +320,8 @@ export async function POST(request: Request) {
 
   let liveCheckoutWarning = "";
   if (stripeLiveEnabled && orderId && orderUuid) {
-    const depositAmountUsd = computeDepositToday(PRICING, tierId, typedAddonIds);
-    const totalAmountUsd = computeTotal(PRICING, tierId, typedAddonIds);
-    const remainingAmountUsd = computeRemainingBalance(PRICING, tierId, typedAddonIds);
     const stripeSession = await createStripeCheckoutSession({
+      productId,
       checkoutOrigin,
       orderUuid,
       orderId,
@@ -316,10 +390,26 @@ export async function POST(request: Request) {
     );
   }
 
+  if (productId !== PRODUCTS.detailflow.product_id) {
+    return NextResponse.json(
+      {
+        error: "Placeholder checkout is only available for detailflow. Configure live Stripe checkout for inkbot.",
+      },
+      { status: 503 },
+    );
+  }
+
+  if (!isDetailflowTierId(tierId)) {
+    return NextResponse.json(
+      { error: "Placeholder checkout requires a valid DetailFlow tier." },
+      { status: 400 },
+    );
+  }
+
   const record = createCheckoutSessionRecord({
     origin: checkoutOrigin,
     tierId,
-    addonIds: typedAddonIds,
+    addonIds: typedAddonIds.filter((id): id is DetailflowAddonId => isDetailflowAddonId(id)),
     customerEmail,
     orderId: orderId || undefined,
   });

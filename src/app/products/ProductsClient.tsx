@@ -7,13 +7,34 @@ import {
 } from "../components/HoverTooltip";
 import {
   ProductPurchaseDrawer,
+  type ProductPricingConfig,
 } from "../components/products/ProductPurchaseDrawer";
 import { createDetailflowConfig } from "../../products/detailflow";
-import { CAL_LINKS } from "../../config/cal";
 
 export default function ProductsClient() {
   const { tooltipText, mousePosition, setTooltipText } = useHoverTooltip();
   const detailflowPricingConfig = createDetailflowConfig();
+  const inkbotPricingConfig: ProductPricingConfig = {
+    productKey: "inkbot",
+    subtitle:
+      "Modular community automation system with role-driven workflows and reliable moderation controls.",
+    checkoutTierId: "base",
+    basePrice: 300,
+    baseLabel: "InkBot base package",
+    optionsHeading: "Customizable settings in chat.",
+    optionsHint: "Simplified MEE6-style controls with structured, maintainable defaults.",
+    options: [
+      { id: "welcome_message", label: "Welcome Message", price: 25 },
+      { id: "auto_role_assign", label: "Auto-Role Assign", price: 40 },
+      { id: "digest_schedule", label: "Digest Schedule", price: 35 },
+      { id: "anti_spam_cooldown", label: "Anti-Spam Cooldown", price: 30 },
+      { id: "moderation_logging", label: "Moderation Logging", price: 45 },
+    ],
+    managementOptions: [
+      { id: "self-managed", label: "Self-managed", price: 0 },
+      { id: "ward-managed", label: "Ward.studio managed", price: 250 },
+    ],
+  };
 
   return (
     <main data-page="products" className="min-h-screen px-4 py-16 sm:px-6 md:px-12 md:py-24">
@@ -85,9 +106,6 @@ export default function ProductsClient() {
               <h2 className="tracking-tight text-[1.8rem] sm:text-[2.4rem]">
                 InkBot Product
               </h2>
-              <span className="inline-flex items-center rounded-full border border-orange-300/40 bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-600">
-                Under production
-              </span>
             </div>
             <p className="leading-relaxed text-muted-foreground">
               Modular community automation system focused on role-driven
@@ -118,16 +136,12 @@ export default function ProductsClient() {
               />
             </div>
             <div className="flex justify-center pt-1">
-              <a
-                href={CAL_LINKS.inkbotPlanning}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                onMouseEnter={() => setTooltipText("Open the InkBot planning session in Cal.")}
-                onMouseLeave={() => setTooltipText("")}
-              >
-                Plan InkBot Session
-              </a>
+              <ProductPurchaseDrawer
+                productName="InkBot Product"
+                config={inkbotPricingConfig}
+                triggerLabel="Purchase"
+                setTooltipText={setTooltipText}
+              />
             </div>
           </section>
         </div>
