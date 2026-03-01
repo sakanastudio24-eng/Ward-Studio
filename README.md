@@ -32,8 +32,7 @@ Current legal contact:
 
 ## Product State
 
-- DetailFlow is the active product flow.
-- InkBot is shown as in development with request-access CTA.
+- DetailFlow and InkBot are active product purchase flows.
 
 DetailFlow purchase experience:
 
@@ -41,6 +40,14 @@ DetailFlow purchase experience:
 2. Complete readiness gate
 3. Review pricing and pay deposit
 4. Complete post-purchase setup form on `/products/success`
+
+InkBot purchase experience:
+
+1. Select configurable settings and management mode
+2. Enter buyer email + required consents
+3. Create order via `POST /api/orders/create`
+4. Create Stripe checkout via `POST /api/checkout/create`
+5. Complete payment in Stripe-hosted checkout
 
 Implementation reference: `flow.md`
 Stripe payment reference: `stripe-flow.md`

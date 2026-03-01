@@ -41,7 +41,6 @@ Post-purchase:
 - Primary flow redirects to `/products/success`, which renders an inline post-purchase form via `/src/app/components/products/PostPurchaseForm.tsx`.
 - Fallback/simulated non-live flows can still use the right drawer via `/src/app/components/products/SuccessDrawer.tsx`.
 - Both surfaces show payment status, booking CTA, order summary, onboarding inputs, and copyable config text.
-- `Submit setup details` sends `POST /api/onboarding/submit` with:
 - `Send setup email` sends `POST /api/onboarding/submit` with:
   - `order_id`
   - `order_uuid` (optional, preferred when available)
@@ -74,10 +73,16 @@ Controller:
 Behavior:
 1. Open bottom drawer
 2. Select options + management mode
-3. Click `Purchase`
-4. Show post-purchase right drawer summary
+3. Enter customer email + accept required consents (terms/privacy/email opt-in)
+4. Click `Purchase`
+5. `POST /api/orders/create` with `product_id="inkbot"` and selected add-ons
+6. `POST /api/checkout/create` with returned `order_id`/`order_uuid`
+7. Redirect to Stripe checkout URL
+8. Stripe webhook updates paid status and sends order-confirmed emails
 
-No staged readiness logic is used in this variant.
+Notes:
+- InkBot does not use the staged readiness drawer.
+- InkBot currently uses full-payment checkout (deposit equals total).
 
 ## Pricing and Rules
 
