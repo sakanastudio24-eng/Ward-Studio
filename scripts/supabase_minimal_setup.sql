@@ -1,5 +1,16 @@
 create extension if not exists pgcrypto;
 
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
 create table if not exists orders (
   id uuid primary key default gen_random_uuid(),
   order_id text not null unique,
