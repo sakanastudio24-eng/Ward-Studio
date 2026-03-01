@@ -56,7 +56,7 @@ export function Hero({ setTooltipText }: HeroProps) {
             by Zechariah Ward
           </p>
           <h1
-            className={`mb-5 text-[2.15rem] leading-[0.97] tracking-tight transition-colors duration-300 sm:mb-6 sm:text-[3rem] md:text-[5rem] lg:text-[6rem] ${getTextClass()}`}
+            className={`mb-5 text-[2.15rem] leading-[0.97] tracking-tight transition-colors duration-300 sm:mb-6 sm:text-[3rem] md:text-[5rem] lg:text-[6rem] ${hoveredWord ? getTextClass() : 'text-foreground dark:text-white'}`}
           >
             <span 
               className="cursor-default"
