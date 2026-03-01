@@ -243,6 +243,12 @@ body {
   }
 }
 
+@media (prefers-color-scheme: dark) {
+  #hero {
+    color: oklch(0.985 0 0);
+  }
+}
+
 @media (max-width: 768px) {
   [data-slot="drawer-content"] {
     max-height: 100dvh;
