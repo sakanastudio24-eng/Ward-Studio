@@ -32,6 +32,7 @@ export interface ProjectCardProps {
   resultDetail: string;
   link?: string;
   productLink?: string;
+  previewLink?: string;
   image: string;
   previewImage?: string;
   previewSources?: Array<{
@@ -51,6 +52,7 @@ export interface ProjectCardProps {
   statusLabel?: string;
   linkLabel?: string;
   productLabel?: string;
+  previewLabel?: string;
   placeholderColor: string;
   setTooltipText: (text: string) => void;
   presentationMode?: "overlay" | "drawer-vr1";
@@ -76,6 +78,7 @@ export function ProjectCard({
   resultDetail,
   link,
   productLink,
+  previewLink,
   image,
   previewImage,
   previewSources,
@@ -91,6 +94,7 @@ export function ProjectCard({
   statusLabel,
   linkLabel,
   productLabel,
+  previewLabel,
   placeholderColor,
   setTooltipText,
   presentationMode = "overlay",
@@ -482,8 +486,20 @@ export function ProjectCard({
                   ))}
                 </div>
 
-                {(productLink || link) && (
+                {(previewLink || productLink || link) && (
                   <div className="mt-4 flex flex-wrap items-center gap-2">
+                    {previewLink && (
+                      <a
+                        href={previewLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center rounded-md border border-orange-300/40 bg-orange-500/15 px-4 py-2 text-sm text-foreground hover:bg-orange-500/25"
+                        onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
+                        onMouseLeave={() => setTooltipText("")}
+                      >
+                        {previewLabel || "Preview DetailFlow"}
+                      </a>
+                    )}
                     {productLink && (
                       <a
                         href={productLink}
@@ -724,8 +740,20 @@ export function ProjectCard({
                       </div>
                     </div>
 
-                    {(productLink || link) && (
+                    {(previewLink || productLink || link) && (
                       <div className="mt-2 flex flex-wrap items-center gap-3">
+                        {previewLink && (
+                          <a
+                            href={previewLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center rounded-md border border-orange-300/40 bg-orange-500/20 px-4 py-2 text-orange-100 hover:bg-orange-500/30 text-sm sm:text-base"
+                            onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
+                            onMouseLeave={() => setTooltipText("")}
+                          >
+                            {previewLabel || "Preview DetailFlow"}
+                          </a>
+                        )}
                         {productLink && (
                           <a
                             href={productLink}
