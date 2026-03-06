@@ -87,7 +87,17 @@ export default function ProductsClient() {
                 onMouseLeave={() => setTooltipText("")}
               />
             </div>
-            <div className="flex justify-center pt-1">
+            <div className="flex flex-wrap justify-center gap-3 pt-1">
+              <a
+                href="https://detailflow-demo.zward.studio/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                onMouseEnter={() => setTooltipText("Open the live DetailFlow preview in a new tab.")}
+                onMouseLeave={() => setTooltipText("")}
+              >
+                Preview DetailFlow
+              </a>
               <ProductPurchaseDrawer
                 productName="DetailFlow Template"
                 config={detailflowPricingConfig}

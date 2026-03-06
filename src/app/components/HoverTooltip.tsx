@@ -100,6 +100,7 @@ export const tooltipMessages: Record<string, string> = {
   "show all projects": "Open the full projects index.",
   "products": "Open configurable product systems and pricing.",
   "purchase": "Start the purchase flow and confirm scope.",
+  "preview detailflow": "Open the live DetailFlow demo preview.",
   "github": "Open the source repository.",
   
   // Portfolio cards

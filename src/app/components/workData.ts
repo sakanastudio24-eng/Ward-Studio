@@ -78,8 +78,8 @@ export const allWorkProjects: WorkProject[] = [
     ],
     link: "https://github.com/sakanastudio24-eng/Ward-Studio",
     linkLabel: "GitHub",
-    productLink: "/products#detailflow-template",
-    productLabel: "View Product",
+    productLink: "https://detailflow-demo.zward.studio/",
+    productLabel: "Preview DetailFlow",
     placeholderColor: "#0f766e",
   },
   {
@@ -251,8 +251,8 @@ export const allWorkProjects: WorkProject[] = [
     ],
     link: "https://github.com/sakanastudio24-eng/Ward-Studio",
     linkLabel: "GitHub",
-    productLink: "/products#detailflow-template",
-    productLabel: "View Product",
+    productLink: "https://detailflow-demo.zward.studio/",
+    productLabel: "Preview DetailFlow",
     placeholderColor: "#14b8a6",
   },
   {
