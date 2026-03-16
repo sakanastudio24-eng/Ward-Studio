@@ -1,9 +1,36 @@
 import type { Metadata } from "next";
+import { toAbsoluteUrl } from "../../config/site";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Ward Studio",
   description:
     "Privacy policy for Zward Studio website use, data handling, and third-party service integrations.",
+  alternates: {
+    canonical: "/privacy",
+  },
+  openGraph: {
+    title: "Privacy Policy | Ward Studio",
+    description:
+      "Privacy policy for Zward Studio website use, data handling, and third-party service integrations.",
+    url: toAbsoluteUrl("/privacy"),
+    siteName: "Ward Studio",
+    type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Ward Studio privacy policy",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Privacy Policy | Ward Studio",
+    description:
+      "Privacy policy for Zward Studio website use, data handling, and third-party service integrations.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function PrivacyPage() {

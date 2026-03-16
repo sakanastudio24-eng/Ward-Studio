@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "Projects — Ward Studio",
   description:
     "Selected product, mobile, automation, and design work focused on structured execution and real-world delivery.",
+  alternates: {
+    canonical: "/projects",
+  },
   openGraph: {
     title: "Projects — Ward Studio",
     description:
@@ -28,6 +31,10 @@ export const metadata: Metadata = {
     description:
       "Selected product, mobile, automation, and design work focused on structured execution and real-world delivery.",
     images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 

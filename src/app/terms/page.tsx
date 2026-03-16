@@ -1,9 +1,36 @@
 import type { Metadata } from "next";
+import { toAbsoluteUrl } from "../../config/site";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions | Ward Studio",
   description:
     "Terms and conditions for Zward Studio services, deposits, refunds, licensing, and client responsibilities.",
+  alternates: {
+    canonical: "/terms",
+  },
+  openGraph: {
+    title: "Terms & Conditions | Ward Studio",
+    description:
+      "Terms and conditions for Zward Studio services, deposits, refunds, licensing, and client responsibilities.",
+    url: toAbsoluteUrl("/terms"),
+    siteName: "Ward Studio",
+    type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Ward Studio terms and conditions",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Terms & Conditions | Ward Studio",
+    description:
+      "Terms and conditions for Zward Studio services, deposits, refunds, licensing, and client responsibilities.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function TermsPage() {
@@ -23,7 +50,7 @@ export default function TermsPage() {
           Terms & Conditions
         </h1>
         <p className="text-sm text-muted-foreground mb-2">Effective Date: February 19, 2026</p>
-        <p className="text-sm text-muted-foreground mb-2">Website: https://zward.studio</p>
+        <p className="text-sm text-muted-foreground mb-2">Website: https://www.zward.studio</p>
         <p className="text-sm text-muted-foreground mb-10">
           Owner: Zechariah Ward (&quot;Zward Studio&quot;, &quot;Ward Studio&quot;, &quot;we&quot;, &quot;us&quot;)
         </p>
