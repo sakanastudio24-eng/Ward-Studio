@@ -8,6 +8,7 @@ import { Work } from "./components/Work";
 import { HowIWork } from "./components/HowIWork";
 import { Contact } from "./components/Contact";
 import { Footer } from "./components/Footer";
+import { TopRightNav } from "./components/TopRightNav";
 import { HoverTooltip, useHoverTooltip } from "./components/HoverTooltip";
 import { KeyboardIndicator } from "./components/KeyboardIndicator";
 import { useKeyboardNavigation } from "./hooks/useKeyboardNavigation";
@@ -54,9 +55,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
+      <TopRightNav setTooltipText={setTooltipText} />
       <main>
         <Hero setTooltipText={setTooltipText} />
-        <Capabilities />
+        <Capabilities setTooltipText={setTooltipText} />
         <Work scope="home" setTooltipText={setTooltipText} />
         <HowIWork />
         <Contact setTooltipText={setTooltipText} />

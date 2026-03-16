@@ -5,11 +5,11 @@ import { toAbsoluteUrl } from "../../config/site";
 export const metadata: Metadata = {
   title: "Projects — Ward Studio",
   description:
-    "Engineering builds and design case studies including Terminal Adventure and system-based applications.",
+    "Selected product, mobile, automation, and design work focused on structured execution and real-world delivery.",
   openGraph: {
     title: "Projects — Ward Studio",
     description:
-      "Engineering builds and design case studies including Terminal Adventure and system-based applications.",
+      "Selected product, mobile, automation, and design work focused on structured execution and real-world delivery.",
     url: toAbsoluteUrl("/projects"),
     siteName: "Ward Studio",
     type: "website",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Projects — Ward Studio",
     description:
-      "Engineering builds and design case studies including Terminal Adventure and system-based applications.",
+      "Selected product, mobile, automation, and design work focused on structured execution and real-world delivery.",
     images: ["/og-image.png"],
   },
 };

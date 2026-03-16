@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 // Array of section IDs in order from top to bottom of page
-const SECTIONS = ['hero', 'capabilities', 'work', 'how-i-work', 'contact', 'footer'];
+const SECTIONS = ["home", "services", "projects", "about", "contact", "footer"];
 
 // useKeyboardNavigation: Tracks section position and enables W/S and arrow navigation.
 export function useKeyboardNavigation() {
@@ -44,8 +44,8 @@ export function useKeyboardNavigation() {
     const scrollToSection = (sectionId: string) => {
       let element: HTMLElement | null = null;
       
-      if (sectionId === 'hero') {
-        // Scroll to top for hero section
+      if (sectionId === "home") {
+        // Scroll to top for home section
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       } else {
@@ -66,8 +66,8 @@ export function useKeyboardNavigation() {
       for (let i = SECTIONS.length - 1; i >= 0; i--) {
         let element: HTMLElement | null = null;
         
-        // Special handling for hero - active when near top of page
-        if (SECTIONS[i] === 'hero') {
+        // Special handling for home - active when near top of page
+        if (SECTIONS[i] === "home") {
           if (window.scrollY < 100) {
             setCurrentSection(0);
             return;

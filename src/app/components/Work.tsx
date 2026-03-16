@@ -1,6 +1,6 @@
-import { useEffect, useState, type MouseEvent } from "react";
+import { useState } from "react";
 import { ProjectCard } from "./ProjectCard";
-import { getTooltipMessage } from "./HoverTooltip";
+import { getRandomFeaturedProjectTooltip, getTooltipMessage } from "./HoverTooltip";
 import { allWorkProjects, type WorkScope } from "./workData";
 
 interface WorkProps {
@@ -8,123 +8,136 @@ interface WorkProps {
   setTooltipText: (text: string) => void;
 }
 
-// Work: Displays engineering and case-study project cards with scope-aware visibility.
+// Work: Displays featured home projects and full project listings.
 export function Work({ scope, setTooltipText }: WorkProps) {
-  const [isRoutingToProducts, setIsRoutingToProducts] = useState(false);
-  const [isMobileNavigation, setIsMobileNavigation] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(pointer: coarse), (max-width: 768px)");
-    const syncMobileNavigation = () => setIsMobileNavigation(mediaQuery.matches);
-    syncMobileNavigation();
-    mediaQuery.addEventListener("change", syncMobileNavigation);
-    return () => mediaQuery.removeEventListener("change", syncMobileNavigation);
-  }, []);
-
-  const handleViewProductsClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    if (isRoutingToProducts) return;
-
-    setTooltipText("");
-
-    if (isMobileNavigation) {
-      window.location.href = "/products";
-      return;
-    }
-
-    setIsRoutingToProducts(true);
-
-    window.setTimeout(() => {
-      window.location.href = "/products";
-    }, 220);
-  };
-
+  const [activeFilter, setActiveFilter] = useState<"all" | "engineering" | "design">(
+    scope === "all-projects" ? "all" : "engineering",
+  );
   const visibleProjects = allWorkProjects.filter((project) => project.visibility.includes(scope));
+  const featuredHomeProjects = visibleProjects.filter((project) => project.homeFeatured);
   const engineeringProjects = visibleProjects.filter((project) => project.section === "engineering");
-  const caseStudyProjects = visibleProjects.filter((project) => project.section === "case-study");
+  const designProjects = visibleProjects.filter((project) => project.section === "case-study");
+  const filteredProjects =
+    activeFilter === "all"
+      ? visibleProjects
+      : activeFilter === "engineering"
+        ? engineeringProjects
+        : designProjects;
 
-  return (
-    <section id="work" className="bg-muted/30 px-4 py-16 sm:px-6 sm:py-20 md:px-12 md:py-28">
-      {!isMobileNavigation && (
-        <div
-          className={`pointer-events-none fixed inset-0 z-40 bg-background transition-opacity duration-200 ${
-            isRoutingToProducts ? "opacity-100" : "opacity-0"
-          }`}
-        />
-      )}
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-14 sm:mb-16 md:mb-20">
-          <h2 className="mb-3 text-[1.55rem] tracking-tight sm:mb-4 sm:text-[2rem] md:text-[3rem]">
-            Engineering Work
-          </h2>
-          <p className="mb-8 text-sm text-muted-foreground sm:mb-10 sm:text-base md:mb-12">
-            Production systems and automation builds
-          </p>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {engineeringProjects.map((project, idx) => {
-              const { section, visibility, ...cardProps } = project;
-              return (
-                <ProjectCard
-                  key={`${project.title}-${section}-${idx}`}
-                  {...cardProps}
-                  setTooltipText={setTooltipText}
-                />
-              );
-            })}
-          </div>
-        </div>
-
-        <div>
-          <div className="text-center">
+  if (scope === "home") {
+    return (
+      <section id="projects" className="bg-muted/30 px-4 py-16 sm:px-6 sm:py-20 md:px-12 md:py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 text-center sm:mb-12 md:mb-14">
             <h2 className="mb-3 text-[1.55rem] tracking-tight sm:mb-4 sm:text-[2rem] md:text-[3rem]">
-              Product & UX Case Studies
+              Featured Projects
             </h2>
-            <p className="mb-8 text-sm text-muted-foreground sm:mb-10 sm:text-base md:mb-12">
-              Interaction systems and interface execution across active projects
+            <p className="mx-auto max-w-3xl text-sm text-muted-foreground sm:text-base">
+              Top contract-ready builds across mobile apps, interactive websites, and automation systems.
             </p>
           </div>
-          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2">
-            {caseStudyProjects.map((project, idx) => {
-              const { section, visibility, ...cardProps } = project;
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {featuredHomeProjects.map((project, idx) => {
+              const { section, visibility, homeFeatured, ...cardProps } = project;
               return (
                 <ProjectCard
                   key={`${project.title}-${section}-${idx}`}
                   {...cardProps}
                   setTooltipText={setTooltipText}
+                  getHoverTooltipText={() => getRandomFeaturedProjectTooltip(project.title)}
                 />
               );
             })}
           </div>
 
-          <div className="mt-10 flex flex-wrap justify-center gap-3">
-            {scope === "home" && (
-              <a
-                href="/projects"
-                className="inline-flex items-center rounded-md border border-border px-5 py-2.5 text-sm text-foreground transition-transform hover:-translate-y-0.5 hover:bg-accent sm:text-base"
-                onMouseEnter={(e) =>
-                  setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))
-                }
-                onMouseLeave={() => setTooltipText("")}
-              >
-                Show All Projects
-              </a>
-            )}
-
+          <div className="mt-10 flex justify-center">
             <a
-              href="/products"
-              className={`inline-flex items-center rounded-md border border-orange-300/40 bg-orange-500/15 px-5 py-2.5 text-sm text-foreground transition-transform hover:bg-orange-500/25 sm:text-base ${
-                isRoutingToProducts ? "pointer-events-none opacity-60" : "hover:-translate-y-0.5"
-              }`}
-              onClick={handleViewProductsClick}
-              onMouseEnter={(e) =>
-                setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))
-              }
+              href="/projects"
+              className="inline-flex items-center rounded-md border border-border px-5 py-2.5 text-sm text-foreground transition-transform hover:-translate-y-0.5 hover:bg-accent sm:text-base"
+              onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
               onMouseLeave={() => setTooltipText("")}
             >
-              View Products
+              Show All Projects
             </a>
           </div>
         </div>
+      </section>
+    );
+  }
+
+  return (
+    <section id="work" className="bg-muted/30 px-4 py-16 sm:px-6 sm:py-20 md:px-12 md:py-28">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-8 text-center sm:mb-10 md:mb-12">
+          <h2 className="mb-3 text-[1.55rem] tracking-tight sm:mb-4 sm:text-[2rem] md:text-[3rem]">
+            Projects
+          </h2>
+          <p className="mx-auto max-w-3xl text-sm text-muted-foreground sm:text-base">
+            Filter by discipline to browse systems, apps, automation, and design work.
+          </p>
+        </div>
+
+        <div className="mb-8 flex items-center justify-center gap-3 sm:mb-10">
+          <button
+            type="button"
+            onClick={() => setActiveFilter("all")}
+            className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+              activeFilter === "all"
+                ? "border-orange-500 bg-orange-500 text-white"
+                : "border-border text-foreground hover:bg-accent"
+            }`}
+            onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
+            onMouseLeave={() => setTooltipText("")}
+          >
+            All Projects
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveFilter("engineering")}
+            className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+              activeFilter === "engineering"
+                ? "border-orange-500 bg-orange-500 text-white"
+                : "border-border text-foreground hover:bg-accent"
+            }`}
+            onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
+            onMouseLeave={() => setTooltipText("")}
+          >
+            Engineering
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveFilter("design")}
+            className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+              activeFilter === "design"
+                ? "border-orange-500 bg-orange-500 text-white"
+                : "border-border text-foreground hover:bg-accent"
+            }`}
+            onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
+            onMouseLeave={() => setTooltipText("")}
+          >
+            Design
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredProjects.map((project, idx) => {
+            const { section, visibility, homeFeatured, ...cardProps } = project;
+            return (
+              <ProjectCard
+                key={`${project.title}-${section}-${idx}`}
+                {...cardProps}
+                setTooltipText={setTooltipText}
+                getHoverTooltipText={() => getRandomFeaturedProjectTooltip(project.title)}
+              />
+            );
+          })}
+        </div>
+        {filteredProjects.length === 0 ? (
+          <div className="mt-6 text-center text-sm text-muted-foreground">
+            No projects are available for this filter yet.
+          </div>
+        ) : null}
       </div>
     </section>
   );

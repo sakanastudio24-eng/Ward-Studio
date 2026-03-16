@@ -7,9 +7,162 @@ export type ProjectVisibility = WorkScope[];
 export interface WorkProject extends Omit<ProjectCardProps, "setTooltipText"> {
   section: WorkSection;
   visibility: ProjectVisibility;
+  homeFeatured?: boolean;
 }
 
 export const allWorkProjects: WorkProject[] = [
+  {
+    section: "engineering",
+    visibility: ["home", "all-projects"],
+    homeFeatured: true,
+    title: "GameMate — Social Mobile App",
+    statusLabel: "Contract Ready",
+    outcome:
+      "Mobile social platform for gamers to share clips, connect with teammates, and discover communities in one streamlined app",
+    stack: ["React Native", "Django REST Framework", "PostgreSQL"],
+    summary:
+      "GameMate is a mobile social platform designed for gamers to share clips, connect with teammates, and discover communities based on the games they play.",
+    whatItCanDo: [
+      "Social feed for gameplay highlights and clips",
+      "Group discovery by game title",
+      "Friend connections and activity visibility",
+      "Personalized onboarding based on favorite games",
+      "Profile, notifications, privacy, and account controls",
+    ],
+    testsAndEdgeCases: [
+      "Authentication/session validation",
+      "Feed rendering with mixed media payloads",
+      "Group discovery and membership filtering",
+      "Privacy/notification preference persistence",
+      "Navigation consistency across Feed, Groups, Social, and Profile",
+    ],
+    skillReflection:
+      "GameMate demonstrates end-to-end product thinking for social platforms, combining discovery, connection, and community systems in one mobile-first experience.",
+    skillsUsed: ["React Native", "Django REST Framework", "PostgreSQL"],
+    context:
+      "Gamers usually split activity across social feeds, chat apps, and forums. GameMate was built to unify those workflows into one focused platform.",
+    problem:
+      "Gamers typically rely on several platforms to share clips, communicate with teams, and find teammates, which creates a fragmented experience and constant app switching.",
+    approach:
+      "Designed a dark, fast mobile interface with simple navigation between Feed, Groups, Social, and Profile, then implemented a centralized system for content discovery, friend connections, and group organization.",
+    tools: ["React Native", "Django REST Framework", "PostgreSQL"],
+    resultDetail:
+      "The project demonstrates a complete social platform flow from onboarding to community interaction, with a structure ready for MVP rollout and iterative expansion.",
+    image: "/case-studies/gamemate-feed.png",
+    previewFrame: "phone",
+    previewObjectFit: "contain",
+    galleryFrame: "phone",
+    galleryObjectFit: "contain",
+    galleryAspectClassName: "aspect-[9/16]",
+    galleryMaxWidthClassName: "max-w-[220px] sm:max-w-[280px]",
+    galleryImages: [
+      "/case-studies/gamemate-feed.png",
+      "/case-studies/gamemate-comments.png",
+      "/case-studies/gamemate-groups.png",
+      "/case-studies/gamemate-login.png",
+      "/case-studies/gamemate-onboard-1.png",
+      "/case-studies/gamemate-onboard-2.png",
+      "/case-studies/gamemate-onboard-3.png",
+      "/case-studies/gamemate-onboard-4.png",
+      "/case-studies/gamemate-settings.png",
+      "/case-studies/gamemate-social.png",
+      "/case-studies/gamemate-why-this-appeared.png",
+    ],
+    androidPreviewQrLink:
+      "https://expo.dev/accounts/zech1v1/projects/GameMate/builds/c05082bb-b924-483d-bd22-30debca190be",
+    androidPreviewQrLabel: "Show QR (Android Preview)",
+    link: "https://github.com/sakanastudio24-eng/Game-Mate",
+    linkLabel: "GitHub",
+    placeholderColor: "#0f172a",
+  },
+  {
+    section: "case-study",
+    visibility: ["home", "all-projects"],
+    homeFeatured: true,
+    title: "Aurora Museum UX Case Study",
+    statusLabel: "Contract Ready",
+    outcome:
+      "UX redesign for a museum website focused on clarity, discoverability, and accessibility for visitors, families, members, and donors",
+    stack: ["UX Research", "Information Architecture", "Figma Prototype"],
+    summary:
+      "Aurora Museum is a UX design case study for the fictional Aurora Museum of Design, Art and Creativity in Palm Springs, California. The project redesigns the museum's digital presence through research, personas, wireframes, and a fully interactive prototype.",
+    whatItCanDo: [
+      "Clear information architecture for tickets, exhibitions, events, and programs",
+      "Inclusive persona-driven UX decisions",
+      "Fully navigable interactive prototype",
+      "Consistent design system aligned to museum brand identity",
+    ],
+    testsAndEdgeCases: [
+      "Fast access to ticketing and location details from multiple entry points",
+      "Event and exhibition discoverability without deep navigation",
+      "Membership and donor path clarity",
+      "Accessibility-focused structure for diverse visitor needs",
+      "Consistency across multi-page navigation and hierarchy",
+    ],
+    skillReflection:
+      "The case study highlights strengths in user research, information architecture, interface design, and interactive prototyping.",
+    skillsUsed: ["User Research", "UX Strategy", "Empathy Mapping", "Wireframing", "Interactive Prototyping"],
+    context:
+      "Many museum websites bury critical information behind confusing navigation, making it harder for visitors to plan visits or discover programs.",
+    problem:
+      "Museum visitors often need immediate access to locations, pricing, exhibitions, events, and memberships, but these paths are frequently fragmented and hard to discover.",
+    approach:
+      "Built a structured UX workflow from research and personas to wireframes and high-fidelity prototype, then reorganized the site map around core visitor tasks.",
+    tools: ["Figma", "UX Research", "User Personas", "Wireframing", "Design System"],
+    resultDetail:
+      "The final prototype improves navigation clarity, simplifies ticket and event access, and creates a cohesive digital identity aligned with the museum brand.",
+    image: "/case-studies/aurora-museum-1.png",
+    previewObjectFit: "contain",
+    galleryObjectFit: "contain",
+    galleryAspectClassName: "aspect-[3/2]",
+    galleryImages: ["/case-studies/aurora-museum-1.png"],
+    previewLink: "https://grainy-dried-23206590.figma.site/",
+    previewLabel: "Preview Aurora Museum",
+    placeholderColor: "#7c2d12",
+  },
+  {
+    section: "engineering",
+    visibility: ["home", "all-projects"],
+    homeFeatured: true,
+    title: "Community Discord Bot",
+    statusLabel: "Contract Ready",
+    outcome: "Automation tooling for community operations and platform integrations",
+    stack: ["Node.js", "Discord.js"],
+    summary:
+      "Automation tools built for online communities with moderation safety, command workflows, and integration support.",
+    whatItCanDo: [
+      "Command-based interaction",
+      "Automated moderation",
+      "API integrations",
+    ],
+    testsAndEdgeCases: [
+      "Permission hierarchy checks",
+      "Rate-limit protection",
+      "Command validation failures",
+      "Channel scoping rules",
+      "Fallback behavior for invalid inputs",
+    ],
+    skillReflection:
+      "I can build automation tools, bots, and integrations for communities and product platforms.",
+    skillsUsed: ["Node.js", "Discord.js"],
+    context: "Built to structure online community workflows and reduce manual moderation overhead.",
+    problem:
+      "Communities and early-stage products need automation without sacrificing control and moderation clarity.",
+    approach:
+      "Implemented command architecture, moderation actions, and integration-ready endpoints in a modular bot workflow.",
+    tools: ["Node.js", "Discord.js"],
+    resultDetail:
+      "The bot system demonstrates reusable automation patterns for communities and SaaS support workflows.",
+    image: "/case-studies/inkbot-1.png",
+    galleryImages: [
+      "/case-studies/inkbot-1.png",
+      "/case-studies/inkbot-2.png",
+      "/case-studies/inkbot-3.png",
+    ],
+    link: "https://github.com/sakanastudio24-eng/Ward-Studio",
+    linkLabel: "GitHub",
+    placeholderColor: "#1d4ed8",
+  },
   {
     section: "engineering",
     visibility: ["home", "all-projects"],
@@ -185,131 +338,9 @@ export const allWorkProjects: WorkProject[] = [
     placeholderColor: "#7c2d12",
   },
   {
-    section: "case-study",
-    visibility: ["home", "all-projects"],
-    title: "DetailFlow",
-    statusLabel: "Production Ready",
-    outcome:
-      "Case study: booking and confirmation system with validated intake and messaging",
-    stack: ["Figma", "Next.js", "Tailwind CSS"],
-    summary:
-      "DetailFlow was designed to give small service businesses a production-ready booking path without SaaS lock-in. It combines a clear booking UI, API submission flow, and owner/client confirmation messaging. The experience is optimized for mobile and desktop use.",
-    whatItCanDo: [
-      "Structured booking intake",
-      "Client confirmation messaging",
-      "Owner notification system",
-      "API-based submission handling",
-      "Email template rendering",
-      "Mobile-first UI",
-    ],
-    testsAndEdgeCases: [
-      "Required field validation",
-      "Email format verification",
-      "Rate-limiting protection",
-      "Failed API fallback handling",
-      "Timezone-safe scheduling",
-    ],
-    skillReflection:
-      "This project strengthened full-stack flow design, form validation strategy, API integration patterns, email delivery workflows, and production UX thinking.",
-    skillsUsed: [
-      "Next.js",
-      "React",
-      "TypeScript",
-      "Tailwind CSS",
-      "FastAPI",
-      "REST APIs",
-      "Email Automation",
-      "Form Validation",
-      "Mobile-First Design",
-    ],
-    context:
-      "Small service businesses need professional booking flows without expensive SaaS lock-in.",
-    problem:
-      "Without a validated intake and communication system, scheduling quality drops and owner workload increases.",
-    approach:
-      "Designed in Figma, translated to production-ready Next.js UI, and integrated with backend routing and email confirmations.",
-    tools: ["Component design", "Interaction states", "Form UX", "Accessibility pass"],
-    resultDetail:
-      "The final system supports reliable booking intake, clear confirmations, and production-ready UX behavior.",
-    image: "/case-studies/detailflow-1.png",
-    previewImage: "/case-studies/previews/detailflow-1-home.webp",
-    previewSources: [
-      {
-        srcSet: "/case-studies/previews/detailflow-1-home.avif",
-        type: "image/avif",
-      },
-      {
-        srcSet: "/case-studies/previews/detailflow-1-home.webp",
-        type: "image/webp",
-      },
-    ],
-    previewLoading: "lazy",
-    galleryImages: [
-      "/case-studies/detailflow-1.png",
-      "/case-studies/detailflow-2.png",
-      "/case-studies/detailflow-3.png",
-      "/case-studies/detailflow-4.png",
-      "/case-studies/detailflow-5.png",
-    ],
-    link: "https://github.com/sakanastudio24-eng/Ward-Studio",
-    linkLabel: "GitHub",
-    previewLink: "https://detailflow-demo.zward.studio/",
-    previewLabel: "Preview DetailFlow",
-    productLink: "/products#detailflow-template",
-    productLabel: "View Product",
-    placeholderColor: "#14b8a6",
-  },
-  {
-    section: "case-study",
-    visibility: ["home", "all-projects"],
-    title: "InkBot Discord Bot",
-    outcome:
-      "Case study: structured collaboration UX for Discord communities without over-automation",
-    stack: ["Discord UX", "Command Design", "Event Architecture"],
-    context:
-      "This case study documents why InkBot was built: creative communities need structure without losing flexibility. It began as a basic command bot and matured into a modular event-driven platform.",
-    problem:
-      "Without reliable role matching, reaction state control, and moderation-safe commands, community coordination becomes inconsistent and hard to scale.",
-    approach:
-      "Designed role-based matching flows, reaction-driven transitions, scheduled digest loops, analytics checkpoints, and validation paths that keep operations stable across channel and permission edge cases.",
-    tools: [
-      "Python",
-      "discord.py",
-      "Role-Based Access Control",
-      "Scheduled Jobs",
-      "Command Validation",
-      "UX Architecture",
-    ],
-    resultDetail:
-      "Coverage included case-insensitive role matching, cooldown controls, channel validation failures, permission hierarchy handling, thread fallback logic, and reaction-based state locking. Core skill growth came from asynchronous event architecture, distributed state tracking, permission-aware logic, lightweight storage, and community UX design.",
-    image: "/case-studies/inkbot-2.png",
-    previewImage: "/case-studies/previews/inkbot-1-home.webp",
-    previewSources: [
-      {
-        srcSet: "/case-studies/previews/inkbot-1-home.avif",
-        type: "image/avif",
-      },
-      {
-        srcSet: "/case-studies/previews/inkbot-1-home.webp",
-        type: "image/webp",
-      },
-    ],
-    previewLoading: "lazy",
-    galleryImages: [
-      "/case-studies/inkbot-1.png",
-      "/case-studies/inkbot-2.png",
-      "/case-studies/inkbot-3.png",
-    ],
-    link: "https://github.com/sakanastudio24-eng/Ward-Studio",
-    linkLabel: "GitHub",
-    productLink: "/products#inkbot-product",
-    productLabel: "View Product",
-    placeholderColor: "#2563eb",
-  },
-  {
     section: "engineering",
     visibility: ["home", "all-projects"],
-    title: "Drawer Flow",
+    title: "Drawerflow Drawer component",
     statusLabel: "Vr 1",
     outcome:
       "Case study: post-purchase drawer architecture with reusable checkout components and one combined flow",
@@ -424,51 +455,97 @@ export const allWorkProjects: WorkProject[] = [
   {
     section: "case-study",
     visibility: ["all-projects"],
-    title: "Terminal Adventure - Systems-Driven CLI Game",
+    title: "Fullerton Emergency Management Logo Case Study",
+    statusLabel: "Design Case Study",
     outcome:
-      "Case study: systems-driven CLI game architecture and state-safe interaction design",
-    stack: ["xterm.js", "ANSI styling", "Interaction design"],
+      "Civic emergency identity system that unifies city leadership and emergency services in one visual mark",
+    stack: ["Brand Identity", "Logo System", "Typography", "Color Strategy"],
     summary:
-      "Terminal RPG was built to explore logic systems, state management, and interaction design through a command-line game model. It began with one combat loop and evolved into modular components for player, enemy, combat engine, and game state. The project is still in development.",
+      "The Fullerton Emergency Management logo was created to represent coordination between city leadership and emergency services through a civic, symbol-led identity.",
     whatItCanDo: [
-      "Turn-based combat logic",
-      "Dynamic stat updates",
-      "Branching choices",
-      "State persistence",
-      "Structured modular architecture",
+      "Uses a Maltese cross to reference emergency response and protection",
+      "Centers the four emergency phases: Mitigation, Preparedness, Response, Recovery",
+      "Combines fire, EMS, civil defense, and city leadership symbols",
+      "Maintains clear readability across print and digital usage",
     ],
     testsAndEdgeCases: [
-      "Invalid input handling",
-      "Health underflow prevention",
-      "State reset handling",
-      "Conditional branching validation",
-      "Graceful termination paths",
+      "Small-format legibility for reports and internal documents",
+      "Clear symbol hierarchy at reduced sizes",
+      "Color contrast for emergency readability standards",
+      "Consistency across civic and department communication assets",
     ],
     skillReflection:
-      "This project sharpened algorithmic thinking, game loop control, state mutation safety, input validation patterns, and modular architecture planning.",
+      "This case study demonstrates identity systems thinking: balancing civic tone, emergency symbolism, and practical readability for real-world operations.",
     skillsUsed: [
-      "Python",
-      "CLI Systems",
-      "State Machines",
-      "Input Validation",
-      "Modular Design",
-      "Game Logic",
-      "Architecture",
-      "Terminal UX",
+      "Logo Design",
+      "Visual Hierarchy",
+      "Civic Branding",
+      "Typography",
+      "Color Theory",
+      "Symbol Design",
+      "Adobe Illustrator",
+      "Iconography",
+      "Public Safety Communication",
+      "Graphic Design Fundamentals",
     ],
     context:
-      "Built to explore logic systems, state management, and interactive design in a controlled environment.",
+      "The city needed a logo that clearly communicated shared emergency responsibility across multiple departments.",
     problem:
-      "Terminal experiences require strict input handling and safe state transitions to stay stable.",
+      "Emergency programs often appear fragmented when departments use disconnected visual language, reducing clarity during public communication.",
     approach:
-      "Started as a single combat loop and expanded into modular components for player, enemy, combat engine, and game state.",
-    tools: ["Terminal renderer", "Event design", "Gameplay copy", "Runtime notes"],
+      "Built the mark around a Maltese cross, then layered a phase-based emergency seal and service symbols to reflect coordinated preparedness and response.",
+    tools: ["Illustrator", "Brand System Planning", "Symbol Design", "Typography"],
     resultDetail:
-      "Gameplay systems are active and continue to evolve while development is in progress.",
-    image: "/case-studies/terminal-rpg-1.png",
-    galleryImages: ["/case-studies/terminal-rpg-1.png"],
-    link: "https://github.com/sakanastudio24-eng/Ward-Studio",
-    linkLabel: "GitHub",
-    placeholderColor: "#92400e",
+      "The final logo combines emergency recognition cues, city identity, and structured typography to reinforce Fullerton's commitment to preparedness, response, and community resilience.",
+    image: "/case-studies/fullerton-emergency-management-logo.png",
+    galleryImages: ["/case-studies/fullerton-emergency-management-logo.png"],
+    placeholderColor: "#9a3412",
+  },
+  {
+    section: "case-study",
+    visibility: ["all-projects"],
+    title: "Neon City Grid",
+    statusLabel: "Design Project",
+    outcome:
+      "Grid-inspired green and off-white logo built for a bold urban identity",
+    stack: ["Logo Design", "Brand Identity", "Typography", "Adobe Illustrator"],
+    summary:
+      "Neon City Grid is a standalone logo project centered on a structured grid form and a confident, high-contrast visual direction.",
+    whatItCanDo: [
+      "Uses a grid-inspired symbol structure for geometric balance",
+      "Applies a green and off-white palette for clear recognition",
+      "Pairs icon and wordmark for flexible usage",
+      "Maintains readability across print and digital contexts",
+    ],
+    testsAndEdgeCases: [
+      "Legibility at small icon and favicon sizes",
+      "Contrast consistency between green and off-white variants",
+      "Wordmark clarity in horizontal and stacked lockups",
+      "Background compatibility in light and dark placements",
+    ],
+    skillReflection:
+      "This project demonstrates disciplined logo construction, typography control, and color direction aligned to a defined brand ego.",
+    skillsUsed: [
+      "Logo Design",
+      "Visual Hierarchy",
+      "Typography",
+      "Color Theory",
+      "Symbol Design",
+      "Adobe Illustrator",
+      "Iconography",
+      "Graphic Design Fundamentals",
+    ],
+    context:
+      "The project was created as a focused identity exercise for an urban-inspired brand concept.",
+    problem:
+      "The brand needed a mark that felt distinct and structured without unnecessary visual noise.",
+    approach:
+      "Constructed the logo on a grid framework, then refined spacing and proportions with Centry Schoolbook to keep the identity clean and assertive.",
+    tools: ["Adobe Illustrator", "Grid construction", "Logo system planning", "Typography"],
+    resultDetail:
+      "The final Neon City Grid logo delivers a clear geometric mark and cohesive green/off-white treatment with strong application readiness.",
+    image: "/case-studies/neon-city-grid-logo.png",
+    galleryImages: ["/case-studies/neon-city-grid-logo.png"],
+    placeholderColor: "#166534",
   },
 ];

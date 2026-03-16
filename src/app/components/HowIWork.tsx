@@ -28,13 +28,13 @@ export function HowIWork() {
   ];
 
   return (
-    <section id="how-i-work" className="py-24 md:py-32 px-4 sm:px-6 md:px-12">
+    <section id="about" className="py-24 md:py-32 px-4 sm:px-6 md:px-12">
       <div className="max-w-4xl mx-auto">
         <h2 className="text-[1.75rem] sm:text-[2rem] md:text-[3rem] mb-12 md:mb-16 tracking-tight">
-          How I Work
+          About
         </h2>
         <p className="mb-8 text-base text-muted-foreground">
-          I am a systems-oriented contract creative developer. I build systems that reduce friction and help businesses move faster with clarity.
+          Available for freelance and contract work. I design and engineer production-ready systems with clear scope, clean delivery, and maintainable architecture.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {principles.map((principle, idx) => (

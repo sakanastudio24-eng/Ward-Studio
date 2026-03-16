@@ -38,7 +38,7 @@ export function KeyboardIndicator() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
           transition={{ duration: 0.3 }}
-          className="fixed bottom-8 right-8 z-40 bg-background border border-border rounded-lg p-4 shadow-lg"
+          className="fixed bottom-8 right-8 z-40 hidden rounded-lg border border-border bg-background p-4 shadow-lg md:block"
         >
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <div className="flex flex-col items-center gap-1">

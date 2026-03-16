@@ -8,11 +8,7 @@ import {
   type DetailflowTierId,
 } from "../pricing";
 
-const DETAILFLOW_TIER_IDS: DetailflowTierId[] = [
-  "starter",
-  "growth",
-  "pro_launch",
-];
+const DETAILFLOW_TIER_IDS: DetailflowTierId[] = ["starter", "growth", "pro_launch"];
 const DETAILFLOW_ADDON_IDS: DetailflowAddonId[] = [
   "advanced_email_styling",
   "hosting_help",
@@ -82,11 +78,7 @@ export function createCheckoutSessionRecord(input: {
   const orderId = input.orderId?.trim() || buildOrderId();
   const total = computeTotal(PRICING, input.tierId, input.addonIds);
   const deposit = computeDepositToday(PRICING, input.tierId, input.addonIds);
-  const remaining = computeRemainingBalance(
-    PRICING,
-    input.tierId,
-    input.addonIds,
-  );
+  const remaining = computeRemainingBalance(PRICING, input.tierId, input.addonIds);
   const checkoutUrl = `${input.origin}/products/success?session_id=${encodeURIComponent(sessionId)}&celebrate=1`;
 
   const record: CheckoutSessionRecord = {
@@ -113,8 +105,6 @@ export function createCheckoutSessionRecord(input: {
 /**
  * Returns a checkout session previously created by the checkout create route.
  */
-export function getCheckoutSessionRecord(
-  sessionId: string,
-): CheckoutSessionRecord | null {
+export function getCheckoutSessionRecord(sessionId: string): CheckoutSessionRecord | null {
   return checkoutSessionStore.get(sessionId) || null;
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -33,6 +33,7 @@ export interface ProjectCardProps {
   link?: string;
   productLink?: string;
   previewLink?: string;
+  androidPreviewQrLink?: string;
   image: string;
   previewImage?: string;
   previewSources?: Array<{
@@ -53,6 +54,13 @@ export interface ProjectCardProps {
   linkLabel?: string;
   productLabel?: string;
   previewLabel?: string;
+  androidPreviewQrLabel?: string;
+  previewFrame?: "default" | "phone";
+  previewObjectFit?: "cover" | "contain";
+  galleryFrame?: "default" | "phone";
+  galleryObjectFit?: "cover" | "contain";
+  galleryAspectClassName?: string;
+  galleryMaxWidthClassName?: string;
   placeholderColor: string;
   setTooltipText: (text: string) => void;
   presentationMode?: "overlay" | "drawer-vr1";
@@ -64,6 +72,7 @@ export interface ProjectCardProps {
     description: string;
     bullets: string[];
   }>;
+  getHoverTooltipText?: () => string;
 }
 
 // ProjectCard: Renders a project preview card with an expandable case-study modal.
@@ -79,6 +88,7 @@ export function ProjectCard({
   link,
   productLink,
   previewLink,
+  androidPreviewQrLink,
   image,
   previewImage,
   previewSources,
@@ -95,11 +105,19 @@ export function ProjectCard({
   linkLabel,
   productLabel,
   previewLabel,
+  androidPreviewQrLabel,
+  previewFrame = "default",
+  previewObjectFit = "cover",
+  galleryFrame = "default",
+  galleryObjectFit = "cover",
+  galleryAspectClassName = "aspect-[16/9]",
+  galleryMaxWidthClassName = "max-w-full",
   placeholderColor,
   setTooltipText,
   presentationMode = "overlay",
   hidePreviewImage = false,
   interactiveOverlayParts,
+  getHoverTooltipText,
 }: ProjectCardProps) {
   type PreviewTheme = "dark" | "light";
   const [isOpen, setIsOpen] = useState(false);
@@ -107,9 +125,23 @@ export function ProjectCard({
   const [isPartPreviewOpen, setIsPartPreviewOpen] = useState(false);
   const [previewFlowPartIdx, setPreviewFlowPartIdx] = useState(0);
   const [previewTheme, setPreviewTheme] = useState<PreviewTheme>("dark");
+  const [showAndroidQr, setShowAndroidQr] = useState(false);
+  const androidQrSectionRef = useRef<HTMLDivElement | null>(null);
   const interactiveParts = interactiveOverlayParts ?? [];
   const gallery = galleryImages && galleryImages.length > 0 ? galleryImages : [image];
   const previewSrc = previewImage || gallery[0];
+  const androidQrCodeImageSrc = androidPreviewQrLink
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=520x520&data=${encodeURIComponent(androidPreviewQrLink)}`
+    : null;
+  const previewFitClass = previewObjectFit === "contain" ? "object-contain" : "object-cover";
+  const galleryFitClass = galleryObjectFit === "contain" ? "object-contain" : "object-cover";
+  const phonePreviewFrameClasses =
+    "mx-auto h-full w-[40%] max-w-[220px] rounded-[1.1rem] border border-white/30 bg-black/30 p-1 shadow-[0_8px_28px_rgba(0,0,0,0.35)] sm:w-[34%]";
+  const lightGalleryPhoneFrameClasses =
+    "rounded-[1.1rem] border border-border bg-background p-1 shadow-[0_8px_22px_rgba(0,0,0,0.12)]";
+  const darkGalleryPhoneFrameClasses =
+    "rounded-[1.1rem] border border-white/20 bg-black/30 p-1 shadow-[0_8px_22px_rgba(0,0,0,0.45)]";
+  const handleAndroidQrToggle = () => setShowAndroidQr((prev) => !prev);
   const isDrawerVr1 = presentationMode === "drawer-vr1";
   const hasInteractiveOverlay = interactiveParts.length > 0;
   const activeInteractivePart = hasInteractiveOverlay
@@ -167,6 +199,14 @@ export function ProjectCard({
     setPreviewFlowPartIdx(idx);
     setIsPartPreviewOpen(true);
   };
+
+  useEffect(() => {
+    if (!showAndroidQr) return;
+    const timer = setTimeout(() => {
+      androidQrSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 80);
+    return () => clearTimeout(timer);
+  }, [showAndroidQr]);
 
   const renderDetailflowPartPreview = (partId: string, theme: PreviewTheme) => {
     const isDark = theme === "dark";
@@ -341,18 +381,35 @@ export function ProjectCard({
       <div
         className="group relative aspect-[4/3] overflow-hidden rounded-lg cursor-pointer bg-muted"
         onClick={() => setIsOpen(true)}
-        onMouseEnter={() => setTooltipText(getTooltipMessage(title))}
+        onMouseEnter={() =>
+          setTooltipText(getHoverTooltipText ? getHoverTooltipText() : getTooltipMessage(title))
+        }
         onMouseLeave={() => setTooltipText("")}
       >
         {!hidePreviewImage && (
-          <ImageWithFallback
-            src={previewSrc}
-            sources={previewSources}
-            alt={`${title} preview`}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading={previewLoading}
-            decoding="async"
-          />
+          previewFrame === "phone" ? (
+            <div className="flex h-full w-full items-center justify-center px-3 py-2 sm:px-4">
+              <div className={phonePreviewFrameClasses}>
+                <ImageWithFallback
+                  src={previewSrc}
+                  sources={previewSources}
+                  alt={`${title} preview`}
+                  className={`h-full w-full rounded-[0.85rem] ${previewFitClass} transition-transform duration-500 group-hover:scale-105`}
+                  loading={previewLoading}
+                  decoding="async"
+                />
+              </div>
+            </div>
+          ) : (
+            <ImageWithFallback
+              src={previewSrc}
+              sources={previewSources}
+              alt={`${title} preview`}
+              className={`h-full w-full ${previewFitClass} transition-transform duration-500 group-hover:scale-105`}
+              loading={previewLoading}
+              decoding="async"
+            />
+          )
         )}
         <div
           className="absolute inset-0"
@@ -428,13 +485,25 @@ export function ProjectCard({
                     <CarouselContent className="ml-0">
                       {gallery.map((galleryImage, idx) => (
                         <CarouselItem key={`${galleryImage}-${idx}`} className="pl-0">
-                          <div className="overflow-hidden rounded-lg border border-border">
-                            <ImageWithFallback
-                              src={galleryImage}
-                              alt={`${title} case study image ${idx + 1}`}
-                              className="w-full aspect-[16/9] object-cover"
-                            />
-                          </div>
+                          {galleryFrame === "phone" ? (
+                            <div className={`mx-auto w-full ${galleryMaxWidthClassName}`}>
+                              <div className={lightGalleryPhoneFrameClasses}>
+                                <ImageWithFallback
+                                  src={galleryImage}
+                                  alt={`${title} case study image ${idx + 1}`}
+                                  className={`w-full ${galleryAspectClassName} rounded-[0.85rem] ${galleryFitClass}`}
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="overflow-hidden rounded-lg border border-border">
+                              <ImageWithFallback
+                                src={galleryImage}
+                                alt={`${title} case study image ${idx + 1}`}
+                                className={`w-full ${galleryAspectClassName} ${galleryFitClass}`}
+                              />
+                            </div>
+                          )}
                         </CarouselItem>
                       ))}
                     </CarouselContent>
@@ -442,13 +511,25 @@ export function ProjectCard({
                     <CarouselNext className="right-3 top-1/2 -translate-y-1/2 h-9 w-9 border-border bg-background text-foreground hover:bg-accent" />
                   </Carousel>
                 ) : (
-                  <div className="mb-4 overflow-hidden rounded-lg border border-border">
-                    <ImageWithFallback
-                      src={gallery[0]}
-                      alt={`${title} case study image`}
-                      className="w-full aspect-[16/9] object-cover"
-                    />
-                  </div>
+                  galleryFrame === "phone" ? (
+                    <div className={`mx-auto mb-4 w-full ${galleryMaxWidthClassName}`}>
+                      <div className={lightGalleryPhoneFrameClasses}>
+                        <ImageWithFallback
+                          src={gallery[0]}
+                          alt={`${title} case study image`}
+                          className={`w-full ${galleryAspectClassName} rounded-[0.85rem] ${galleryFitClass}`}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mb-4 overflow-hidden rounded-lg border border-border">
+                      <ImageWithFallback
+                        src={gallery[0]}
+                        alt={`${title} case study image`}
+                        className={`w-full ${galleryAspectClassName} ${galleryFitClass}`}
+                      />
+                    </div>
+                  )
                 )}
 
                 <div className="space-y-3">
@@ -486,7 +567,7 @@ export function ProjectCard({
                   ))}
                 </div>
 
-                {(previewLink || productLink || link) && (
+                {(previewLink || androidPreviewQrLink || productLink || link) && (
                   <div className="mt-4 flex flex-wrap items-center gap-2">
                     {previewLink && (
                       <a
@@ -498,6 +579,31 @@ export function ProjectCard({
                         onMouseLeave={() => setTooltipText("")}
                       >
                         {previewLabel || "Preview DetailFlow"}
+                      </a>
+                    )}
+                    {androidPreviewQrLink && (
+                      <button
+                        type="button"
+                        onClick={handleAndroidQrToggle}
+                        className="inline-flex items-center rounded-md border border-orange-300/40 bg-orange-500/15 px-4 py-2 text-sm text-foreground hover:bg-orange-500/25"
+                        onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
+                        onMouseLeave={() => setTooltipText("")}
+                      >
+                        {showAndroidQr
+                          ? "Hide QR (Android Preview)"
+                          : androidPreviewQrLabel || "Show QR (Android Preview)"}
+                      </button>
+                    )}
+                    {androidPreviewQrLink && (
+                      <a
+                        href={androidPreviewQrLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center rounded-md border border-orange-300/40 bg-orange-500/15 px-4 py-2 text-sm text-foreground hover:bg-orange-500/25"
+                        onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
+                        onMouseLeave={() => setTooltipText("")}
+                      >
+                        Download Preview
                       </a>
                     )}
                     {productLink && (
@@ -522,6 +628,26 @@ export function ProjectCard({
                         {linkLabel || "GitHub"}
                       </a>
                     )}
+                  </div>
+                )}
+                {showAndroidQr && androidQrCodeImageSrc && (
+                  <div ref={androidQrSectionRef} className="mt-4 w-full rounded-md border border-border bg-muted/30 p-3">
+                    <p className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
+                      Scan in Expo Go (Android)
+                    </p>
+                    <ImageWithFallback
+                      src={androidQrCodeImageSrc}
+                      alt={`${title} Android preview QR code`}
+                      className="mx-auto h-auto w-full max-w-[260px] rounded-md border border-border bg-white p-2"
+                    />
+                    <a
+                      href={androidPreviewQrLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 block text-center text-xs text-muted-foreground underline-offset-4 hover:underline"
+                    >
+                      Open Android preview link
+                    </a>
                   </div>
                 )}
               </section>
@@ -668,25 +794,49 @@ export function ProjectCard({
                       )}
                     </div>
                   ) : gallery.length === 1 ? (
-                    <div className="mb-8 overflow-hidden rounded-lg border border-white/10 bg-white/5">
-                      <ImageWithFallback
-                        src={gallery[0]}
-                        alt={`${title} case study image`}
-                        className="w-full aspect-[16/9] object-cover"
-                      />
-                    </div>
+                    galleryFrame === "phone" ? (
+                      <div className={`mx-auto mb-8 w-full ${galleryMaxWidthClassName}`}>
+                        <div className={darkGalleryPhoneFrameClasses}>
+                          <ImageWithFallback
+                            src={gallery[0]}
+                            alt={`${title} case study image`}
+                            className={`w-full ${galleryAspectClassName} rounded-[0.85rem] ${galleryFitClass}`}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mb-8 overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                        <ImageWithFallback
+                          src={gallery[0]}
+                          alt={`${title} case study image`}
+                          className={`w-full ${galleryAspectClassName} ${galleryFitClass}`}
+                        />
+                      </div>
+                    )
                   ) : (
                     <Carousel opts={{ loop: true }} className="mb-8 w-full">
                       <CarouselContent className="ml-0">
                         {gallery.map((galleryImage, idx) => (
                           <CarouselItem key={`${galleryImage}-${idx}`} className="pl-0">
-                            <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
-                              <ImageWithFallback
-                                src={galleryImage}
-                                alt={`${title} case study image ${idx + 1}`}
-                                className="w-full aspect-[16/9] object-cover"
-                              />
-                            </div>
+                            {galleryFrame === "phone" ? (
+                              <div className={`mx-auto w-full ${galleryMaxWidthClassName}`}>
+                                <div className={darkGalleryPhoneFrameClasses}>
+                                  <ImageWithFallback
+                                    src={galleryImage}
+                                    alt={`${title} case study image ${idx + 1}`}
+                                    className={`w-full ${galleryAspectClassName} rounded-[0.85rem] ${galleryFitClass}`}
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                                <ImageWithFallback
+                                  src={galleryImage}
+                                  alt={`${title} case study image ${idx + 1}`}
+                                  className={`w-full ${galleryAspectClassName} ${galleryFitClass}`}
+                                />
+                              </div>
+                            )}
                           </CarouselItem>
                         ))}
                       </CarouselContent>
@@ -740,7 +890,7 @@ export function ProjectCard({
                       </div>
                     </div>
 
-                    {(previewLink || productLink || link) && (
+                    {(previewLink || androidPreviewQrLink || productLink || link) && (
                       <div className="mt-2 flex flex-wrap items-center gap-3">
                         {previewLink && (
                           <a
@@ -752,6 +902,31 @@ export function ProjectCard({
                             onMouseLeave={() => setTooltipText("")}
                           >
                             {previewLabel || "Preview DetailFlow"}
+                          </a>
+                        )}
+                        {androidPreviewQrLink && (
+                          <button
+                            type="button"
+                            onClick={handleAndroidQrToggle}
+                            className="inline-flex items-center rounded-md border border-orange-300/40 bg-orange-500/20 px-4 py-2 text-orange-100 hover:bg-orange-500/30 text-sm sm:text-base"
+                            onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
+                            onMouseLeave={() => setTooltipText("")}
+                          >
+                            {showAndroidQr
+                              ? "Hide QR (Android Preview)"
+                              : androidPreviewQrLabel || "Show QR (Android Preview)"}
+                          </button>
+                        )}
+                        {androidPreviewQrLink && (
+                          <a
+                            href={androidPreviewQrLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center rounded-md border border-orange-300/40 bg-orange-500/20 px-4 py-2 text-orange-100 hover:bg-orange-500/30 text-sm sm:text-base"
+                            onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
+                            onMouseLeave={() => setTooltipText("")}
+                          >
+                            Download Preview
                           </a>
                         )}
                         {productLink && (
@@ -776,6 +951,26 @@ export function ProjectCard({
                             {linkLabel || "GitHub"}
                           </a>
                         )}
+                      </div>
+                    )}
+                    {showAndroidQr && androidQrCodeImageSrc && (
+                      <div ref={androidQrSectionRef} className="mt-4 w-full rounded-md border border-white/20 bg-white/5 p-3">
+                        <p className="mb-2 text-xs uppercase tracking-wide text-white/70">
+                          Scan in Expo Go (Android)
+                        </p>
+                        <ImageWithFallback
+                          src={androidQrCodeImageSrc}
+                          alt={`${title} Android preview QR code`}
+                          className="mx-auto h-auto w-full max-w-[300px] rounded-md border border-white/20 bg-white p-2"
+                        />
+                        <a
+                          href={androidPreviewQrLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-3 block text-center text-xs text-white/80 underline-offset-4 hover:underline"
+                        >
+                          Open Android preview link
+                        </a>
                       </div>
                     )}
                   </div>

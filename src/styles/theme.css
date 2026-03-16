@@ -206,6 +206,26 @@ body {
   }
 }
 
+@keyframes services-scroll-up {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes services-scroll-down {
+  from {
+    transform: translateY(-50%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
 @layer utilities {
   .word-carousel-right-track {
     width: max-content;
@@ -213,10 +233,41 @@ body {
     will-change: transform;
   }
 
+  .services-preview-viewport {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .services-preview-track {
+    display: flex;
+    flex-direction: column;
+    will-change: transform;
+  }
+
+  .services-preview-track-up {
+    animation: services-scroll-up 20s linear infinite;
+  }
+
+  .services-preview-track-down {
+    animation: services-scroll-down 20s linear infinite;
+  }
+
+  .services-preview-line {
+    min-height: 2.75rem;
+  }
+
   /* Keep all UI text selectable, including overlay/menu primitives that ship with select-none. */
   .select-none {
     -webkit-user-select: text !important;
     user-select: text !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .services-preview-track-up,
+  .services-preview-track-down {
+    animation: none !important;
   }
 }
 
@@ -323,6 +374,24 @@ body {
   [data-page="product-success"] select {
     font-size: 0.92rem;
   }
+
+  [data-ui="top-right-nav"] {
+    left: auto;
+    right: 0.5rem;
+    max-width: none;
+    padding: 0.3rem 0.4rem;
+  }
+
+  [data-ui="top-right-nav"] ul {
+    display: none;
+  }
+
+  [data-ui="top-right-nav"] button {
+    padding: 0.28rem 0.42rem;
+    font-size: 0.78rem;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
 }
 
 @media (max-width: 360px) {
@@ -347,6 +416,18 @@ body {
 
   [data-page="product-success"] [data-ui="post-purchase-form"] {
     border-radius: 0.625rem;
+  }
+
+  [data-ui="top-right-nav"] {
+    left: auto;
+    right: 0.35rem;
+    max-width: none;
+    padding: 0.26rem 0.32rem;
+  }
+
+  [data-ui="top-right-nav"] button {
+    padding: 0.25rem 0.34rem;
+    font-size: 0.72rem;
   }
 }
 

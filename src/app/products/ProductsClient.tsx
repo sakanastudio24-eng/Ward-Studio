@@ -9,6 +9,7 @@ import {
   ProductPurchaseDrawer,
   type ProductPricingConfig,
 } from "../components/products/ProductPurchaseDrawer";
+import { TopRightNav } from "../components/TopRightNav";
 import { createDetailflowConfig } from "../../products/detailflow";
 
 export default function ProductsClient() {
@@ -37,24 +38,16 @@ export default function ProductsClient() {
   };
 
   return (
-    <main data-page="products" className="min-h-screen px-4 py-16 sm:px-6 md:px-12 md:py-24">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-10">
-          <a
-            href="/"
-            className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
-            onMouseLeave={() => setTooltipText("")}
-          >
-            Back to Home
-          </a>
-        </div>
+    <>
+      <TopRightNav setTooltipText={setTooltipText} />
+      <main data-page="products" className="min-h-screen px-4 py-16 sm:px-6 md:px-12 md:py-24">
+        <div className="mx-auto max-w-5xl">
 
-        <div className="space-y-16">
-          <section
-            id="detailflow-template"
-            className="scroll-mt-24 space-y-5 rounded-2xl border border-border p-5 text-center sm:p-7"
-          >
+          <div className="space-y-16">
+            <section
+              id="detailflow-template"
+              className="scroll-mt-24 space-y-5 rounded-2xl border border-border p-5 text-center sm:p-7"
+            >
             <div className="flex flex-wrap items-center justify-center gap-3">
               <h1 className="tracking-tight text-[1.8rem] sm:text-[2.4rem]">
                 DetailFlow Template
@@ -106,12 +99,12 @@ export default function ProductsClient() {
                 setTooltipText={setTooltipText}
               />
             </div>
-          </section>
+            </section>
 
-          <section
-            id="inkbot-product"
-            className="scroll-mt-24 space-y-5 rounded-2xl border border-border p-5 text-center sm:p-7"
-          >
+            <section
+              id="inkbot-product"
+              className="scroll-mt-24 space-y-5 rounded-2xl border border-border p-5 text-center sm:p-7"
+            >
             <div className="flex flex-wrap items-center justify-center gap-3">
               <h2 className="tracking-tight text-[1.8rem] sm:text-[2.4rem]">
                 InkBot Product
@@ -153,14 +146,15 @@ export default function ProductsClient() {
                 setTooltipText={setTooltipText}
               />
             </div>
-          </section>
+            </section>
+          </div>
         </div>
-      </div>
-      <HoverTooltip
-        text={tooltipText}
-        mouseX={mousePosition.x}
-        mouseY={mousePosition.y}
-      />
-    </main>
+        <HoverTooltip
+          text={tooltipText}
+          mouseX={mousePosition.x}
+          mouseY={mousePosition.y}
+        />
+      </main>
+    </>
   );
 }
