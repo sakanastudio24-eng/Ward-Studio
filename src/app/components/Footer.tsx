@@ -156,6 +156,26 @@ export function Footer({ onGameOpen, setTooltipText }: FooterProps) {
         >
           Privacy Policy
         </a>
+        <a
+          href="https://www.linkedin.com/in/zechariah-ward-zward-studio-381803357"
+          target="_blank"
+          rel="noreferrer"
+          className={navItemClass}
+          onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
+          onMouseLeave={() => setTooltipText("")}
+        >
+          LinkedIn
+        </a>
+        <a
+          href="https://github.com/sakanastudio24-eng"
+          target="_blank"
+          rel="noreferrer"
+          className={navItemClass}
+          onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
+          onMouseLeave={() => setTooltipText("")}
+        >
+          GitHub
+        </a>
       </nav>
 
       <div className={`mt-7 flex flex-col items-center gap-2 md:mt-8 md:flex-row md:gap-4 ${isHoveringWard ? "text-white" : ""}`}>
