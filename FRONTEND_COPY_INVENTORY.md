@@ -1,11 +1,17 @@
 # Approved frontend copy
 
 This file holds the final client facing copy direction for the site.
-It keeps marketing copy cleaner and more human.
+Each section includes the source file and route so it is easier to navigate the codebase.
 Technical labels, system states, and validation text stay close to the product.
 Terms and Privacy stay formal and legally clear.
 
 ## SEO copy
+
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/layout.tsx
+
+Route
+/
 
 Root title
 Ward Studio Design and Engineering Systems
@@ -13,11 +19,23 @@ Ward Studio Design and Engineering Systems
 Root description
 Design systems, brand identity, and production ready web engineering. Built by Zechariah Ward for growing businesses.
 
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/projects/page.tsx
+
+Route
+/projects
+
 Projects title
 Projects — Ward Studio
 
 Projects description
 Engineering builds and design case studies including GameMate, Aurora Museum, and system based applications.
+
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/products/page.tsx
+
+Route
+/products
 
 Products title
 Products — Ward Studio
@@ -25,11 +43,23 @@ Products — Ward Studio
 Products description
 Structured product packages including DetailFlow and InkBot. Configurable, production ready systems with clear onboarding.
 
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/terms/page.tsx
+
+Route
+/terms
+
 Terms title
 Terms and Conditions | Ward Studio
 
 Terms description
 Terms and conditions for Zward Studio services, deposits, refunds, licensing, and client responsibilities.
+
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/privacy/page.tsx
+
+Route
+/privacy
 
 Privacy title
 Privacy Policy | Ward Studio
@@ -39,12 +69,26 @@ Privacy policy for Zward Studio website use, data handling, and third party serv
 
 ## Navigation
 
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/components/TopRightNav.tsx
+
+Route
+/
+/projects
+/products
+
 Main navigation
 Home
 Services
 Projects
 About
 Contact
+
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/components/Footer.tsx
+
+Route
+/
 
 Footer navigation
 Home
@@ -61,6 +105,12 @@ GitHub
 
 ## Home page
 
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/components/Hero.tsx
+
+Route
+/
+
 Hero heading
 Design meets engineering.
 Systems built to ship.
@@ -72,12 +122,16 @@ Hero actions
 Let's Work
 View Projects
 
-## Services section
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/components/Capabilities.tsx
 
-Section heading
+Route
+/#services
+
+Services section heading
 Services
 
-Section intro
+Services section intro
 Independent developer building websites, apps, and automation tools for startups and businesses.
 
 Websites
@@ -108,12 +162,16 @@ Visual direction
 Design token planning
 Interaction and layout refinement
 
-## Projects section
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/components/Work.tsx
 
-Section heading
+Route
+/#projects
+
+Projects section heading
 Featured projects
 
-Section intro
+Projects section intro
 A few of the strongest builds across mobile, web, automation, and product work.
 
 Project filters
@@ -121,7 +179,93 @@ Engineering
 Design
 All Projects
 
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/components/HowIWork.tsx
+
+Route
+/#about
+
+About section heading
+About
+
+About section intro
+Available for freelance and contract work. I design and engineer production ready systems with clear scope, clean delivery, and maintainable architecture.
+
+Principles
+Clear scope
+Detailed project briefs with defined deliverables and milestones.
+
+Structured timelines
+Realistic schedules with buffer time for revisions and testing.
+
+Weekly updates
+Regular async updates and scheduled check ins to maintain alignment.
+
+Clean handoff
+Complete documentation, code comments, and training materials.
+
+Long term maintainable builds
+Production ready code with tests, type safety, and clear architecture.
+
+Transparent pricing
+Fixed rate contracts with no hidden fees or scope creep surprises.
+
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/components/Contact.tsx
+
+Route
+/#contact
+
+Contact section heading
+Get in Touch
+
+Contact section intro
+I work with 3 to 5 clients at a time. If you are looking for design or engineering support, let's talk.
+
+Consultation action
+Book Custom Consultation
+
+Contact form fields
+Name
+Company
+Email
+Budget USD
+Timeline
+Project Type
+Project Goals
+
+Contact form success
+Thanks for reaching out. Your message was sent to the owner email.
+
+## Projects page
+
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/projects/page.tsx
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/components/Work.tsx
+
+Route
+/projects
+
+Page heading
+All Projects
+
+Page description
+Work across product systems, automation, mobile UI, branding, and case study design.
+
+Secondary navigation
+Home
+Projects
+Products
+Contact
+
 ## Featured and project copy
+
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/components/workData.ts
+
+Route
+/
+/projects
 
 GameMate
 Title
@@ -166,7 +310,7 @@ A visually immersive website experience shaped by research, information architec
 
 Feature copy
 Clear information architecture for tickets, exhibitions, events, and programs.
-Inclusive persona driven UX decisions.
+Inclusive persona based UX decisions.
 Fully navigable interactive prototype.
 Consistent design system aligned to the museum brand.
 
@@ -205,7 +349,7 @@ Title
 DetailFlow
 
 Summary
-DetailFlow is a booking and confirmation system for service businesses. It combines a mobile first interface, backend handling, and owner and client email delivery in one clean flow.
+DetailFlow is a booking and confirmation system built for service businesses. It combines a mobile first interface, API backed submission handling, and owner and client email delivery in one clear flow.
 
 Outcome
 Booking and confirmation system for service businesses.
@@ -247,20 +391,20 @@ I can build event driven tools that reduce manual work without making the system
 
 Terminal Adventure
 Title
-Terminal Adventure
+Terminal Adventure CLI Game
 
 Summary
-Terminal Adventure is a systems focused CLI game built around logic, state control, and modular design. It started as a simple combat loop and grew into a more structured game system.
+Terminal Adventure is a CLI game built around logic control, state safety, and interactive design. It grew from a simple combat loop into a modular system for player state, enemy behavior, combat, and game flow.
 
 Outcome
 A modular command line game that shows systems thinking, state management, and feature layering.
 
 Drawerflow
 Title
-Drawerflow Drawer component
+Drawerflow Drawer Component
 
 Summary
-Drawerflow breaks the checkout experience into reusable pieces and shows how they connect from plan selection through post purchase handoff.
+Drawerflow turns the checkout experience into reusable pieces and shows the full journey from selection to post purchase handoff in one case study.
 
 Outcome
 A reusable drawer based purchase flow for configuration driven products.
@@ -270,7 +414,7 @@ Title
 Fullerton Emergency Management Logo Case Study
 
 Summary
-The Fullerton Emergency Management logo was designed to show how city leadership and emergency services work together through one civic identity.
+The Fullerton Emergency Management logo was created to show how city leadership and emergency services work together through one civic identity.
 
 Outcome
 A civic logo system that combines emergency response symbols, city identity, and public trust cues.
@@ -303,71 +447,14 @@ A logo study focused on structure, contrast, and identity through type and grid 
 What it demonstrates
 Graphic identity work with strong typography, Illustrator craft, and a clear visual concept.
 
-## Projects page
-
-Page heading
-All Projects
-
-Page description
-Work across product systems, automation, mobile UI, branding, and case study design.
-
-Secondary navigation
-Home
-Projects
-Products
-Contact
-
-## About section
-
-Section heading
-About
-
-Section intro
-Available for freelance and contract work. I design and engineer production ready systems with clear scope, clean delivery, and maintainable architecture.
-
-Principles
-Clear scope
-Detailed project briefs with defined deliverables and milestones.
-
-Structured timelines
-Realistic schedules with buffer time for revisions and testing.
-
-Weekly updates
-Regular async updates and scheduled check ins to maintain alignment.
-
-Clean handoff
-Complete documentation, code comments, and training materials.
-
-Long term maintainable builds
-Production ready code with tests, type safety, and clear architecture.
-
-Transparent pricing
-Fixed rate contracts with no hidden fees or scope creep surprises.
-
-## Contact section
-
-Section heading
-Get in Touch
-
-Section intro
-I work with 3 to 5 clients at a time. If you are looking for design or engineering support, let's talk.
-
-Consultation action
-Book Custom Consultation
-
-Contact form fields
-Name
-Company
-Email
-Budget USD
-Timeline
-Project Type
-Project Goals
-
-Contact form success
-Thanks for reaching out. Your message was sent to the owner email.
-
 ## Products page
+
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/products/page.tsx
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/products/ProductsClient.tsx
+
+Route
+/products
 
 DetailFlow title
 DetailFlow Template
@@ -389,6 +476,15 @@ InkBot action
 Purchase
 
 ## DetailFlow flow copy
+
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/products/detailflow.ts
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/components/products/CheckoutDrawer.tsx
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/products/success/SuccessClient.tsx
+
+Route
+/products
+/products/success
 
 Timeline estimate
 Most launches land within 7 to 14 days once the required assets are in.
@@ -423,6 +519,14 @@ Do not send passwords, API keys, or tokens here. We will handle anything sensiti
 
 ## Footer tooltip copy
 
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/components/HoverTooltip.tsx
+
+Route
+/
+/projects
+/products
+
 Home
 Back to the top.
 
@@ -454,6 +558,12 @@ GitHub
 Review repositories and shipped code.
 
 ## Terms and Conditions
+
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/terms/page.tsx
+
+Route
+/terms
 
 Metadata description
 Terms and conditions for Zward Studio services, deposits, refunds, licensing, and client responsibilities.
@@ -495,6 +605,12 @@ Contact
 For questions regarding these Terms contact hello@zward.studio.
 
 ## Privacy Policy
+
+Source file
+/Users/zech/Downloads/The-Big-One/Portfolio/Portfoli-website/src/app/privacy/page.tsx
+
+Route
+/privacy
 
 Metadata description
 Privacy policy for Zward Studio website use, data handling, and third party service integrations.
