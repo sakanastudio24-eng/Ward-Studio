@@ -477,7 +477,7 @@ export function SuccessDrawer({
                 <p className="mt-1 break-all text-sm font-medium">{confirmationEmail}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button variant="outline" onClick={onResendClick}>
-                    Resend confirmation
+                    Need email help
                   </Button>
                   <a
                     href={`mailto:${supportEmail}?subject=DetailFlow%20Support%20${encodeURIComponent(orderId)}`}

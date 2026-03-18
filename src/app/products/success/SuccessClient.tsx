@@ -332,53 +332,10 @@ export default function SuccessClient() {
           window.open(targetUrl.toString(), "_blank", "noopener,noreferrer");
         }}
         onResendClick={() => {
-          if (!customerEmail) {
-            setResendNotice("Customer email is missing.");
-            toast.error("Customer email is required to resend confirmation");
-            return;
-          }
-
-          void (async () => {
-            try {
-              const response = await fetch("/api/email/order-confirmed", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  orderId: resolvedOrderId,
-                  customerEmail,
-                  customerName: queryName || undefined,
-                  summary: {
-                    tierLabel: selectedTierLabel,
-                    addOnLabels: selectedAddOnLabels,
-                    deposit,
-                    remaining,
-                  },
-                  bookingUrl: CAL_LINKS.detailflowSetup,
-                  stripeSessionId: sessionId || undefined,
-                  force: true,
-                }),
-              });
-
-              const payload = (await response.json().catch(() => null)) as
-                | { error?: string; sent?: { client?: boolean; internal?: boolean } }
-                | null;
-
-              if (!response.ok) {
-                throw new Error(payload?.error || "Resend failed.");
-              }
-
-              const wasSent = Boolean(payload?.sent?.client || payload?.sent?.internal);
-              const message = wasSent ? "Confirmation email resent." : "Confirmation request received.";
-              setResendNotice(message);
-              toast.success(message);
-            } catch (error) {
-              const message = error instanceof Error ? error.message : "Resend failed.";
-              setResendNotice(message);
-              toast.error(message);
-            }
-          })();
+          const message =
+            "For security, confirmation emails can only be resent by support. Use the support link below.";
+          setResendNotice(message);
+          toast(message);
         }}
         onSupportClick={() => undefined}
         onConfigCopied={() => toast.success("Configuration copied")}

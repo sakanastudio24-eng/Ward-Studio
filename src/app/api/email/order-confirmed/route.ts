@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendOrderConfirmedBundle, type OrderSummary } from "../../../../lib/email";
 import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
+import { getSupabaseServerClient } from "../../../../lib/supabase/server";
 
 type OrderConfirmedRequestBody = {
   orderId?: string;
@@ -14,7 +15,6 @@ type OrderConfirmedRequestBody = {
   };
   bookingUrl?: string;
   stripeSessionId?: string;
-  force?: boolean;
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -43,8 +43,12 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
-function getBoolean(value: unknown): boolean {
-  return value === true;
+function getInternalRouteSecret(request: Request): string {
+  return (request.headers.get("x-order-email-secret") || "").trim();
+}
+
+function getConfiguredRouteSecret(): string {
+  return (process.env.ORDER_EMAIL_ROUTE_SECRET || "").trim();
 }
 
 function parseSummary(input: unknown): OrderSummary | null {
@@ -91,12 +95,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
   }
 
+  const configuredRouteSecret = getConfiguredRouteSecret();
+  if (!configuredRouteSecret) {
+    return NextResponse.json(
+      { error: "ORDER_EMAIL_ROUTE_SECRET is not configured for this route." },
+      { status: 503 },
+    );
+  }
+
+  const providedRouteSecret = getInternalRouteSecret(request);
+  if (!providedRouteSecret || providedRouteSecret !== configuredRouteSecret) {
+    return NextResponse.json(
+      { error: "Forbidden. This route is restricted to trusted server callers." },
+      { status: 403 },
+    );
+  }
+
   const orderId = getString(payload.orderId);
   const customerEmail = getString(payload.customerEmail);
   const customerName = getString(payload.customerName);
   const bookingUrl = getString(payload.bookingUrl);
   const stripeSessionId = getString(payload.stripeSessionId);
-  const force = getBoolean(payload.force);
   const summary = parseSummary(payload.summary);
 
   if (!orderId || !customerEmail || !summary || !bookingUrl) {
@@ -118,6 +137,41 @@ export async function POST(request: Request) {
   }
 
   try {
+    const supabase = getSupabaseServerClient();
+    const order = await supabase.findOrderByOrderId(orderId);
+    if (!order) {
+      return NextResponse.json({ error: "Unknown orderId." }, { status: 404 });
+    }
+
+    const orderStatus =
+      typeof order.status === "string" ? order.status.trim().toLowerCase() : "";
+    if (orderStatus !== "paid") {
+      return NextResponse.json(
+        { error: "Order is not paid. Confirmation emails can only be sent for paid orders." },
+        { status: 409 },
+      );
+    }
+
+    const storedEmail =
+      typeof order.customer_email === "string" ? order.customer_email.trim() : "";
+    if (storedEmail && storedEmail.toLowerCase() !== customerEmail.toLowerCase()) {
+      return NextResponse.json(
+        { error: "customerEmail does not match the paid order record." },
+        { status: 409 },
+      );
+    }
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: `Unable to validate order before sending email: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+      },
+      { status: 500 },
+    );
+  }
+
+  try {
     const result = await sendOrderConfirmedBundle({
       orderId,
       customerEmail,
@@ -125,7 +179,7 @@ export async function POST(request: Request) {
       summary,
       bookingUrl,
       stripeSessionId: stripeSessionId || undefined,
-    }, { force });
+    });
 
     return NextResponse.json({
       ok: true,
