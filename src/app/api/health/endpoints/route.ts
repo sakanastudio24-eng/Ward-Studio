@@ -241,7 +241,7 @@ export async function GET(request: Request) {
   };
 
   const payload = {
-    ok: summary.error === 0 && summary.notResponding === 0,
+    ok: summary.error === 0 && summary.notResponding === 0 && summary.false === 0,
     summary,
     checks: results,
     checkedAt: new Date().toISOString(),

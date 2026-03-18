@@ -161,7 +161,10 @@ export async function POST(request: Request) {
   const safeConfig = isPlainObject(sanitizedConfig) ? sanitizedConfig : {};
 
   const supabase = getSupabaseServer();
-  const orderLookup = supabase.from("orders").select("order_id, customer_email").limit(1);
+  const orderLookup = supabase
+    .from("orders")
+    .select("id, order_id, customer_email, status")
+    .limit(1);
   const { data: order, error: orderLookupError } = orderIdInput
     ? await orderLookup.eq("order_id", orderIdInput).maybeSingle()
     : await orderLookup.eq("id", orderUuidInput).maybeSingle();
@@ -175,6 +178,14 @@ export async function POST(request: Request) {
 
   if (!order) {
     return NextResponse.json({ error: "Unknown order_id/order_uuid." }, { status: 404 });
+  }
+
+  const orderStatus = getString(order.status).toLowerCase();
+  if (orderStatus !== "paid") {
+    return NextResponse.json(
+      { error: "Order is not paid. Setup submission is only available after payment is confirmed." },
+      { status: 409 },
+    );
   }
 
   const resolvedOrderId = getString(order.order_id);
@@ -220,11 +231,15 @@ export async function POST(request: Request) {
     getString(payload.customer_name) ||
     getString(configBusiness.name) ||
     "DetailFlow Customer";
+  const storedOrderEmail = getString(order.customer_email);
+  const payloadCustomerEmail = getString(payload.customer_email);
+  const configCustomerEmail = getString(configBusiness.contact_email);
   const customerEmail =
-    getString(payload.customer_email) ||
-    getString(configBusiness.contact_email) ||
-    getString(order.customer_email) ||
-    "pending@example.com";
+    storedOrderEmail || payloadCustomerEmail || configCustomerEmail || "pending@example.com";
+
+  if (payloadCustomerEmail && storedOrderEmail && payloadCustomerEmail.toLowerCase() !== storedOrderEmail.toLowerCase()) {
+    warningParts.push("Buyer email in request did not match the paid order record. Stored order email was used.");
+  }
   const tierId = getString(configPackage.tier_id);
   const addonIds = toStringList(configPackage.addon_ids);
   const packageLabel = TIER_LABELS[tierId] || (tierId ? tierId : "DetailFlow");
