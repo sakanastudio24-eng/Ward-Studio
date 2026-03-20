@@ -1,6 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Checkout Return | Ward Studio",
+  description: "Stripe embedded checkout return page for DetailFlow payment confirmation.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 type SessionStatus = {
   status?: string;
@@ -101,4 +111,3 @@ export default function EmbeddedCheckoutReturnPage() {
     </main>
   );
 }
-
