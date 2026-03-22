@@ -1,8 +1,11 @@
-node_modules/
-dist/
-.next/
+node_modules
 .next
+.env
+.env.*
+!.env.schema
+!.env.example
 .next.bak-*/
+dist/
 out/
 .DS_Store
 *.log
@@ -12,7 +15,5 @@ yarn-error.log*
 pnpm-debug.log*
 Ward Studio Positioning Update.zip
 tsconfig.tsbuildinfo
+*.tsbuildinfo
 Pictures/
-.env*
-!.env.example
-!.env.schema

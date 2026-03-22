@@ -1,0 +1,40 @@
+import "server-only";
+import "varlock/auto-load";
+import { ENV } from "varlock/env";
+
+type ServerEnv = {
+  NODE_ENV?: "development" | "test" | "production";
+  SUPABASE_URL?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_SUCCESS_URL?: string;
+  STRIPE_CANCEL_URL?: string;
+  STRIPE_CHECKOUT_LIVE_MODE?: string;
+  STRIPE_CHECKOUT_ALLOW_PLACEHOLDER?: string;
+  STRIPE_PAYMENT_CONFIRMATION_SOURCE?: string;
+  RESEND_API_KEY?: string;
+  RESEND_CONTACT_TEMPLATE_ID?: string;
+  RESEND_TEMPLATE_NAME?: string;
+  CONTACT_OWNER_EMAIL?: string;
+  CONTACT_FROM_EMAIL?: string;
+  EMAIL_INTERNAL_TO?: string;
+  ORDERS_OWNER_EMAIL?: string;
+  ORDERS_SEND_BUYER_ACK?: string;
+  ORDER_EMAIL_ROUTE_SECRET?: string;
+  CHECKOUT_SITE_URL?: string;
+  CAL_WEBHOOK_SECRET?: string;
+  NEXT_PUBLIC_SITE_URL?: string;
+  NEXT_PUBLIC_CHECKOUT_URL?: string;
+  NEXT_PUBLIC_SECURE_UPLOAD_URL?: string;
+  NEXT_PUBLIC_STRATEGY_CALL_URL?: string;
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?: string;
+  NEXT_PUBLIC_STRIPE_CHECKOUT_UI_MODE?: string;
+  NEXT_PUBLIC_ANALYTICS_ENABLED?: string;
+  NEXT_PUBLIC_CAL_DETAILFLOW_SETUP_URL?: string;
+  NEXT_PUBLIC_CAL_INKBOT_PLANNING_URL?: string;
+  NEXT_PUBLIC_CAL_CUSTOM_PROJECT_URL?: string;
+  NEXT_PUBLIC_CAL_FREE_STRATEGY_URL?: string;
+};
+
+export const env = ENV as unknown as ServerEnv;
