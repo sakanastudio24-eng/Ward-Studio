@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   HoverTooltip,
   getTooltipMessage,
@@ -58,23 +59,29 @@ export default function ProductsClient() {
               Configure what you need. Ship with clarity.
             </p>
             <div className="mx-auto grid max-w-5xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <img
+              <Image
                 src="/case-studies/detailflow-1.png"
                 alt="DetailFlow product image 1"
+                width={1280}
+                height={800}
                 className="aspect-[16/10] w-full rounded-lg border border-border object-cover"
                 onMouseEnter={() => setTooltipText("Structured intake and booking flow view.")}
                 onMouseLeave={() => setTooltipText("")}
               />
-              <img
+              <Image
                 src="/case-studies/detailflow-2.png"
                 alt="DetailFlow product image 2"
+                width={1280}
+                height={800}
                 className="aspect-[16/10] w-full rounded-lg border border-border object-cover"
                 onMouseEnter={() => setTooltipText("Validation and reliability states overview.")}
                 onMouseLeave={() => setTooltipText("")}
               />
-              <img
+              <Image
                 src="/case-studies/detailflow-3.png"
                 alt="DetailFlow product image 3"
+                width={1280}
+                height={800}
                 className="aspect-[16/10] w-full rounded-lg border border-border object-cover"
                 onMouseEnter={() => setTooltipText("Confirmation system and messaging behavior.")}
                 onMouseLeave={() => setTooltipText("")}
@@ -116,23 +123,29 @@ export default function ProductsClient() {
               controls.
             </p>
             <div className="mx-auto grid max-w-5xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <img
+              <Image
                 src="/case-studies/inkbot-1.png"
                 alt="InkBot product image 1"
+                width={1280}
+                height={800}
                 className="aspect-[16/10] w-full rounded-lg border border-border object-cover"
                 onMouseEnter={() => setTooltipText("Role and flow architecture preview.")}
                 onMouseLeave={() => setTooltipText("")}
               />
-              <img
+              <Image
                 src="/case-studies/inkbot-2.png"
                 alt="InkBot product image 2"
+                width={1280}
+                height={800}
                 className="aspect-[16/10] w-full rounded-lg border border-border object-cover"
                 onMouseEnter={() => setTooltipText("Configurable moderation and reminder system.")}
                 onMouseLeave={() => setTooltipText("")}
               />
-              <img
+              <Image
                 src="/case-studies/inkbot-3.png"
                 alt="InkBot product image 3"
+                width={1280}
+                height={800}
                 className="aspect-[16/10] w-full rounded-lg border border-border object-cover"
                 onMouseEnter={() => setTooltipText("Reliable command handling and event controls.")}
                 onMouseLeave={() => setTooltipText("")}
