@@ -95,7 +95,7 @@ export function Hero({ setTooltipText }: HeroProps) {
             onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
             onMouseLeave={() => setTooltipText("")}
           >
-            Let's Work
+            Let&apos;s Work
           </Button>
           <Button 
             size="lg" 

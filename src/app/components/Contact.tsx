@@ -131,7 +131,7 @@ export function Contact({ setTooltipText }: ContactProps) {
             Get in Touch
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground">
-            I work with 3-5 clients at a time. If you're looking for design or engineering support, let's talk.
+            I work with 3-5 clients at a time. If you&apos;re looking for design or engineering support, let&apos;s talk.
           </p>
           <a
             href={CAL_LINKS.customProjectConsultation}

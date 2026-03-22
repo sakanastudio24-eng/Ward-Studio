@@ -163,7 +163,7 @@ The home route includes an optimization pass focused on Lighthouse desktop metri
 
 Preview generation script:
 
-- `npm run perf:optimize-previews`
+- `pnpm perf:optimize-previews`
 - Source files: `public/case-studies/detailflow-1.png`, `public/case-studies/inkbot-1.png`
 - Outputs:
   - `public/case-studies/previews/detailflow-1-home.avif`
@@ -173,10 +173,17 @@ Preview generation script:
 
 ## Local Development
 
-1. Install dependencies: `npm install`
-2. Start dev server: `npm run dev`
-3. Production build: `npm run build`
-4. Production run: `npm run start`
+1. Install dependencies: `pnpm install`
+2. Start dev server: `pnpm dev`
+3. Production build: `pnpm build`
+4. Production run: `pnpm start`
+
+## Team Workflow
+
+- Use `pnpm install` for dependency installation.
+- Use `pnpm add` and `pnpm remove` for package changes.
+- Do not commit `package-lock.json`.
+- Run `pnpm lint` and `pnpm typecheck` before push.
 
 ## Stripe Preparation (No Webhook Yet)
 

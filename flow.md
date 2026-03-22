@@ -263,4 +263,4 @@ Home route performance decisions:
 Asset optimization helper:
 
 - Script: `scripts/optimize-case-study-previews.mjs`
-- Command: `npm run perf:optimize-previews`
+- Command: `pnpm perf:optimize-previews`
