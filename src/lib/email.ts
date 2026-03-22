@@ -6,6 +6,7 @@ import {
   DEFAULT_SUPPORT_EMAIL,
 } from "../config/email";
 import { SITE_URL } from "../config/site";
+import { env } from "../env";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 const RESEND_FALLBACK_FROM = "Ward Studio <noreply@zward.studio>";
@@ -109,12 +110,12 @@ function extractAllowedTestRecipient(details: string): string {
 }
 
 function getMailConfig() {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = env.RESEND_API_KEY;
   const from = DEFAULT_EMAIL_FROM;
   const internalTo =
-    process.env.EMAIL_INTERNAL_TO ||
-    process.env.ORDERS_OWNER_EMAIL ||
-    process.env.CONTACT_OWNER_EMAIL ||
+    env.EMAIL_INTERNAL_TO ||
+    env.ORDERS_OWNER_EMAIL ||
+    env.CONTACT_OWNER_EMAIL ||
     DEFAULT_OWNER_EMAIL;
 
   if (!apiKey) {

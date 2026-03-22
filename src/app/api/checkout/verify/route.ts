@@ -20,11 +20,12 @@ import {
   isStripeSessionId,
   retrieveStripeCheckoutSession,
 } from "../../../../lib/stripe/session";
+import { env } from "../../../../env";
 
 const STRATEGY_CALL_URL =
-  process.env.NEXT_PUBLIC_STRATEGY_CALL_URL || CAL_LINKS.detailflowSetup;
+  env.NEXT_PUBLIC_STRATEGY_CALL_URL || CAL_LINKS.detailflowSetup;
 const PAYMENT_CONFIRMATION_SOURCE = (
-  process.env.STRIPE_PAYMENT_CONFIRMATION_SOURCE || "verify"
+  env.STRIPE_PAYMENT_CONFIRMATION_SOURCE || "verify"
 ).trim().toLowerCase();
 
 const TIER_LABELS: Record<string, string> = {

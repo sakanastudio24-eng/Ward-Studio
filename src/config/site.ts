@@ -1,3 +1,5 @@
+import { publicEnv } from "../env.public";
+
 const DEFAULT_SITE_URL = "https://www.zward.studio";
 
 function normalizeSiteUrl(value: string): string {
@@ -14,7 +16,7 @@ function normalizeSiteUrl(value: string): string {
   }
 }
 
-export const SITE_URL = normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL);
+export const SITE_URL = normalizeSiteUrl(publicEnv.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL);
 
 export function toAbsoluteUrl(path: string): string {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;

@@ -4,6 +4,7 @@ import {
   DEFAULT_EMAIL_FROM,
   DEFAULT_SERVICE_EMAIL,
 } from "../../../config/email";
+import { env } from "../../../env";
 import { enforceRateLimit, rateLimitedResponse } from "../../../lib/rate-limit/server";
 
 interface ContactRequestBody {
@@ -42,10 +43,10 @@ export async function POST(request: Request) {
     return rateLimitedResponse(rateLimit.retryAfterSeconds);
   }
 
-  const resendApiKey = process.env.RESEND_API_KEY;
-  const ownerEmail = process.env.CONTACT_OWNER_EMAIL || DEFAULT_SERVICE_EMAIL;
-  const templateId = process.env.RESEND_CONTACT_TEMPLATE_ID;
-  const fromEmail = process.env.CONTACT_FROM_EMAIL || DEFAULT_EMAIL_FROM;
+  const resendApiKey = env.RESEND_API_KEY;
+  const ownerEmail = env.CONTACT_OWNER_EMAIL || DEFAULT_SERVICE_EMAIL;
+  const templateId = env.RESEND_CONTACT_TEMPLATE_ID;
+  const fromEmail = env.CONTACT_FROM_EMAIL || DEFAULT_EMAIL_FROM;
 
   if (!resendApiKey || !templateId) {
     return NextResponse.json(

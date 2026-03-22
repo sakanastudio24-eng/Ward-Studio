@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { launchConfetti } from "../../../lib/confetti";
 import { CAL_LINKS } from "../../../config/cal";
 import { DEFAULT_SERVICE_EMAIL, DEFAULT_SUPPORT_EMAIL } from "../../../config/email";
+import { publicEnv } from "../../../env.public";
 import {
   generateDetailflowConfigAndHandoff,
   type SafeConfigInput,
@@ -208,7 +209,7 @@ export default function SuccessClient() {
   const selectedAddOnLabels = addonIds.map((addonId) => ADDON_LABELS[addonId] || addonId);
   const resolvedOrderId = orderId || fallbackOrderId;
   const resolvedOrderUuid = orderUuid || fallbackOrderUuid;
-  const secureUploadUrl = process.env.NEXT_PUBLIC_SECURE_UPLOAD_URL || "";
+  const secureUploadUrl = publicEnv.NEXT_PUBLIC_SECURE_UPLOAD_URL || "";
   const supportEmail = DEFAULT_SUPPORT_EMAIL;
 
   const configOutput = useMemo(

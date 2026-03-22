@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendOrderConfirmedBundle, type OrderSummary } from "../../../../lib/email";
+import { env } from "../../../../env";
 import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
 import { getSupabaseServerClient } from "../../../../lib/supabase/server";
 
@@ -48,7 +49,7 @@ function getInternalRouteSecret(request: Request): string {
 }
 
 function getConfiguredRouteSecret(): string {
-  return (process.env.ORDER_EMAIL_ROUTE_SECRET || "").trim();
+  return (env.ORDER_EMAIL_ROUTE_SECRET || "").trim();
 }
 
 function parseSummary(input: unknown): OrderSummary | null {

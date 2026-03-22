@@ -1,5 +1,6 @@
 "use client";
 
+import { publicEnv } from "../../env.public";
 import type {
   AnalyticsEventName,
   AnalyticsPayload,
@@ -12,7 +13,7 @@ const ANONYMOUS_ID_KEY = "ward_analytics_anonymous_id";
  * Global analytics feature flag controlled by NEXT_PUBLIC_ANALYTICS_ENABLED.
  */
 function analyticsEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_ANALYTICS_ENABLED !== "false";
+  return publicEnv.NEXT_PUBLIC_ANALYTICS_ENABLED !== "false";
 }
 
 /**

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
+import { env } from "../../../env";
 import {
   sendBuyerConfigSubmissionAck,
   sendInternalConfigSubmission,
@@ -157,7 +158,7 @@ export async function POST(request: Request) {
     .join("\n");
   const submittedAt = new Date().toISOString();
   const buyerAckEnabled =
-    process.env.ORDERS_SEND_BUYER_ACK !== "false" && payload.sendBuyerCopy !== false;
+    env.ORDERS_SEND_BUYER_ACK !== "false" && payload.sendBuyerCopy !== false;
   let buyerAckSent = false;
   let generatedConfigSummary = "Configuration summary unavailable.";
   try {

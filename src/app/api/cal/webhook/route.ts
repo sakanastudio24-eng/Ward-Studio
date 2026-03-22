@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { sendBookingConfirmedBundle } from "../../../../lib/email";
+import { env } from "../../../../env";
 import { getSupabaseServerClient } from "../../../../lib/supabase/server";
 import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
 
@@ -186,7 +187,7 @@ export async function POST(request: Request) {
   }
 
   const rawBody = await request.text();
-  const signatureSecret = process.env.CAL_WEBHOOK_SECRET?.trim() || "";
+  const signatureSecret = env.CAL_WEBHOOK_SECRET?.trim() || "";
   const signature = getWebhookSignature(request);
 
   if (signatureSecret && !verifyCalSignature(rawBody, signature, signatureSecret)) {
@@ -212,7 +213,7 @@ export async function POST(request: Request) {
   const uploadUrl =
     getString(metadata.uploadUrl) ||
     getString(metadata.upload_url) ||
-    process.env.NEXT_PUBLIC_SECURE_UPLOAD_URL ||
+    env.NEXT_PUBLIC_SECURE_UPLOAD_URL ||
     "#";
 
   if (!orderId && orderUuid) {

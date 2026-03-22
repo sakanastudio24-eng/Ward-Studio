@@ -1,4 +1,5 @@
 import "server-only";
+import { env } from "../../env";
 
 export type DiagnosticStatus = "valid" | "missing" | "placeholder" | "invalid";
 
@@ -32,7 +33,7 @@ function validateByPrefix(value: string, prefixes: string[]): DiagnosticStatus {
 }
 
 function readLiveMode(): "true" | "false" | "auto" {
-  const mode = sanitize(process.env.STRIPE_CHECKOUT_LIVE_MODE).toLowerCase();
+  const mode = sanitize(env.STRIPE_CHECKOUT_LIVE_MODE).toLowerCase();
   if (mode === "true") return "true";
   if (mode === "false") return "false";
   return "auto";
@@ -42,20 +43,20 @@ function readLiveMode(): "true" | "false" | "auto" {
  * Returns non-secret diagnostics for Stripe-related env configuration.
  */
 export function getStripeDiagnostics() {
-  const secretStatus = validateByPrefix(sanitize(process.env.STRIPE_SECRET_KEY), [
+  const secretStatus = validateByPrefix(sanitize(env.STRIPE_SECRET_KEY), [
     "sk_test_",
     "sk_live_",
   ]);
   const publishableStatus = validateByPrefix(
-    sanitize(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY),
+    sanitize(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY),
     ["pk_test_", "pk_live_"],
   );
-  const webhookStatus = validateByPrefix(sanitize(process.env.STRIPE_WEBHOOK_SECRET), [
+  const webhookStatus = validateByPrefix(sanitize(env.STRIPE_WEBHOOK_SECRET), [
     "whsec_",
   ]);
   const liveMode = readLiveMode();
   const allowPlaceholder =
-    sanitize(process.env.STRIPE_CHECKOUT_ALLOW_PLACEHOLDER).toLowerCase() === "true";
+    sanitize(env.STRIPE_CHECKOUT_ALLOW_PLACEHOLDER).toLowerCase() === "true";
 
   const checks: StripeKeyDiagnostic[] = [
     {
@@ -93,4 +94,3 @@ export function getStripeDiagnostics() {
     checks,
   };
 }
-

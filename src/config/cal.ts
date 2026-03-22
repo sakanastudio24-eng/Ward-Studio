@@ -1,3 +1,5 @@
+import { publicEnv } from "../env.public";
+
 const FALLBACK_CAL_LINKS = {
   detailflowSetup: "https://cal.com/zechariah-ward-dl8qoz/template-setup-configuration-call",
   inkbotPlanning: "https://cal.com/zechariah-ward-dl8qoz/automation-bot-planning-session",
@@ -21,20 +23,19 @@ function normalizeCalUrl(value: string | undefined, fallback: string): string {
 
 export const CAL_LINKS = {
   detailflowSetup: normalizeCalUrl(
-    process.env.NEXT_PUBLIC_CAL_DETAILFLOW_SETUP_URL,
+    publicEnv.NEXT_PUBLIC_CAL_DETAILFLOW_SETUP_URL,
     FALLBACK_CAL_LINKS.detailflowSetup,
   ),
   inkbotPlanning: normalizeCalUrl(
-    process.env.NEXT_PUBLIC_CAL_INKBOT_PLANNING_URL,
+    publicEnv.NEXT_PUBLIC_CAL_INKBOT_PLANNING_URL,
     FALLBACK_CAL_LINKS.inkbotPlanning,
   ),
   customProjectConsultation: normalizeCalUrl(
-    process.env.NEXT_PUBLIC_CAL_CUSTOM_PROJECT_URL,
+    publicEnv.NEXT_PUBLIC_CAL_CUSTOM_PROJECT_URL,
     FALLBACK_CAL_LINKS.customProjectConsultation,
   ),
   freeStrategyFit: normalizeCalUrl(
-    process.env.NEXT_PUBLIC_CAL_FREE_STRATEGY_URL,
+    publicEnv.NEXT_PUBLIC_CAL_FREE_STRATEGY_URL,
     FALLBACK_CAL_LINKS.freeStrategyFit,
   ),
 } as const;
-

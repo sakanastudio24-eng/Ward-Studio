@@ -3,6 +3,7 @@ import {
   isDetailflowAddonId,
   isDetailflowTierId,
 } from "../checkout/session-store";
+import { env } from "../../env";
 import type { DetailflowAddonId, DetailflowTierId } from "../pricing";
 import { getStripeServer } from "./server";
 
@@ -123,7 +124,7 @@ export function isStripeSessionId(sessionId: string): boolean {
 }
 
 export function hasStripeSecretKey(): boolean {
-  return Boolean(process.env.STRIPE_SECRET_KEY?.trim());
+  return Boolean(env.STRIPE_SECRET_KEY?.trim());
 }
 
 /**

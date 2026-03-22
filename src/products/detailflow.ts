@@ -2,6 +2,7 @@ import { PRICING } from "../lib/pricing";
 import type { DetailflowAddonConfig } from "../app/components/products/CheckoutDrawer";
 import { DEFAULT_SERVICE_EMAIL, DEFAULT_SUPPORT_EMAIL } from "../config/email";
 import { CAL_LINKS } from "../config/cal";
+import { publicEnv } from "../env.public";
 
 export function createDetailflowConfig(): DetailflowAddonConfig {
   return {
@@ -222,9 +223,9 @@ export function createDetailflowConfig(): DetailflowAddonConfig {
       },
     },
     strategyCallUrl:
-      process.env.NEXT_PUBLIC_STRATEGY_CALL_URL || CAL_LINKS.detailflowSetup,
+      publicEnv.NEXT_PUBLIC_STRATEGY_CALL_URL || CAL_LINKS.detailflowSetup,
     prepCallUrl: CAL_LINKS.freeStrategyFit,
-    secureUploadUrl: process.env.NEXT_PUBLIC_SECURE_UPLOAD_URL || "#",
+    secureUploadUrl: publicEnv.NEXT_PUBLIC_SECURE_UPLOAD_URL || "#",
     confirmationEmail: DEFAULT_SERVICE_EMAIL,
     supportEmail: DEFAULT_SUPPORT_EMAIL,
   };

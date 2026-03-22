@@ -1,5 +1,6 @@
 import "server-only";
 import Stripe from "stripe";
+import { env } from "../../env";
 
 let cachedStripe: Stripe | null = null;
 
@@ -8,7 +9,7 @@ let cachedStripe: Stripe | null = null;
  * This must only be used in server routes/actions.
  */
 export function getStripeServer(): Stripe {
-  const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
+  const secretKey = env.STRIPE_SECRET_KEY?.trim();
   if (!secretKey) {
     throw new Error("STRIPE_SECRET_KEY is not configured.");
   }
@@ -19,4 +20,3 @@ export function getStripeServer(): Stripe {
 
   return cachedStripe;
 }
-

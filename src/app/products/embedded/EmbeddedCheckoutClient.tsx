@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
+import { publicEnv } from "../../../env.public";
 
 type EmbeddedCheckoutClientProps = {
   orderId: string;
@@ -13,7 +14,7 @@ type EmbeddedCheckoutClientProps = {
 };
 
 function createStripePromise() {
-  const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "";
+  const publishableKey = publicEnv.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "";
   if (!publishableKey) return null;
   return loadStripe(publishableKey);
 }

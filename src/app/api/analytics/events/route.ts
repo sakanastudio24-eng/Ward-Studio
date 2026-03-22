@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAnalyticsEventName, type AnalyticsPayload } from "../../../../lib/analytics/types";
 import { getSupabaseServerClient } from "../../../../lib/supabase/server";
+import { env } from "../../../../env";
 
 function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -8,7 +9,7 @@ function getString(value: unknown): string {
 
 export async function POST(request: Request) {
   const analyticsStorageConfigured = Boolean(
-    process.env.SUPABASE_URL?.trim() && process.env.SUPABASE_SERVICE_ROLE_KEY?.trim(),
+    env.SUPABASE_URL?.trim() && env.SUPABASE_SERVICE_ROLE_KEY?.trim(),
   );
   if (!analyticsStorageConfigured) {
     return NextResponse.json({

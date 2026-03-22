@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { getTooltipMessage } from "../HoverTooltip";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -64,6 +64,7 @@ import {
   type HandoffChecklist,
   type SafeConfigInput,
 } from "../../../lib/config-generator/detailflow";
+import { publicEnv } from "../../../env.public";
 import { PRODUCTS } from "../../../config/products";
 import {
   DEFAULT_SERVICE_EMAIL,
@@ -230,7 +231,7 @@ type CheckoutVerifyResponse = {
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const USE_EMBEDDED_CHECKOUT = process.env.NEXT_PUBLIC_STRIPE_CHECKOUT_UI_MODE === "embedded";
+const USE_EMBEDDED_CHECKOUT = publicEnv.NEXT_PUBLIC_STRIPE_CHECKOUT_UI_MODE === "embedded";
 
 /**
  * Seeds a safe config object used by the post-purchase handoff form.
@@ -369,10 +370,10 @@ export function CheckoutDrawer({
     form.readinessChecks.bookingMethod,
   ].filter(Boolean).length;
 
-  const selectedAddOnIds: DetailflowAddonId[] = [
-    ...form.selectedGeneralAddOnIds,
-    ...form.selectedReadinessAddOnIds,
-  ];
+  const selectedAddOnIds = useMemo<DetailflowAddonId[]>(
+    () => [...form.selectedGeneralAddOnIds, ...form.selectedReadinessAddOnIds],
+    [form.selectedGeneralAddOnIds, form.selectedReadinessAddOnIds],
+  );
 
   const addOnSubtotal = computeAddonSubtotal(config.pricing, selectedAddOnIds);
   const total = computeTotal(config.pricing, form.selectedPackageId, selectedAddOnIds);
@@ -553,15 +554,15 @@ export function CheckoutDrawer({
     [createdOrderId, depositToday, flow.orderId, form.selectedPackageId, selectedAddOnIds, total],
   );
 
-  function trackCheckoutEvent(
+  const trackCheckoutEvent = useCallback((
     event: AnalyticsEventName,
     eventProps: Record<string, unknown> = {},
-  ) {
+  ) => {
     void track(event, {
       ...analyticsSharedProps,
       ...eventProps,
     });
-  }
+  }, [analyticsSharedProps]);
 
   function scrollAndFocusById(id: string) {
     window.requestAnimationFrame(() => {
@@ -653,14 +654,14 @@ export function CheckoutDrawer({
     }
 
     previousPrimaryStateRef.current = flow.primaryState;
-  }, [flow.errorMessage, flow.primaryState, analyticsSharedProps]);
+  }, [flow.errorMessage, flow.primaryState, trackCheckoutEvent]);
 
   useEffect(() => {
     if (!isAfterPurchaseOpen || successViewedTrackedRef.current) return;
 
     trackCheckoutEvent("success_viewed");
     successViewedTrackedRef.current = true;
-  }, [isAfterPurchaseOpen, analyticsSharedProps]);
+  }, [isAfterPurchaseOpen, trackCheckoutEvent]);
 
   function resetToDefaults() {
     setStep("package");

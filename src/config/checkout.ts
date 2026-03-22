@@ -1,3 +1,5 @@
+import { env } from "../env";
+import { publicEnv } from "../env.public";
 import { SITE_URL } from "./site";
 
 /**
@@ -27,13 +29,13 @@ function normalizeUrl(value: string): string {
  */
 export function resolveCheckoutOrigin(requestOrigin: string): string {
   const explicit =
-    process.env.CHECKOUT_SITE_URL?.trim() || process.env.NEXT_PUBLIC_CHECKOUT_URL?.trim() || "";
+    env.CHECKOUT_SITE_URL?.trim() || publicEnv.NEXT_PUBLIC_CHECKOUT_URL?.trim() || "";
 
   if (explicit) {
     return normalizeUrl(explicit);
   }
 
-  if (process.env.NODE_ENV !== "production") {
+  if (env.NODE_ENV !== "production") {
     return normalizeUrl(requestOrigin);
   }
 
@@ -42,14 +44,14 @@ export function resolveCheckoutOrigin(requestOrigin: string): string {
 
 export function getStripeSuccessUrl(origin: string): string {
   // Supports full override for Stripe dashboard compatibility.
-  const explicit = process.env.STRIPE_SUCCESS_URL?.trim();
+  const explicit = env.STRIPE_SUCCESS_URL?.trim();
   if (explicit) return explicit;
   return `${origin}/products/success?session_id={CHECKOUT_SESSION_ID}&celebrate=1`;
 }
 
 export function getStripeCancelUrl(origin: string): string {
   // Supports full override for Stripe dashboard compatibility.
-  const explicit = process.env.STRIPE_CANCEL_URL?.trim();
+  const explicit = env.STRIPE_CANCEL_URL?.trim();
   if (explicit) return explicit;
   return `${origin}/products#detailflow-template`;
 }

@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { sendOrderConfirmedBundle } from "../../../../lib/email";
 import { CAL_LINKS } from "../../../../config/cal";
 import { PRODUCTS } from "../../../../config/products";
+import { env } from "../../../../env";
 import {
   PRICING,
   computeDepositToday,
@@ -249,7 +250,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       bookingUrl:
         canonicalProductId === PRODUCTS.inkbot.product_id
           ? CAL_LINKS.inkbotPlanning
-          : process.env.NEXT_PUBLIC_STRATEGY_CALL_URL || CAL_LINKS.detailflowSetup,
+          : env.NEXT_PUBLIC_STRATEGY_CALL_URL || CAL_LINKS.detailflowSetup,
       stripeSessionId: sessionId,
     });
 
@@ -288,7 +289,7 @@ export async function POST(request: Request) {
     return rateLimitedResponse(rateLimit.retryAfterSeconds);
   }
 
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim() || "";
+  const webhookSecret = env.STRIPE_WEBHOOK_SECRET?.trim() || "";
   if (!webhookSecret) {
     return NextResponse.json(
       { error: "Missing STRIPE_WEBHOOK_SECRET." },

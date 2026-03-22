@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { PRODUCTS } from "../../../../config/products";
+import { env } from "../../../../env";
 import {
   INKBOT_PRICING,
   computeInkbotTotal,
@@ -58,15 +59,15 @@ function toStripeAmountCents(amountUsd: number): number {
 }
 
 function getStripeCheckoutEnabled(): boolean {
-  const liveMode = (process.env.STRIPE_CHECKOUT_LIVE_MODE || "").trim().toLowerCase();
+  const liveMode = (env.STRIPE_CHECKOUT_LIVE_MODE || "").trim().toLowerCase();
   if (liveMode === "false") return false;
   // Default behavior: if a Stripe secret exists, assume live checkout should be used.
-  return Boolean(process.env.STRIPE_SECRET_KEY?.trim());
+  return Boolean(env.STRIPE_SECRET_KEY?.trim());
 }
 
 function getAllowPlaceholderCheckout(): boolean {
   // Escape hatch for dev/staging when Stripe is intentionally unavailable.
-  return (process.env.STRIPE_CHECKOUT_ALLOW_PLACEHOLDER || "").trim().toLowerCase() === "true";
+  return (env.STRIPE_CHECKOUT_ALLOW_PLACEHOLDER || "").trim().toLowerCase() === "true";
 }
 
 const TIER_LABELS: Record<DetailflowTierId, string> = {
@@ -92,7 +93,7 @@ async function createStripeCheckoutSession(input: {
   | { ok: true; url: string; sessionId: string }
   | { ok: false; error: string }
 > {
-  const secretKey = process.env.STRIPE_SECRET_KEY?.trim() || "";
+  const secretKey = env.STRIPE_SECRET_KEY?.trim() || "";
   if (!secretKey) {
     return { ok: false, error: "STRIPE_SECRET_KEY is missing." };
   }
