@@ -116,7 +116,7 @@ function addonLabelsFor(addonIds: DetailflowAddonId[]): string[] {
  *
  * Lookup order is intentionally layered for resilience:
  * 1) Stripe API (source of truth for live sessions, includes metadata order_uuid)
- * 2) In-memory fallback session store (dev placeholder path)
+ * 2) Legacy in-memory fallback session store
  * 3) Supabase lookup by stripe_session_id (durable fallback across instances)
  */
 export async function GET(request: Request) {

@@ -9,7 +9,6 @@ import {
   type InkbotAddonId,
 } from "../../../../lib/inkbot-pricing";
 import {
-  createCheckoutSessionRecord,
   isDetailflowAddonId,
   isDetailflowTierId,
 } from "../../../../lib/checkout/session-store";
@@ -63,11 +62,6 @@ function getStripeCheckoutEnabled(): boolean {
   if (liveMode === "false") return false;
   // Default behavior: if a Stripe secret exists, assume live checkout should be used.
   return Boolean(env.STRIPE_SECRET_KEY?.trim());
-}
-
-function getAllowPlaceholderCheckout(): boolean {
-  // Escape hatch for dev/staging when Stripe is intentionally unavailable.
-  return (env.STRIPE_CHECKOUT_ALLOW_PLACEHOLDER || "").trim().toLowerCase() === "true";
 }
 
 const TIER_LABELS: Record<DetailflowTierId, string> = {
@@ -191,9 +185,8 @@ async function createStripeCheckoutSession(input: {
  * Creates a server-side checkout session payload for supported products.
  * Flow:
  * 1) Validate payload and product/tier/add-on ids
- * 2) Try live Stripe checkout session when enabled
- * 3) Persist stripe_session_id on existing order row
- * 4) Optionally fall back to placeholder checkout for DetailFlow only
+ * 2) Create a live Stripe checkout session
+ * 3) Persist stripe_session_id on the existing order row
  */
 export async function POST(request: Request) {
   const rateLimit = enforceRateLimit(request, {
@@ -218,7 +211,6 @@ export async function POST(request: Request) {
   const rawAddonIds = toStringArray(body.addonIds);
   const addonIds = Array.from(new Set(rawAddonIds));
   const stripeLiveEnabled = getStripeCheckoutEnabled();
-  const allowPlaceholder = getAllowPlaceholderCheckout();
 
   // Product-agnostic response fields, populated by product-specific validation branches below.
   let typedAddonIds: string[] = [];
@@ -299,7 +291,7 @@ export async function POST(request: Request) {
   const orderId = providedOrderId || "";
   const orderUuid = providedOrderUuid || "";
 
-  if (!stripeLiveEnabled && !allowPlaceholder) {
+  if (!stripeLiveEnabled) {
     const diagnostics = getStripeDiagnostics();
     return NextResponse.json(
       {
@@ -311,7 +303,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (stripeLiveEnabled && (!orderId || !orderUuid) && !allowPlaceholder) {
+  if (!orderId || !orderUuid) {
     return NextResponse.json(
       {
         error:
@@ -321,139 +313,52 @@ export async function POST(request: Request) {
     );
   }
 
-  let liveCheckoutWarning = "";
-  if (stripeLiveEnabled && orderId && orderUuid) {
-    const stripeSession = await createStripeCheckoutSession({
-      productId,
-      checkoutOrigin,
+  const stripeSession = await createStripeCheckoutSession({
+    productId,
+    checkoutOrigin,
+    orderUuid,
+    orderId,
+    tierId,
+    addonIds: typedAddonIds,
+    customerEmail,
+    depositAmountUsd,
+    totalAmountUsd,
+    remainingAmountUsd,
+  });
+
+  if (stripeSession.ok) {
+    let persistenceWarning = "";
+    try {
+      const supabase = getSupabaseServerClient();
+      await supabase.updateOrderByUuid(orderUuid, {
+        stripe_session_id: stripeSession.sessionId,
+        customer_email: customerEmail || null,
+        status: "created",
+      });
+    } catch (error) {
+      persistenceWarning = error instanceof Error ? error.message : "Supabase order sync failed.";
+    }
+
+    return NextResponse.json({
+      url: stripeSession.url,
+      sessionId: stripeSession.sessionId,
       orderUuid,
       orderId,
       tierId,
       addonIds: typedAddonIds,
-      customerEmail,
-      depositAmountUsd,
-      totalAmountUsd,
-      remainingAmountUsd,
+      deposit: depositAmountUsd,
+      remaining: remainingAmountUsd,
+      amountTotal: totalAmountUsd,
+      currency: "usd",
+      liveCheckout: true,
+      ...(persistenceWarning ? { persistenceWarning } : {}),
     });
-
-    if (stripeSession.ok) {
-      let persistenceWarning = "";
-      try {
-        const supabase = getSupabaseServerClient();
-        await supabase.updateOrderByUuid(orderUuid, {
-          stripe_session_id: stripeSession.sessionId,
-          customer_email: customerEmail || null,
-          status: "created",
-        });
-      } catch (error) {
-        persistenceWarning = error instanceof Error ? error.message : "Supabase order sync failed.";
-      }
-
-      return NextResponse.json({
-        url: stripeSession.url,
-        sessionId: stripeSession.sessionId,
-        orderUuid,
-        orderId,
-        tierId,
-        addonIds: typedAddonIds,
-        deposit: depositAmountUsd,
-        remaining: remainingAmountUsd,
-        amountTotal: totalAmountUsd,
-        currency: "usd",
-        liveCheckout: true,
-        ...(persistenceWarning ? { persistenceWarning } : {}),
-      });
-    }
-
-    if (!allowPlaceholder) {
-      console.error("Stripe error:", stripeSession.error || "Stripe live checkout session creation failed.");
-      const diagnostics = getStripeDiagnostics();
-      // In strict mode we fail hard so users do not continue without Stripe confirmation.
-      return NextResponse.json(
-        {
-          error: stripeSession.error || "Stripe live checkout session creation failed.",
-          diagnostics,
-        },
-        { status: 502 },
-      );
-    }
-
-    liveCheckoutWarning = stripeSession.error || "Stripe live checkout unavailable; using placeholder flow.";
   }
 
-  if (!allowPlaceholder) {
-    const diagnostics = getStripeDiagnostics();
-    // Guard against accidental "silent fallback" in production.
-    return NextResponse.json(
-      {
-        error: "Stripe live checkout is required. Placeholder flow is disabled.",
-        diagnostics,
-      },
-      { status: 503 },
-    );
-  }
-
-  // Placeholder flow is intentionally limited to DetailFlow only.
-  if (productId !== PRODUCTS.detailflow.product_id) {
-    return NextResponse.json(
-      {
-        error: "Placeholder checkout is only available for detailflow. Configure live Stripe checkout for inkbot.",
-      },
-      { status: 503 },
-    );
-  }
-
-  if (!isDetailflowTierId(tierId)) {
-    return NextResponse.json(
-      { error: "Placeholder checkout requires a valid DetailFlow tier." },
-      { status: 400 },
-    );
-  }
-
-  const record = createCheckoutSessionRecord({
-    origin: checkoutOrigin,
-    tierId,
-    addonIds: typedAddonIds.filter((id): id is DetailflowAddonId => isDetailflowAddonId(id)),
-    customerEmail,
-    orderId: orderId || undefined,
-  });
-
-  let persistenceWarning = "";
-  if (orderUuid || orderId) {
-    try {
-      const supabase = getSupabaseServerClient();
-      const patch = {
-        stripe_session_id: record.sessionId,
-        customer_email: customerEmail || null,
-        status: "paid",
-      };
-      if (orderUuid) {
-        await supabase.updateOrderByUuid(orderUuid, patch);
-      } else if (orderId) {
-        await supabase.updateOrderByOrderId(orderId, patch);
-      }
-    } catch (error) {
-      console.error(
-        "Checkout persistence error:",
-        error instanceof Error ? error.message : "Supabase order sync failed.",
-      );
-      persistenceWarning = error instanceof Error ? error.message : "Supabase order sync failed.";
-    }
-  }
-
+  console.error("Stripe error:", stripeSession.error || "Stripe live checkout session creation failed.");
+  const diagnostics = getStripeDiagnostics();
   return NextResponse.json({
-    url: record.checkoutUrl,
-    sessionId: record.sessionId,
-    orderUuid: orderUuid || undefined,
-    orderId: record.orderId,
-    tierId: record.tierId,
-    addonIds: record.addonIds,
-    deposit: record.deposit,
-    remaining: record.remaining,
-    amountTotal: record.total,
-    currency: record.currency,
-    liveCheckout: false,
-    ...(liveCheckoutWarning ? { liveCheckoutWarning } : {}),
-    ...(persistenceWarning ? { persistenceWarning } : {}),
-  });
+    error: stripeSession.error || "Stripe live checkout session creation failed.",
+    diagnostics,
+  }, { status: 502 });
 }
