@@ -88,6 +88,8 @@
   "devDependencies": {
     "@tailwindcss/postcss": "4.1.12",
     "@types/node": "^25.2.3",
+    "@types/react": "18.3.24",
+    "@types/react-dom": "18.3.7",
     "eslint": "^8.57.1",
     "eslint-config-next": "14.2.35",
     "postcss": "8.4.40",
