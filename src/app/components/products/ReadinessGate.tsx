@@ -111,10 +111,14 @@ export function ReadinessGate({
           </RadioGroup>
         </div>
 
-        {readinessNotice && <p className="mt-3 text-xs text-orange-600">{readinessNotice}</p>}
+        {readinessNotice && (
+          <div className="mt-3 rounded-md border border-foreground/40 bg-transparent p-3 text-xs text-foreground">
+            {readinessNotice}
+          </div>
+        )}
 
         {missingRequiredItems.length > 0 && (
-          <div className="mt-3 rounded-md border border-orange-300/40 bg-orange-100/30 p-3 text-xs text-orange-700">
+          <div className="mt-3 rounded-md border border-foreground/40 bg-transparent p-3 text-xs text-foreground">
             Missing required readiness items: {missingRequiredItems.join(", ")}.
           </div>
         )}
