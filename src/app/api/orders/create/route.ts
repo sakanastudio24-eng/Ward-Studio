@@ -150,43 +150,53 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "customer_email must be a valid email address." }, { status: 400 });
   }
 
-  const supabase = getSupabaseServer();
-  for (let attempt = 0; attempt < MAX_COLLISION_RETRIES; attempt += 1) {
-    const orderId = buildOrderId(orderPrefix);
-    const { data, error } = await supabase
-      .from("orders")
-      .insert({
-        order_id: orderId,
-        status: "created",
-        product_id: productId,
-        tier_id: tierId,
-        addon_ids: addonIds,
-        customer_email: customerEmailRaw || null,
-        stripe_session_id: null,
-        email_sent_at: null,
-      })
-      .select("id, order_id")
-      .single();
+  try {
+    const supabase = getSupabaseServer();
 
-    if (!error) {
-      console.log("Order created:", getString(data?.order_id) || orderId);
-      return NextResponse.json({
-        order_uuid: getString(data?.id),
-        order_id: getString(data?.order_id) || orderId,
-      });
+    for (let attempt = 0; attempt < MAX_COLLISION_RETRIES; attempt += 1) {
+      const orderId = buildOrderId(orderPrefix);
+      const { data, error } = await supabase
+        .from("orders")
+        .insert({
+          order_id: orderId,
+          status: "created",
+          product_id: productId,
+          tier_id: tierId,
+          addon_ids: addonIds,
+          customer_email: customerEmailRaw || null,
+          stripe_session_id: null,
+          email_sent_at: null,
+        })
+        .select("id, order_id")
+        .single();
+
+      if (!error) {
+        console.log("Order created:", getString(data?.order_id) || orderId);
+        return NextResponse.json({
+          order_uuid: getString(data?.id),
+          order_id: getString(data?.order_id) || orderId,
+        });
+      }
+
+      if (!isUniqueConstraintError(error)) {
+        console.error("Order create error:", error.message);
+        return NextResponse.json(
+          { error: `Unable to create order: ${error.message}` },
+          { status: 500 },
+        );
+      }
     }
 
-    if (!isUniqueConstraintError(error)) {
-      console.error("Order create error:", error.message);
-      return NextResponse.json(
-        { error: `Unable to create order: ${error.message}` },
-        { status: 500 },
-      );
-    }
+    return NextResponse.json(
+      { error: "Could not generate a unique order id. Please retry." },
+      { status: 500 },
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown order create failure.";
+    console.error("Order create bootstrap error:", message);
+    return NextResponse.json(
+      { error: `Unable to create order: ${message}` },
+      { status: 500 },
+    );
   }
-
-  return NextResponse.json(
-    { error: "Could not generate a unique order id. Please retry." },
-    { status: 500 },
-  );
 }
