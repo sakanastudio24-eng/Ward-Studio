@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import {
-  getCheckoutSessionRecord,
   isDetailflowAddonId,
   isDetailflowTierId,
 } from "../../../../lib/checkout/session-store";
@@ -116,8 +115,7 @@ function addonLabelsFor(addonIds: DetailflowAddonId[]): string[] {
  *
  * Lookup order is intentionally layered for resilience:
  * 1) Stripe API (source of truth for live sessions, includes metadata order_uuid)
- * 2) Legacy in-memory fallback session store
- * 3) Supabase lookup by stripe_session_id (durable fallback across instances)
+ * 2) Supabase lookup by stripe_session_id (durable fallback across instances)
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -133,7 +131,6 @@ export async function GET(request: Request) {
     );
   }
 
-  const localRecord = getCheckoutSessionRecord(sessionId);
   let verification: NormalizedVerification | null = null;
   let stripeLookupError = "";
 
@@ -149,37 +146,19 @@ export async function GET(request: Request) {
         status: toStatus(stripePaid, stripeSession.status),
         sessionId: stripeSession.id,
         orderUuid: stripeSession.orderUuid || "",
-        orderId: stripeSession.orderId || localRecord?.orderId || "",
-        tierId: stripeSession.tierId || localRecord?.tierId || "",
-        addonIds:
-          stripeSession.addonIds.length > 0
-            ? stripeSession.addonIds
-            : localRecord?.addonIds || [],
+        orderId: stripeSession.orderId || "",
+        tierId: stripeSession.tierId || "",
+        addonIds: stripeSession.addonIds,
         amountTotal:
           stripeSession.amountTotalCents > 0
             ? stripeSession.amountTotalCents / 100
-            : localRecord?.total || 0,
-        currency: stripeSession.currency || localRecord?.currency || "usd",
-        customerEmail: stripeSession.customerEmail || localRecord?.customerEmail || "",
+            : 0,
+        currency: stripeSession.currency || "usd",
+        customerEmail: stripeSession.customerEmail || "",
       };
     } else {
       stripeLookupError = stripeLookup.error;
     }
-  }
-
-  if (!verification && localRecord) {
-    verification = {
-      paid: localRecord.status === "paid",
-      status: localRecord.status,
-      sessionId: localRecord.sessionId,
-      orderUuid: "",
-      orderId: localRecord.orderId,
-      tierId: localRecord.tierId,
-      addonIds: localRecord.addonIds,
-      amountTotal: localRecord.total,
-      currency: localRecord.currency,
-      customerEmail: localRecord.customerEmail,
-    };
   }
 
   // Durable fallback for cases where the process-local session store is unavailable

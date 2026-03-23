@@ -43,13 +43,6 @@ const PROBES: ProbeDefinition[] = [
     successStatuses: [200, 400, 404],
   },
   {
-    id: "stripe_session_status",
-    method: "GET",
-    path: "/api/stripe/session-status?session_id=healthcheck",
-    successStatuses: [200, 400, 404],
-    allowErrorMessageIncludes: ["no such checkout.session", "missing session_id"],
-  },
-  {
     id: "orders_create_route",
     method: "GET",
     path: "/api/orders/create",

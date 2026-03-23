@@ -47,16 +47,10 @@ export function getStripeDiagnostics() {
     "sk_test_",
     "sk_live_",
   ]);
-  const publishableStatus = validateByPrefix(
-    sanitize(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY),
-    ["pk_test_", "pk_live_"],
-  );
   const webhookStatus = validateByPrefix(sanitize(env.STRIPE_WEBHOOK_SECRET), [
     "whsec_",
   ]);
   const liveMode = readLiveMode();
-  const allowPlaceholder =
-    sanitize(env.STRIPE_CHECKOUT_ALLOW_PLACEHOLDER).toLowerCase() === "true";
 
   const checks: StripeKeyDiagnostic[] = [
     {
@@ -65,13 +59,6 @@ export function getStripeDiagnostics() {
       required: true,
       description: "Server secret key used for checkout/session retrieval.",
       fix: "Set STRIPE_SECRET_KEY to a real sk_test_... or sk_live_... key.",
-    },
-    {
-      key: "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
-      status: publishableStatus,
-      required: true,
-      description: "Client publishable key used for embedded checkout mounting.",
-      fix: "Set NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to a real pk_test_... or pk_live_... key.",
     },
     {
       key: "STRIPE_WEBHOOK_SECRET",
@@ -89,7 +76,6 @@ export function getStripeDiagnostics() {
   return {
     ok: !hasBlocking,
     liveMode,
-    allowPlaceholder,
     liveCheckoutEnabled,
     checks,
   };

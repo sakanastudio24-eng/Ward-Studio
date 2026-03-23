@@ -198,23 +198,16 @@ Behavior:
 - Paid sessions are synced into Supabase (`orders.status`, `stripe_session_id`, optional `customer_email`).
 - Order-confirmation emails are sent server-side only after successful paid verification.
 
-## Embedded Checkout Endpoints (Integrated)
+## Hosted Checkout Flow
 
-For Stripe embedded checkout flow (no Ruby server required):
+Stripe checkout uses the hosted Stripe page only.
 
-- `POST /api/stripe/create-checkout-session`
-  - creates Stripe Checkout Session with `ui_mode: "embedded"`
-  - returns `clientSecret` for mounting embedded checkout
-- `GET /api/stripe/session-status?session_id=...`
-  - returns Stripe session status for return page handling
-
-Pages:
-- `/products/embedded` mounts embedded checkout with React Stripe components.
-- `/products/embedded-return` checks session status and forwards completed payments to `/products/success`.
-
-Client toggle:
-- `NEXT_PUBLIC_STRIPE_CHECKOUT_UI_MODE=embedded`
-  - when enabled, `Pay deposit` routes to `/products/embedded` with current order/tier/add-ons.
+- `POST /api/checkout/create`
+  - creates a live Stripe Checkout Session
+  - returns the Stripe hosted checkout URL
+- `/products/success`
+  - receives `session_id` after Stripe redirect
+  - verifies payment through `/api/checkout/verify`
 
 ## Checkout Origin / Subdomain
 
