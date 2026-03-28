@@ -14,7 +14,7 @@ export function ProjectsClient() {
         <section className="mx-auto max-w-6xl px-4 pb-8 pt-12 sm:px-6 sm:pb-10 md:px-12">
           <h1 className="mt-6 text-[2rem] tracking-tight sm:text-[2.6rem]">All Projects</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
-            Built work across product systems, automation, mobile interfaces, and brand-driven design.
+            Built work across product systems, automation, mobile interfaces, and brand driven design
           </p>
         </section>
 

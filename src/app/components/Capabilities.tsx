@@ -116,7 +116,7 @@ export function Capabilities({ setTooltipText }: CapabilitiesProps) {
           Services
         </h2>
         <p className="mb-10 max-w-3xl text-sm text-muted-foreground dark:text-white/70 sm:text-base md:mb-12">
-          Independent developer building websites, apps, and automation tools for startups and businesses.
+          Independent developer building websites, apps, and automation tools for startups and businesses
         </p>
         <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2 lg:grid-cols-4 md:gap-8">
           {serviceGroups.map((group, index) => {

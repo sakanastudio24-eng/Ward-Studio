@@ -74,7 +74,7 @@ export function Work({ scope, setTooltipText }: WorkProps) {
             Projects
           </h2>
           <p className="mx-auto max-w-3xl text-sm text-muted-foreground sm:text-base">
-            Filter by discipline to browse systems, apps, automation, and design work.
+            Filter by discipline to browse systems, apps, automation, and design work
           </p>
         </div>
 

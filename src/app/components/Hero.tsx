@@ -73,16 +73,16 @@ export function Hero({ setTooltipText }: HeroProps) {
               onMouseLeave={() => setHoveredWord(null)}
             >
               engineering
-            </span>.
+            </span>
             </span>
             <span className={`mt-3 block text-center text-[1.12rem] font-medium leading-[1.2] tracking-[0.08em] sm:mt-4 sm:text-[1.4rem] md:text-left md:text-[1.8rem] ${getTaglineClass()}`}>
-              Systems built to ship.
+              Systems built to ship
             </span>
           </h1>
           <p
             className={`mx-auto max-w-2xl text-center text-[0.98rem] leading-relaxed transition-colors duration-300 sm:text-lg md:mx-0 md:text-left md:text-xl ${hoveredWord ? getSubtextClass() : 'text-muted-foreground'}`}
           >
-            Independent developer building websites, apps, and automation tools for startups and businesses.
+            Independent developer building websites, apps, and automation tools for startups and businesses
           </p>
         </div>
         <div

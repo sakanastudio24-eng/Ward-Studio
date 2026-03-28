@@ -55,7 +55,7 @@ export default function ProductsClient() {
               </h1>
             </div>
             <p className="leading-relaxed text-muted-foreground">
-              Structured product systems built for real-world use.
+              Structured product systems built for real world use.
               Configure what you need. Ship with clarity.
             </p>
             <div className="mx-auto grid max-w-5xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -118,7 +118,7 @@ export default function ProductsClient() {
               </h2>
             </div>
             <p className="leading-relaxed text-muted-foreground">
-              Modular community automation system focused on role-driven
+              Modular community automation system focused on role driven
               workflows, reliable state transitions, and maintainable moderation
               controls.
             </p>

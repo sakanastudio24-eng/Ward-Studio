@@ -112,11 +112,11 @@ Route
 /
 
 Hero heading
-Design meets engineering.
-Systems built to ship.
+Design meets engineering
+Systems built to ship
 
 Hero supporting line
-Independent developer building websites, apps, and automation tools for startups and businesses.
+Independent developer building websites, apps, and automation tools for startups and businesses
 
 Hero actions
 Let's Work
@@ -132,7 +132,7 @@ Services section heading
 Services
 
 Services section intro
-Independent developer building websites, apps, and automation tools for startups and businesses.
+Independent developer building websites, apps, and automation tools for startups and businesses
 
 Websites
 Landing pages

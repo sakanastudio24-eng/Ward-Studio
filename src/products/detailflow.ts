@@ -8,7 +8,7 @@ export function createDetailflowConfig(): DetailflowAddonConfig {
   return {
     productKey: "detailflow",
     subtitle:
-      "Structured product systems built for real-world use. Configure what you need. Ship with clarity.",
+      "Structured product systems built for real world use. Configure what you need. Ship with clarity.",
     defaultPackageId: "starter",
     timelineEstimate: "Estimated launch window: 7-14 days once required assets are in.",
     requiredItems: [

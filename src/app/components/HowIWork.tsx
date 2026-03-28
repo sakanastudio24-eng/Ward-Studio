@@ -19,7 +19,7 @@ export function HowIWork() {
     },
     {
       title: "Long-term maintainable builds",
-      description: "Production-ready code with tests, type safety, and clear architecture"
+      description: "Production ready code with tests, type safety, and clear architecture"
     },
     {
       title: "Transparent pricing",
@@ -34,7 +34,7 @@ export function HowIWork() {
           About
         </h2>
         <p className="mb-8 text-base text-muted-foreground">
-          Available for freelance and contract work. I design and engineer production-ready systems with clear scope, clean delivery, and maintainable architecture.
+          Available for freelance and contract work. I design and engineer production ready systems with clear scope, clean delivery, and maintainable architecture.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {principles.map((principle, idx) => (
