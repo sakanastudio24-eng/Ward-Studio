@@ -89,11 +89,10 @@ export async function POST(request: Request) {
   const safeTimeline = escapeHtml(timeline || "Not provided");
   const safeProjectType = escapeHtml(projectType || "Not provided");
   const safeGoalsHtml = escapeHtml(goals).replaceAll("\n", "<br />");
-  const submittedAt = new Date().toLocaleString("en-US", {
+  const submittedAt = new Intl.DateTimeFormat("en-US", {
     dateStyle: "long",
     timeStyle: "short",
-    timeZoneName: "short",
-  });
+  }).format(new Date());
 
   const subject = `New portfolio inquiry from ${name}`;
 
