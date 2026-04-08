@@ -5,6 +5,7 @@ import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
 import { getTooltipMessage } from "./HoverTooltip";
 import { CAL_LINKS } from "../../config/cal";
+import { DEFAULT_SERVICE_EMAIL } from "../../config/email";
 
 interface ContactProps {
   setTooltipText: (text: string) => void;
@@ -19,6 +20,27 @@ const INITIAL_FORM_DATA = {
   projectType: "",
   goals: ""
 };
+
+function buildFallbackMailto(formData: typeof INITIAL_FORM_DATA) {
+  const lines = [
+    `Name: ${formData.name || "Not provided"}`,
+    `Company: ${formData.company || "Not provided"}`,
+    `Email: ${formData.email || "Not provided"}`,
+    `Budget: ${formData.budget || "Not provided"}`,
+    `Timeline: ${formData.timeline || "Not provided"}`,
+    `Project Type: ${formData.projectType || "Not provided"}`,
+    "",
+    "Project Goals:",
+    formData.goals || "Not provided",
+  ];
+
+  const subject = encodeURIComponent(
+    formData.name ? `Project inquiry from ${formData.name}` : "Project inquiry"
+  );
+  const body = encodeURIComponent(lines.join("\n"));
+
+  return `mailto:${DEFAULT_SERVICE_EMAIL}?subject=${subject}&body=${body}`;
+}
 
 // Contact: Captures project inquiry details and handles contact form submission.
 export function Contact({ setTooltipText }: ContactProps) {
@@ -87,22 +109,35 @@ export function Contact({ setTooltipText }: ContactProps) {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData((current) => ({
+      ...current,
+      [name]: value,
+    }));
   };
 
-  // handleBudgetChange: Normalizes and rounds budget input to a clean numeric value.
+  // handleBudgetChange: Keeps the budget field numeric-only while the user types.
   const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^0-9]/g, '');
-    if (value === '') {
-      setFormData({ ...formData, budget: '' });
+    const value = e.target.value.replace(/[^0-9]/g, "");
+    setFormData((current) => ({ ...current, budget: value }));
+  };
+
+  // handleBudgetBlur: Rounds the numeric budget once editing is complete.
+  const handleBudgetBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9]/g, "");
+    if (!value) {
+      setFormData((current) => ({ ...current, budget: "" }));
       return;
     }
-    const numValue = parseInt(value);
+
+    const numValue = Number.parseInt(value, 10);
+    if (Number.isNaN(numValue)) {
+      setFormData((current) => ({ ...current, budget: "" }));
+      return;
+    }
+
     const rounded = Math.ceil(numValue / 10) * 10;
-    setFormData({ ...formData, budget: rounded.toString() });
+    setFormData((current) => ({ ...current, budget: rounded.toString() }));
   };
 
   return (
@@ -187,9 +222,14 @@ export function Contact({ setTooltipText }: ContactProps) {
               <Input
                 id="budget"
                 name="budget"
-                value={formData.budget ? `$${formData.budget}` : ''}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
+                value={formData.budget}
                 onChange={handleBudgetChange}
-                placeholder="$10,000"
+                onBlur={handleBudgetBlur}
+                placeholder="10000"
               />
             </div>
 
@@ -241,12 +281,22 @@ export function Contact({ setTooltipText }: ContactProps) {
           </Button>
 
           {submitStatus !== "idle" && (
-            <p
-              role="status"
-              className={`text-sm ${submitStatus === "success" ? "text-emerald-600" : "text-destructive"}`}
-            >
-              {submitMessage}
-            </p>
+            <div className="space-y-3">
+              <p
+                role="status"
+                className={`text-sm ${submitStatus === "success" ? "text-emerald-600" : "text-destructive"}`}
+              >
+                {submitMessage}
+              </p>
+              {submitStatus === "error" ? (
+                <a
+                  href={buildFallbackMailto(formData)}
+                  className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                >
+                  Email directly instead
+                </a>
+              ) : null}
+            </div>
           )}
         </form>
       </div>
