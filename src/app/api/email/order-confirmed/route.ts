@@ -3,6 +3,7 @@ import { sendOrderConfirmedBundle, type OrderSummary } from "../../../../lib/ema
 import { env } from "../../../../env";
 import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
 import { getSupabaseServerClient } from "../../../../lib/supabase/server";
+import { methodNotAllowedResponse } from "../../../../lib/http/method-not-allowed";
 
 type OrderConfirmedRequestBody = {
   orderId?: string;
@@ -19,6 +20,10 @@ type OrderConfirmedRequestBody = {
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export async function GET() {
+  return methodNotAllowedResponse(["POST"]);
+}
 
 function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";

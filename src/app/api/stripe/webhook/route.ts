@@ -14,6 +14,7 @@ import {
 import { getSupabaseServerClient } from "../../../../lib/supabase/server";
 import { isDetailflowAddonId, isDetailflowTierId } from "../../../../lib/checkout/session-store";
 import { getStripeServer } from "../../../../lib/stripe/server";
+import { methodNotAllowedResponse } from "../../../../lib/http/method-not-allowed";
 import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
 
 export const runtime = "nodejs";
@@ -36,6 +37,10 @@ const ADDON_LABELS: Record<string, string> = {
   photo_optimization: "Photo Optimization",
   strategy_call: "Free 20-Min Strategy Call",
 };
+
+export async function GET() {
+  return methodNotAllowedResponse(["POST"]);
+}
 
 type KnownOrderRow = {
   id: string;

@@ -28,6 +28,7 @@ import {
 } from "../../../../config/checkout";
 import { getStripeDiagnostics } from "../../../../lib/stripe/diagnostics";
 import { getAddonAvailability } from "../../../../lib/rules";
+import { methodNotAllowedResponse } from "../../../../lib/http/method-not-allowed";
 import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
 
 type CreateCheckoutRequestBody = {
@@ -41,6 +42,10 @@ type CreateCheckoutRequestBody = {
 
 type StripeCheckoutSessionResponse = Record<string, unknown>;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export async function GET() {
+  return methodNotAllowedResponse(["POST"]);
+}
 
 function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";

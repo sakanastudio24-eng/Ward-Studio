@@ -5,6 +5,7 @@ import type { DetailflowAddonId, DetailflowTierId } from "../../../../lib/pricin
 import { PRICING } from "../../../../lib/pricing";
 import { getSupabaseServer } from "../../../../lib/supabase-server";
 import { getAddonAvailability } from "../../../../lib/rules";
+import { methodNotAllowedResponse } from "../../../../lib/http/method-not-allowed";
 import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
 
 type CreateOrderBody = {
@@ -21,6 +22,10 @@ const VALID_ADDON_IDS = new Set<DetailflowAddonId>(
   Object.keys(PRICING.addons) as DetailflowAddonId[],
 );
 const INKBOT_TIER_ID = "base";
+
+export async function GET() {
+  return methodNotAllowedResponse(["POST"]);
+}
 
 function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";

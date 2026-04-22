@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { sendBookingConfirmedBundle } from "../../../../lib/email";
 import { env } from "../../../../env";
 import { getSupabaseServerClient } from "../../../../lib/supabase/server";
+import { methodNotAllowedResponse } from "../../../../lib/http/method-not-allowed";
 import { enforceRateLimit, rateLimitedResponse } from "../../../../lib/rate-limit/server";
 
 type CalWebhookPayload = {
@@ -24,6 +25,10 @@ const BOOKING_EVENTS = new Set([
 ]);
 
 const processedBookingWebhookKeys = new Set<string>();
+
+export async function GET() {
+  return methodNotAllowedResponse(["POST"]);
+}
 
 function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";

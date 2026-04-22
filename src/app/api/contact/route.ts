@@ -5,6 +5,7 @@ import {
   DEFAULT_SERVICE_EMAIL,
 } from "../../../config/email";
 import { env } from "../../../env";
+import { methodNotAllowedResponse } from "../../../lib/http/method-not-allowed";
 import { enforceRateLimit, rateLimitedResponse } from "../../../lib/rate-limit/server";
 
 interface ContactRequestBody {
@@ -19,6 +20,10 @@ interface ContactRequestBody {
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export async function GET() {
+  return methodNotAllowedResponse(["POST"]);
+}
 
 function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";

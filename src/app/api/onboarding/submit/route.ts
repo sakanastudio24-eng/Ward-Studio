@@ -6,6 +6,7 @@ import {
   sendInternalConfigSubmission,
 } from "../../../../lib/email";
 import { buildConfigSummaryFromSubmittedConfig } from "../../../../lib/config-generator/detailflow";
+import { methodNotAllowedResponse } from "../../../../lib/http/method-not-allowed";
 
 type OnboardingSubmitBody = {
   order_id?: unknown;
@@ -27,6 +28,10 @@ const TIER_LABELS: Record<string, string> = {
   growth: "Growth",
   pro_launch: "Pro Launch",
 };
+
+export async function GET() {
+  return methodNotAllowedResponse(["POST"]);
+}
 
 function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";

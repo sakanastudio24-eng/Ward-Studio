@@ -6,6 +6,7 @@ import {
   sendInternalConfigSubmission,
 } from "../../../lib/email";
 import { buildConfigSummaryFromSubmittedConfig } from "../../../lib/config-generator/detailflow";
+import { methodNotAllowedResponse } from "../../../lib/http/method-not-allowed";
 
 interface OrderRequestBody {
   orderId?: string;
@@ -40,6 +41,10 @@ interface OrderRequestBody {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SENSITIVE_KEY_REGEX = /(api[_-]?key|token|password|secret|webhook)/i;
+
+export async function GET() {
+  return methodNotAllowedResponse(["POST"]);
+}
 
 function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";

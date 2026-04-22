@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { isAnalyticsEventName, type AnalyticsPayload } from "../../../../lib/analytics/types";
 import { getSupabaseServerClient } from "../../../../lib/supabase/server";
 import { env } from "../../../../env";
+import { methodNotAllowedResponse } from "../../../../lib/http/method-not-allowed";
+
+export async function GET() {
+  return methodNotAllowedResponse(["POST"]);
+}
 
 function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
