@@ -2,60 +2,79 @@
 
 const API_BASE = "https://api.resend.com";
 const TEMPLATE_NAME = process.env.RESEND_TEMPLATE_NAME || "wardstudio-contact-inquiry";
+const TEMPLATE_ALIAS = process.env.RESEND_CONTACT_TEMPLATE_ALIAS || "wardstudio-contact-inquiry";
+const TEMPLATE_FROM = process.env.CONTACT_FROM_EMAIL || "Ward Studio <noreply@zward.studio>";
+const TEMPLATE_SUBJECT = "New portfolio inquiry from {{{CONTACT_NAME}}}";
 
 const TEMPLATE_HTML = `<!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ward Studio Inquiry</title>
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no" />
+    <title>New portfolio inquiry</title>
   </head>
-  <body style="margin:0;padding:0;background:#f5f6f8;font-family:Inter,Segoe UI,Arial,sans-serif;color:#111827;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:32px 12px;">
+  <body style="margin:0;padding:0;background:#f6f6f6;font-family:Arial,Helvetica,sans-serif;color:#111111;">
+    <div style="display:none;overflow:hidden;line-height:1px;opacity:0;max-height:0;max-width:0;">
+      New project inquiry from {{{CONTACT_NAME}}} with budget {{{CONTACT_BUDGET}}}.
+    </div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;background:#f6f6f6;padding:24px 0;">
       <tr>
-        <td align="center">
-          <table role="presentation" width="680" cellspacing="0" cellpadding="0" style="width:100%;max-width:680px;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
+        <td align="center" style="padding:0 16px;">
+          <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="width:100%;max-width:640px;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e7e7e7;border-radius:12px;overflow:hidden;">
             <tr>
-              <td style="background:#0f1012;padding:24px 28px;border-bottom:4px solid #f97316;">
-                <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#a6adbb;margin-bottom:8px;">Ward Studio</div>
-                <h1 style="margin:0;font-size:28px;line-height:1.2;color:#ffffff;">New Project Inquiry</h1>
+              <td style="padding:32px 32px 16px 32px;background:#ffffff;">
+                <p style="margin:0 0 8px 0;font-size:12px;line-height:1.4;letter-spacing:0.12em;text-transform:uppercase;color:#6b6b6b;">Ward Studio</p>
+                <h1 style="margin:0;font-size:28px;line-height:1.2;font-weight:700;color:#111111;">New portfolio inquiry</h1>
+                <p style="margin:12px 0 0 0;font-size:15px;line-height:1.7;color:#4f4f4f;">A new inquiry was submitted through the contact form.</p>
               </td>
             </tr>
             <tr>
-              <td style="padding:24px 28px;">
-                <p style="margin:0 0 18px 0;font-size:13px;color:#6b7280;">Submitted: {{{SUBMITTED_AT}}}</p>
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+              <td style="padding:8px 32px 0 32px;background:#ffffff;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">
                   <tr>
-                    <td style="padding:10px 0;border-top:1px solid #eef0f3;font-size:14px;color:#6b7280;width:180px;">Name</td>
-                    <td style="padding:10px 0;border-top:1px solid #eef0f3;font-size:15px;color:#111827;">{{{CONTACT_NAME}}}</td>
+                    <td style="padding:12px 0;width:180px;border-top:1px solid #ececec;font-size:13px;line-height:1.5;font-weight:700;color:#111111;vertical-align:top;">Name</td>
+                    <td style="padding:12px 0;border-top:1px solid #ececec;font-size:14px;line-height:1.6;color:#333333;vertical-align:top;">{{{CONTACT_NAME}}}</td>
                   </tr>
                   <tr>
-                    <td style="padding:10px 0;border-top:1px solid #eef0f3;font-size:14px;color:#6b7280;">Company</td>
-                    <td style="padding:10px 0;border-top:1px solid #eef0f3;font-size:15px;color:#111827;">{{{CONTACT_COMPANY}}}</td>
+                    <td style="padding:12px 0;width:180px;border-top:1px solid #ececec;font-size:13px;line-height:1.5;font-weight:700;color:#111111;vertical-align:top;">Company</td>
+                    <td style="padding:12px 0;border-top:1px solid #ececec;font-size:14px;line-height:1.6;color:#333333;vertical-align:top;">{{{CONTACT_COMPANY}}}</td>
                   </tr>
                   <tr>
-                    <td style="padding:10px 0;border-top:1px solid #eef0f3;font-size:14px;color:#6b7280;">Email</td>
-                    <td style="padding:10px 0;border-top:1px solid #eef0f3;font-size:15px;color:#111827;">{{{CONTACT_EMAIL}}}</td>
+                    <td style="padding:12px 0;width:180px;border-top:1px solid #ececec;font-size:13px;line-height:1.5;font-weight:700;color:#111111;vertical-align:top;">Email</td>
+                    <td style="padding:12px 0;border-top:1px solid #ececec;font-size:14px;line-height:1.6;color:#333333;vertical-align:top;">{{{CONTACT_EMAIL}}}</td>
                   </tr>
                   <tr>
-                    <td style="padding:10px 0;border-top:1px solid #eef0f3;font-size:14px;color:#6b7280;">Budget</td>
-                    <td style="padding:10px 0;border-top:1px solid #eef0f3;font-size:15px;color:#111827;">{{{CONTACT_BUDGET}}}</td>
+                    <td style="padding:12px 0;width:180px;border-top:1px solid #ececec;font-size:13px;line-height:1.5;font-weight:700;color:#111111;vertical-align:top;">Budget</td>
+                    <td style="padding:12px 0;border-top:1px solid #ececec;font-size:14px;line-height:1.6;color:#333333;vertical-align:top;">{{{CONTACT_BUDGET}}}</td>
                   </tr>
                   <tr>
-                    <td style="padding:10px 0;border-top:1px solid #eef0f3;font-size:14px;color:#6b7280;">Timeline</td>
-                    <td style="padding:10px 0;border-top:1px solid #eef0f3;font-size:15px;color:#111827;">{{{CONTACT_TIMELINE}}}</td>
+                    <td style="padding:12px 0;width:180px;border-top:1px solid #ececec;font-size:13px;line-height:1.5;font-weight:700;color:#111111;vertical-align:top;">Timeline</td>
+                    <td style="padding:12px 0;border-top:1px solid #ececec;font-size:14px;line-height:1.6;color:#333333;vertical-align:top;">{{{CONTACT_TIMELINE}}}</td>
                   </tr>
                   <tr>
-                    <td style="padding:10px 0;border-top:1px solid #eef0f3;font-size:14px;color:#6b7280;">Project Type</td>
-                    <td style="padding:10px 0;border-top:1px solid #eef0f3;font-size:15px;color:#111827;">{{{CONTACT_PROJECT_TYPE}}}</td>
+                    <td style="padding:12px 0;width:180px;border-top:1px solid #ececec;font-size:13px;line-height:1.5;font-weight:700;color:#111111;vertical-align:top;">Project type</td>
+                    <td style="padding:12px 0;border-top:1px solid #ececec;font-size:14px;line-height:1.6;color:#333333;vertical-align:top;">{{{CONTACT_PROJECT_TYPE}}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:12px 0;width:180px;border-top:1px solid #ececec;font-size:13px;line-height:1.5;font-weight:700;color:#111111;vertical-align:top;">Submitted</td>
+                    <td style="padding:12px 0;border-top:1px solid #ececec;font-size:14px;line-height:1.6;color:#333333;vertical-align:top;">{{{SUBMITTED_AT}}}</td>
                   </tr>
                 </table>
-                <div style="margin-top:22px;">
-                  <div style="font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280;margin-bottom:8px;">Project Goals</div>
-                  <div style="background:#f8fafc;border:1px solid #eef0f3;border-left:3px solid #f97316;border-radius:8px;padding:14px 12px;font-size:15px;line-height:1.5;color:#111827;">
-                    {{{CONTACT_GOALS_HTML}}}
-                  </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 32px 32px 32px;background:#ffffff;">
+                <p style="margin:0 0 10px 0;font-size:13px;line-height:1.5;font-weight:700;color:#111111;">Project goals</p>
+                <div style="margin:0;padding:16px;border:1px solid #ececec;border-radius:10px;background:#fafafa;font-size:14px;line-height:1.8;color:#333333;">
+                  {{{CONTACT_GOALS_HTML}}}
                 </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 32px 28px 32px;background:#ffffff;">
+                <p style="margin:0;font-size:12px;line-height:1.6;color:#7a7a7a;">Reply directly to this email to continue the conversation with the sender.</p>
               </td>
             </tr>
           </table>
@@ -65,8 +84,21 @@ const TEMPLATE_HTML = `<!doctype html>
   </body>
 </html>`;
 
+const TEMPLATE_TEXT = `New portfolio inquiry
+
+Name: {{{CONTACT_NAME}}}
+Company: {{{CONTACT_COMPANY}}}
+Email: {{{CONTACT_EMAIL}}}
+Budget: {{{CONTACT_BUDGET}}}
+Timeline: {{{CONTACT_TIMELINE}}}
+Project type: {{{CONTACT_PROJECT_TYPE}}}
+Submitted: {{{SUBMITTED_AT}}}
+
+Project goals:
+{{{CONTACT_GOALS_HTML}}}`;
+
 const TEMPLATE_VARIABLES = [
-  { key: "CONTACT_NAME", type: "string", fallback_value: "New Lead" },
+  { key: "CONTACT_NAME", type: "string", fallback_value: "New lead" },
   { key: "CONTACT_COMPANY", type: "string", fallback_value: "Not provided" },
   { key: "CONTACT_EMAIL", type: "string", fallback_value: "lead@example.com" },
   { key: "CONTACT_BUDGET", type: "string", fallback_value: "Not provided" },
@@ -121,6 +153,18 @@ async function resendRequest(path, options = {}) {
   return payload;
 }
 
+function templatePayload() {
+  return {
+    name: TEMPLATE_NAME,
+    alias: TEMPLATE_ALIAS,
+    from: TEMPLATE_FROM,
+    subject: TEMPLATE_SUBJECT,
+    html: TEMPLATE_HTML,
+    text: TEMPLATE_TEXT,
+    variables: TEMPLATE_VARIABLES,
+  };
+}
+
 function requireTemplateId(args) {
   const templateId = args.id || args._[1] || process.env.RESEND_CONTACT_TEMPLATE_ID;
   if (!templateId) {
@@ -129,24 +173,46 @@ function requireTemplateId(args) {
   return templateId;
 }
 
+function getTemplateId(payload) {
+  return payload?.id || payload?.data?.id || payload?.template?.id || "";
+}
+
+async function publishTemplate(templateId) {
+  return resendRequest(`/templates/${encodeURIComponent(templateId)}/publish`, {
+    method: "POST",
+  });
+}
+
+function shouldPublish(args) {
+  return args.publish === "true" || args.publish === true;
+}
+
 async function run() {
   const args = parseArgs(process.argv.slice(2));
   const command = args._[0];
 
   if (!command) {
-    throw new Error("Usage: node scripts/resend-templates.mjs <create|get|update|publish|duplicate|delete|list> [--id=...]");
+    throw new Error(
+      "Usage: node scripts/resend-templates.mjs <create|get|update|publish|duplicate|delete|list> [--id=...] [--publish]",
+    );
   }
 
   if (command === "create") {
     const payload = await resendRequest("/templates", {
       method: "POST",
-      body: {
-        name: TEMPLATE_NAME,
-        html: TEMPLATE_HTML,
-        variables: TEMPLATE_VARIABLES,
-      },
+      body: templatePayload(),
     });
-    console.log(JSON.stringify(payload, null, 2));
+
+    const templateId = getTemplateId(payload);
+    const result = { create: payload, publish: null };
+    if (shouldPublish(args)) {
+      if (!templateId) {
+        throw new Error("Template was created, but no template id was returned for publish.");
+      }
+      result.publish = await publishTemplate(templateId);
+    }
+
+    console.log(JSON.stringify(result, null, 2));
     return;
   }
 
@@ -161,21 +227,21 @@ async function run() {
     const templateId = requireTemplateId(args);
     const payload = await resendRequest(`/templates/${encodeURIComponent(templateId)}`, {
       method: "PATCH",
-      body: {
-        name: TEMPLATE_NAME,
-        html: TEMPLATE_HTML,
-        variables: TEMPLATE_VARIABLES,
-      },
+      body: templatePayload(),
     });
-    console.log(JSON.stringify(payload, null, 2));
+
+    const result = { update: payload, publish: null };
+    if (shouldPublish(args)) {
+      result.publish = await publishTemplate(templateId);
+    }
+
+    console.log(JSON.stringify(result, null, 2));
     return;
   }
 
   if (command === "publish") {
     const templateId = requireTemplateId(args);
-    const payload = await resendRequest(`/templates/${encodeURIComponent(templateId)}/publish`, {
-      method: "POST",
-    });
+    const payload = await publishTemplate(templateId);
     console.log(JSON.stringify(payload, null, 2));
     return;
   }
