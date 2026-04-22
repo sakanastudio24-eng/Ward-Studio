@@ -1,72 +1,62 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 
-// Array of section IDs in order from top to bottom of page
 const SECTIONS = ["home", "services", "projects", "about", "contact", "footer"];
 
-// useKeyboardNavigation: Tracks section position and enables W/S and arrow navigation.
+function scrollToSection(sectionId: string) {
+  if (sectionId === "home") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  const element = document.getElementById(sectionId);
+  if (element) {
+    element.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+// useKeyboardNavigation: Tracks section position and exposes keyboard and button navigation.
 export function useKeyboardNavigation() {
-  // Current section index (0 = hero, 1 = capabilities, etc.)
   const [currentSection, setCurrentSection] = useState(0);
+  const totalSections = SECTIONS.length;
+
+  const navigateToIndex = useCallback((index: number) => {
+    const nextSection = Math.max(0, Math.min(index, SECTIONS.length - 1));
+    setCurrentSection(nextSection);
+    scrollToSection(SECTIONS[nextSection]);
+  }, []);
+
+  const goToPreviousSection = useCallback(() => {
+    navigateToIndex(currentSection - 1);
+  }, [currentSection, navigateToIndex]);
+
+  const goToNextSection = useCallback(() => {
+    navigateToIndex(currentSection + 1);
+  }, [currentSection, navigateToIndex]);
 
   useEffect(() => {
-    // handleKeyDown: Moves between sections from keyboard shortcuts.
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent default only for our navigation keys
-      if (['ArrowDown', 'ArrowUp', 's', 'w', 'S', 'W'].includes(e.key)) {
-        // Don't interfere if user is typing in an input
+      if (["ArrowDown", "ArrowUp", "s", "w", "S", "W"].includes(e.key)) {
         const target = e.target as HTMLElement;
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
           return;
         }
 
         e.preventDefault();
 
-        let nextSection = currentSection;
-
-        // Down navigation - move to next section (max: last section)
-        if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
-          nextSection = Math.min(currentSection + 1, SECTIONS.length - 1);
-        }
-        // Up navigation - move to previous section (min: first section)
-        else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
-          nextSection = Math.max(currentSection - 1, 0);
-        }
-
-        // Only scroll if section actually changed
-        if (nextSection !== currentSection) {
-          setCurrentSection(nextSection);
-          scrollToSection(SECTIONS[nextSection]);
+        if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") {
+          goToNextSection();
+        } else if (e.key === "ArrowUp" || e.key === "w" || e.key === "W") {
+          goToPreviousSection();
         }
       }
     };
 
-    // scrollToSection: Smooth-scrolls to the requested section id.
-    const scrollToSection = (sectionId: string) => {
-      let element: HTMLElement | null = null;
-      
-      if (sectionId === "home") {
-        // Scroll to top for home section
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      } else {
-        element = document.getElementById(sectionId);
-      }
-
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    };
-
-    // handleScroll: Detects which section is active based on viewport position.
     const handleScroll = () => {
-      // Calculate scroll position at center of viewport
       const scrollPosition = window.scrollY + window.innerHeight / 2;
 
-      // Check sections from bottom to top to find which one is in view
       for (let i = SECTIONS.length - 1; i >= 0; i--) {
         let element: HTMLElement | null = null;
-        
-        // Special handling for home - active when near top of page
+
         if (SECTIONS[i] === "home") {
           if (window.scrollY < 100) {
             setCurrentSection(0);
@@ -74,10 +64,9 @@ export function useKeyboardNavigation() {
           }
           continue;
         }
-        
+
         element = document.getElementById(SECTIONS[i]);
-        
-        // If scroll position is past this section's top, it's the current section
+
         if (element && element.offsetTop <= scrollPosition) {
           setCurrentSection(i);
           return;
@@ -85,19 +74,23 @@ export function useKeyboardNavigation() {
       }
     };
 
-    // Add event listeners for keyboard and scroll
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("scroll", handleScroll);
 
-    // Initialize current section on mount
     handleScroll();
 
-    // Cleanup: remove event listeners on unmount
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("scroll", handleScroll);
     };
-  }, [currentSection]);
+  }, [goToNextSection, goToPreviousSection]);
 
-  return { currentSection, totalSections: SECTIONS.length };
+  return {
+    currentSection,
+    totalSections,
+    canGoPrevious: currentSection > 0,
+    canGoNext: currentSection < totalSections - 1,
+    goToPreviousSection,
+    goToNextSection,
+  };
 }

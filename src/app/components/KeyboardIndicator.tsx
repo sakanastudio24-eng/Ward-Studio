@@ -2,30 +2,35 @@ import { motion, AnimatePresence } from "motion/react";
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
-// KeyboardIndicator: Displays a temporary keyboard navigation hint banner.
-export function KeyboardIndicator() {
-  // Controls visibility of the keyboard hint
+type KeyboardIndicatorProps = {
+  canGoPrevious: boolean;
+  canGoNext: boolean;
+  onPrevious: () => void;
+  onNext: () => void;
+};
+
+// KeyboardIndicator: Displays real section navigation controls with keyboard hints.
+export function KeyboardIndicator({
+  canGoPrevious,
+  canGoNext,
+  onPrevious,
+  onNext,
+}: KeyboardIndicatorProps) {
   const [showHint, setShowHint] = useState(true);
 
   useEffect(() => {
-    // handleInteraction: Hides the hint after the first user interaction.
     const handleInteraction = () => {
       setShowHint(false);
     };
 
-    // Listen for first scroll event (once: true means listener auto-removes)
-    window.addEventListener('scroll', handleInteraction, { once: true });
-    
-    // Listen for first keypress event
-    window.addEventListener('keydown', handleInteraction, { once: true });
+    window.addEventListener("scroll", handleInteraction, { once: true });
+    window.addEventListener("keydown", handleInteraction, { once: true });
 
-    // Auto-hide after 5 seconds even if no interaction
     const timer = setTimeout(() => setShowHint(false), 5000);
 
-    // Cleanup: remove listeners and clear timer on unmount
     return () => {
-      window.removeEventListener('scroll', handleInteraction);
-      window.removeEventListener('keydown', handleInteraction);
+      window.removeEventListener("scroll", handleInteraction);
+      window.removeEventListener("keydown", handleInteraction);
       clearTimeout(timer);
     };
   }, []);
@@ -41,19 +46,31 @@ export function KeyboardIndicator() {
           className="fixed bottom-8 right-8 z-40 hidden rounded-lg border border-border bg-background p-4 shadow-lg md:block"
         >
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex items-center gap-1">
-                <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">↑</kbd>
-                <span className="text-xs">or</span>
-                <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">W</kbd>
-              </div>
-              <div className="flex items-center gap-1">
-                <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">↓</kbd>
-                <span className="text-xs">or</span>
-                <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">S</kbd>
-              </div>
-            </div>
             <span>Navigate sections</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onPrevious}
+                disabled={!canGoPrevious}
+                className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Navigate to previous section"
+              >
+                <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+                <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">↑</kbd>
+                <span className="text-xs">W</span>
+              </button>
+              <button
+                type="button"
+                onClick={onNext}
+                disabled={!canGoNext}
+                className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Navigate to next section"
+              >
+                <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">↓</kbd>
+                <span className="text-xs">S</span>
+              </button>
+            </div>
           </div>
         </motion.div>
       )}

@@ -34,8 +34,7 @@ export default function App() {
   // Tooltip hook - manages orange tooltip that follows mouse cursor
   const { tooltipText, mousePosition, setTooltipText } = useHoverTooltip();
 
-  // Enable keyboard navigation (↑/↓ or W/S to navigate between sections)
-  useKeyboardNavigation();
+  const keyboardNavigation = useKeyboardNavigation();
 
   useEffect(() => {
     // checkMobile: Detects mobile viewports to choose the right game overlay.
@@ -76,7 +75,12 @@ export default function App() {
         mouseX={mousePosition.x}
         mouseY={mousePosition.y}
       />
-      <KeyboardIndicator />
+      <KeyboardIndicator
+        canGoPrevious={keyboardNavigation.canGoPrevious}
+        canGoNext={keyboardNavigation.canGoNext}
+        onPrevious={keyboardNavigation.goToPreviousSection}
+        onNext={keyboardNavigation.goToNextSection}
+      />
     </div>
   );
 }

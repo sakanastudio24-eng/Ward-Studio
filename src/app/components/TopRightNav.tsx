@@ -20,7 +20,7 @@ export function TopRightNav({ setTooltipText }: TopRightNavProps) {
     { href: "/", label: "Home" },
     { href: "/projects", label: "Projects" },
     { href: "/products", label: "Products" },
-    { href: "https://metis.zward.studio/", label: "Metis", external: true },
+    { href: "https://metis.zward.studio/", label: "Metis", external: true, accent: true },
     { href: "/#contact", label: "Contact" },
   ];
 
@@ -36,7 +36,9 @@ export function TopRightNav({ setTooltipText }: TopRightNavProps) {
               href={item.href}
               target={item.external ? "_blank" : undefined}
               rel={item.external ? "noreferrer" : undefined}
-              className="rounded-md px-2 py-1 text-xs text-foreground transition-colors hover:bg-accent sm:text-sm"
+              className={`rounded-md px-2 py-1 text-xs transition-colors hover:bg-accent sm:text-sm ${
+                item.accent ? "text-[#dc5e5e]" : "text-foreground"
+              }`}
               onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
               onMouseLeave={() => setTooltipText("")}
             >
@@ -71,7 +73,9 @@ export function TopRightNav({ setTooltipText }: TopRightNavProps) {
                   href={item.href}
                   target={item.external ? "_blank" : undefined}
                   rel={item.external ? "noreferrer" : undefined}
-                  className="rounded-[999px] border border-border bg-background px-6 py-4 text-center text-base font-medium text-foreground transition-colors hover:bg-accent"
+                  className={`rounded-[999px] border border-border bg-background px-6 py-4 text-center text-base font-medium transition-colors hover:bg-accent ${
+                    item.accent ? "text-[#dc5e5e]" : "text-foreground"
+                  }`}
                   onClick={() => setMobileOpen(false)}
                 >
                   {item.label}
