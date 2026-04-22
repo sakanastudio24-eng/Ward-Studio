@@ -1,8 +1,6 @@
 import "server-only";
-import "varlock/auto-load";
 
 type ServerEnv = {
-  NODE_ENV?: "development" | "test" | "production";
   NEXT_PUBLIC_SUPABASE_URL?: string;
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?: string;
   SUPABASE_SECRET_KEY?: string;
@@ -36,7 +34,6 @@ type ServerEnv = {
 };
 
 export const env: ServerEnv = {
-  NODE_ENV: process.env.NODE_ENV as ServerEnv["NODE_ENV"],
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,

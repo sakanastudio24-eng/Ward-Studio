@@ -35,7 +35,7 @@ export function resolveCheckoutOrigin(requestOrigin: string): string {
     return normalizeUrl(explicit);
   }
 
-  if (env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV !== "production") {
     return normalizeUrl(requestOrigin);
   }
 
