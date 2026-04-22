@@ -19,10 +19,10 @@ function normalizeSupabaseUrl(value: string): string {
 }
 
 function getSupabaseUrl(): string {
-  const rawValue = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
+  const rawValue = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const value = normalizeSupabaseUrl(rawValue);
   if (!value) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_URL or legacy SUPABASE_URL is not configured.");
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL is not configured.");
   }
   try {
     const parsed = new URL(value);
@@ -35,15 +35,15 @@ function getSupabaseUrl(): string {
       );
     }
   } catch {
-    throw new Error("NEXT_PUBLIC_SUPABASE_URL or legacy SUPABASE_URL must be a valid HTTP or HTTPS URL.");
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL must be a valid HTTP or HTTPS URL.");
   }
   return value;
 }
 
 function getSupabaseServerKey(): string {
-  const value = sanitizeEnv(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "");
+  const value = sanitizeEnv(process.env.SUPABASE_SECRET_KEY || "");
   if (!value) {
-    throw new Error("SUPABASE_SECRET_KEY or legacy SUPABASE_SERVICE_ROLE_KEY is not configured.");
+    throw new Error("SUPABASE_SECRET_KEY is not configured.");
   }
   return value;
 }
