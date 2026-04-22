@@ -18,26 +18,32 @@ function normalizeSupabaseUrl(value: string): string {
   return withProtocol.replace(/\/+$/, "");
 }
 
-function getRequiredEnv(name: "SUPABASE_URL" | "SUPABASE_SERVICE_ROLE_KEY"): string {
-  const rawValue = process.env[name] || "";
-  const value = name === "SUPABASE_URL" ? normalizeSupabaseUrl(rawValue) : sanitizeEnv(rawValue);
+function getSupabaseUrl(): string {
+  const rawValue = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
+  const value = normalizeSupabaseUrl(rawValue);
   if (!value) {
-    throw new Error(`${name} is not configured.`);
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL or legacy SUPABASE_URL is not configured.");
   }
-  if (name === "SUPABASE_URL") {
-    try {
-      const parsed = new URL(value);
-      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-        throw new Error(`${name} must use http or https.`);
-      }
-      if (parsed.hostname === "supabase.com") {
-        throw new Error(
-          `${name} must be your project API URL (https://<project-ref>.supabase.co), not a dashboard URL.`,
-        );
-      }
-    } catch {
-      throw new Error(`${name} must be a valid HTTP or HTTPS URL.`);
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+      throw new Error("Supabase URL must use http or https.");
     }
+    if (parsed.hostname === "supabase.com") {
+      throw new Error(
+        "Supabase URL must be your project API URL (https://<project-ref>.supabase.co), not a dashboard URL.",
+      );
+    }
+  } catch {
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL or legacy SUPABASE_URL must be a valid HTTP or HTTPS URL.");
+  }
+  return value;
+}
+
+function getSupabaseServerKey(): string {
+  const value = sanitizeEnv(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "");
+  if (!value) {
+    throw new Error("SUPABASE_SECRET_KEY or legacy SUPABASE_SERVICE_ROLE_KEY is not configured.");
   }
   return value;
 }
@@ -45,15 +51,15 @@ function getRequiredEnv(name: "SUPABASE_URL" | "SUPABASE_SERVICE_ROLE_KEY"): str
 let cachedClient: SupabaseClient | null = null;
 
 /**
- * Returns a server-only Supabase client configured with service role auth.
+ * Returns a server-only Supabase client configured with Supabase secret key auth.
  * Never import this file from client components.
  */
 export function getSupabaseServer(): SupabaseClient {
   if (cachedClient) return cachedClient;
 
   cachedClient = createClient(
-    getRequiredEnv("SUPABASE_URL"),
-    getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY"),
+    getSupabaseUrl(),
+    getSupabaseServerKey(),
     {
       auth: { persistSession: false },
     },

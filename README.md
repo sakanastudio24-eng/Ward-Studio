@@ -59,7 +59,7 @@ Stripe payment reference: `stripe-flow.md`
 - Styling: Tailwind + custom theme CSS
 - Analytics: Vercel Analytics
 - Email: Resend (server-side only)
-- Persistence: Supabase (service-role server client)
+- Persistence: Supabase (server client prefers `SUPABASE_SECRET_KEY`, with legacy `SUPABASE_SERVICE_ROLE_KEY` fallback during rollout)
 
 Key app areas:
 
@@ -177,6 +177,13 @@ Preview generation script:
 2. Start dev server: `pnpm dev`
 3. Production build: `pnpm build`
 4. Production run: `pnpm start`
+
+Supabase environment names:
+
+- Preferred public URL: `NEXT_PUBLIC_SUPABASE_URL`
+- Preferred server key: `SUPABASE_SECRET_KEY`
+- Preferred public key, for future browser clients: `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- Temporary rollback names: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
 
 ## Team Workflow
 

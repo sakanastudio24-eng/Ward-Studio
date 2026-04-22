@@ -20,6 +20,7 @@ export function TopRightNav({ setTooltipText }: TopRightNavProps) {
     { href: "/", label: "Home" },
     { href: "/projects", label: "Projects" },
     { href: "/products", label: "Products" },
+    { href: "https://metis.zward.studio/", label: "Metis", external: true },
     { href: "/#contact", label: "Contact" },
   ];
 
@@ -33,6 +34,8 @@ export function TopRightNav({ setTooltipText }: TopRightNavProps) {
           <li key={item.label}>
             <a
               href={item.href}
+              target={item.external ? "_blank" : undefined}
+              rel={item.external ? "noreferrer" : undefined}
               className="rounded-md px-2 py-1 text-xs text-foreground transition-colors hover:bg-accent sm:text-sm"
               onMouseEnter={(e) => setTooltipText(getTooltipMessage(e.currentTarget.textContent || ""))}
               onMouseLeave={() => setTooltipText("")}
@@ -66,6 +69,8 @@ export function TopRightNav({ setTooltipText }: TopRightNavProps) {
                 <a
                   key={item.label}
                   href={item.href}
+                  target={item.external ? "_blank" : undefined}
+                  rel={item.external ? "noreferrer" : undefined}
                   className="rounded-[999px] border border-border bg-background px-6 py-4 text-center text-base font-medium text-foreground transition-colors hover:bg-accent"
                   onClick={() => setMobileOpen(false)}
                 >

@@ -108,6 +108,7 @@ export const tooltipMessages: Record<string, string> = {
   "engineering": "Show engineering builds and technical project work.",
   "design": "Show design-focused case studies and UX execution.",
   "products": "Open product systems and pricing.",
+  "metis": "Open the Metis project in a new tab.",
   "purchase": "Start the purchase flow and confirm scope.",
   "preview detailflow": "Open the live DetailFlow demo preview.",
   "download preview": "Open the Android preview build page.",

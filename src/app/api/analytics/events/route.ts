@@ -9,7 +9,8 @@ function getString(value: unknown): string {
 
 export async function POST(request: Request) {
   const analyticsStorageConfigured = Boolean(
-    env.SUPABASE_URL?.trim() && env.SUPABASE_SERVICE_ROLE_KEY?.trim(),
+    (env.NEXT_PUBLIC_SUPABASE_URL?.trim() || env.SUPABASE_URL?.trim()) &&
+      (env.SUPABASE_SECRET_KEY?.trim() || env.SUPABASE_SERVICE_ROLE_KEY?.trim()),
   );
   if (!analyticsStorageConfigured) {
     return NextResponse.json({
