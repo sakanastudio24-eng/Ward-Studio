@@ -173,10 +173,11 @@ Preview generation script:
 
 ## Local Development
 
-1. Install dependencies: `pnpm install`
-2. Start dev server: `pnpm dev`
-3. Production build: `pnpm build`
-4. Production run: `pnpm start`
+1. Use Node `24.x`
+2. Install dependencies: `pnpm install`
+3. Start dev server: `pnpm dev`
+4. Production build: `pnpm build`
+5. Production run: `pnpm start`
 
 Supabase environment names:
 
@@ -186,6 +187,7 @@ Supabase environment names:
 
 ## Team Workflow
 
+- Use Node `24.x` for local development and CI parity.
 - Use `pnpm install` for dependency installation.
 - Use `pnpm add` and `pnpm remove` for package changes.
 - Do not commit `package-lock.json`.
